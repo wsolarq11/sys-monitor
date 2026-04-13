@@ -1,10 +1,4 @@
-import React from 'react';
 import { Card } from '../common/Card';
-
-function formatBytes(bytes: number): string {
-  const gb = bytes / (1024 * 1024 * 1024);
-  return `${gb.toFixed(2)} GB`;
-}
 
 export function MemoryMonitor() {
   return (
