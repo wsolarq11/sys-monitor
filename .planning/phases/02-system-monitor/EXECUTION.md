@@ -92,8 +92,14 @@
 - Backend: Already compiled successfully
 
 **Git Commits**: ✅ Complete
-- Commit: 3e25c17
-- Files changed: 8 files, 486 insertions, 19 deletions
+- Commit: 3e25c17 - Frontend visualization components
+- Commit: 96f8144 - Windows release build
+
+**Release Build**: ✅ Success
+- Build time: ~7 minutes
+- EXE: sys-monitor.exe (12.6 MB)
+- MSI: SysMonitor_0.1.0_x64_en-US.msi (4.8 MB)
+- Profile: Release (optimized)
 
 ---
 
@@ -107,6 +113,7 @@
 - ✅ CPU, Memory, Disk visualization components
 - ✅ Dashboard integration
 - ✅ Dark mode support
+- ✅ Windows release build (EXE + MSI installer)
 
 **Deferred** (future phases):
 - ⏸️ Tauri events for push-based updates
@@ -116,4 +123,22 @@
 
 ---
 
-*Last updated: 2026-04-13 23:30*
+## Installation
+
+### Option 1: MSI Installer (Recommended)
+```
+SysMonitor_0.1.0_x64_en-US.msi
+Location: src-tauri/target/release/bundle/msi/
+Size: 4.8 MB
+```
+
+### Option 2: Standalone EXE
+```
+sys-monitor.exe
+Location: src-tauri/target/release/
+Size: 12.6 MB
+```
+
+---
+
+*Last updated: 2026-04-13 23:40*
