@@ -1,20 +1,45 @@
-use sysinfo::{System, Disks};
+use sysinfo::{System, Disks, CpuRefreshKind, RefreshKind};
 use tauri::command;
 use crate::models::metrics::SystemMetric;
 use crate::error::AppError;
+
+/// Global system instance to maintain state between calls
+static mut SYSTEM: Option<System> = None;
+
+/// Initialize or get the global system instance
+fn get_system() -> &'static mut System {
+    unsafe {
+        if SYSTEM.is_none() {
+            let mut sys = System::new_with_specifics(
+                RefreshKind::new()
+                    .with_cpu(CpuRefreshKind::everything())
+                    .with_memory(sysinfo::MemoryRefreshKind::everything())
+            );
+            // First refresh needs time to establish baseline
+            sys.refresh_cpu();
+            std::thread::sleep(std::time::Duration::from_millis(200));
+            sys.refresh_cpu();
+            SYSTEM = Some(sys);
+        }
+        SYSTEM.as_mut().unwrap()
+    }
+}
 
 fn get_global_cpu_usage(sys: &System) -> f32 {
     if sys.cpus().is_empty() {
         return 0.0;
     }
+    // sysinfo already provides accurate CPU usage based on idle time
     sys.cpus().iter().map(|cpu| cpu.cpu_usage()).sum::<f32>() / sys.cpus().len() as f32
 }
 
 #[command]
 pub fn get_system_metrics() -> Result<SystemMetric, AppError> {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+    let sys = get_system();
+    
+    // Refresh only what we need
     sys.refresh_cpu();
+    sys.refresh_memory();
 
     let total_memory = sys.total_memory() as f64;
     let used_memory = sys.used_memory() as f64;
@@ -28,7 +53,7 @@ pub fn get_system_metrics() -> Result<SystemMetric, AppError> {
     Ok(SystemMetric {
         id: None,
         timestamp: chrono::Utc::now().timestamp(),
-        cpu_usage: get_global_cpu_usage(&sys) as f64,
+        cpu_usage: get_global_cpu_usage(sys) as f64,
         memory_usage: used_memory,
         memory_total: Some(total_memory),
         disk_usage: Some(used_disk),
