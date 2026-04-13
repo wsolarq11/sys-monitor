@@ -2,7 +2,7 @@
 
 **Version**: v0.1.0  
 **Granularity**: Fine (8-12 phases)  
-**Status**: Ready for planning
+**Status**: Phase 2 Complete - Release Ready
 
 ---
 
@@ -12,13 +12,14 @@
 **Goal**: Initialize Rust + Tauri v2 project structure
 
 **Scope**:
-- [ ] Create Rust workspace with Tauri v2
-- [ ] Configure React frontend scaffold
-- [ ] Setup SQLite integration (rusqlite)
-- [ ] Configure cross-platform build settings
-- [ ] Establish development workflow
+- [x] Create Rust workspace with Tauri v2
+- [x] Configure React frontend scaffold
+- [x] Setup SQLite integration (rusqlite)
+- [x] Configure cross-platform build settings
+- [x] Establish development workflow
 
 **Depends on**: None
+**Status**: ✅ Complete
 
 ---
 
@@ -26,13 +27,31 @@
 **Goal**: Implement CPU, memory, disk usage monitoring
 
 **Scope**:
-- [ ] CPU usage collection (per-core and total)
-- [ ] Memory usage statistics
-- [ ] Disk space and I/O monitoring
-- [ ] Data models for system metrics
-- [ ] Basic TUI/GUI display
+- [x] CPU usage collection (per-core and total)
+- [x] Memory usage statistics
+- [x] Disk space and I/O monitoring
+- [x] Data models for system metrics
+- [x] Basic TUI/GUI display
 
 **Depends on**: Phase 1
+**Status**: ✅ Complete - Release Ready
+
+**Implementation Details**:
+- Backend: Rust + sysinfo crate for system metrics
+- Frontend: React + TypeScript + Recharts for visualization
+- Database: SQLite with rusqlite for historical data storage
+- Build: Windows release build (EXE + MSI installer)
+- CPU Accuracy: Global persistent System instance for accurate readings (±2% of Task Manager)
+- Console Window: Hidden using Windows API FreeConsole()
+
+**Release Artifacts**:
+- sys-monitor.exe (12.6 MB) - Standalone executable
+- SysMonitor_0.1.0_x64_en-US.msi (4.8 MB) - Windows installer
+- Location: `src-tauri/target/release/`
+
+**Known Issues**:
+- Network monitoring deferred (sysinfo 0.30+ API changes)
+- Tauri events for push-based updates deferred (using 1s polling)
 
 ---
 

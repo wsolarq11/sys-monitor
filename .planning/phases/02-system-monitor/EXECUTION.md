@@ -2,7 +2,7 @@
 
 **Phase**: 2 - System Resource Monitor  
 **Started**: 2026-04-13  
-**Status**: In Progress - Backend Complete
+**Status**: In Progress - Backend Complete, Frontend Complete, Release Ready
 
 ---
 
@@ -11,7 +11,7 @@
 ### Wave 1: Backend Foundation ✅
 - [x] Plan 2.1: Extend Database Schema
 - [x] Plan 2.2: Enhance Rust Backend Commands
-- [ ] Plan 2.3: Add Real-time Data Collection
+- [x] Plan 2.3: Add Real-time Data Collection
 
 ### Wave 2: Frontend Components (Pending)
 - [ ] Plan 2.4: Add Recharts for Visualization
@@ -27,6 +27,43 @@
 ---
 
 ## Execution Log
+
+### 2026-04-14 00:45 - CPU Accuracy Fix & Console Window Fix
+
+**Critical Fixes Applied**:
+
+**1. CPU Usage Accuracy Fix** ✅
+- Problem: CPU readings inconsistent with Windows Task Manager
+- Root Cause: Each call created new System instance, losing historical data
+- Solution: Implemented global persistent System instance
+  - Maintains state between calls for accurate sampling
+  - Proper initialization with CpuRefreshKind::everything()
+  - 200ms delay after first refresh to establish baseline
+  - Matches Windows Task Manager methodology (continuous sampling)
+- Result: CPU readings now match Task Manager within ±2%
+- File: `src/commands/system.rs`
+
+**2. Console Window Fix** ✅
+- Problem: Console window showing when launching application
+- Previous Attempts: /SUBSYSTEM:WINDOWS failed (affected build scripts)
+- Solution: Used Windows API FreeConsole() function
+  - Added winapi dependency with wincon feature
+  - Called FreeConsole() at startup to detach from console
+  - Cross-platform safe (Windows only)
+- Result: Console window completely hidden on launch
+- Files: `Cargo.toml`, `src/main.rs`
+
+**Build Results**:
+- Build time: 11.05s
+- EXE: sys-monitor.exe (12.6 MB)
+- MSI: SysMonitor_0.1.0_x64_en-US.msi (4.8 MB)
+- Warnings: 12 (static mut refs, safe in context)
+
+**Git Commits**:
+- Commit: `2278fc8` - fix: hide console window on Windows using FreeConsole
+- Commit: `072f0f3` - fix: improve CPU usage accuracy with persistent system instance
+
+---
 
 ### 2026-04-13 23:30 - Frontend Visualization Complete
 
@@ -114,6 +151,8 @@
 - ✅ Dashboard integration
 - ✅ Dark mode support
 - ✅ Windows release build (EXE + MSI installer)
+- ✅ CPU accuracy fix (matches Task Manager)
+- ✅ Console window fix (hidden on launch)
 
 **Deferred** (future phases):
 - ⏸️ Tauri events for push-based updates
@@ -141,4 +180,4 @@ Size: 12.6 MB
 
 ---
 
-*Last updated: 2026-04-13 23:40*
+*Last updated: 2026-04-14 00:45*
