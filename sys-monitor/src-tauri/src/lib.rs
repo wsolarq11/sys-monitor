@@ -7,7 +7,7 @@ mod models;
 #[allow(unused_imports)]
 mod error;
 
-use commands::system::{get_system_metrics, get_cpu_info, get_memory_info};
+use commands::system::{get_system_metrics, get_cpu_info, get_memory_info, get_disk_info, get_network_info};
 use commands::database::{save_system_metric, get_recent_metrics};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,6 +18,8 @@ pub fn run() {
             get_system_metrics,
             get_cpu_info,
             get_memory_info,
+            get_disk_info,
+            get_network_info,
             save_system_metric,
             get_recent_metrics
         ])
