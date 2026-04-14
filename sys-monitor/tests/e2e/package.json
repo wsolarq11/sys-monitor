@@ -1,16 +1,31 @@
 {
   "name": "sys-monitor-e2e-tests",
   "version": "1.0.0",
-  "description": "End-to-end tests for SysMonitor application",
+  "description": "End-to-end tests for SysMonitor application - Playwright 2026 Best Practices",
   "scripts": {
     "test": "playwright test",
+    "test:smoke": "playwright test --project=smoke --grep=@smoke",
+    "test:critical": "playwright test --project=critical --grep=@critical",
+    "test:regression": "playwright test --project=regression --grep=@regression",
+    "test:visual": "playwright test visual-regression.spec.ts",
+    "test:all": "playwright test",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
-    "report": "playwright show-report"
+    "test:workers": "playwright test --workers=4",
+    "test:shard": "playwright test --shard=1/4",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install --with-deps",
+    "docker:smoke": "docker-compose run playwright-smoke",
+    "docker:critical": "docker-compose run playwright-critical",
+    "docker:regression": "docker-compose run playwright-regression",
+    "docker:visual": "docker-compose run playwright-visual"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.52.0",
     "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

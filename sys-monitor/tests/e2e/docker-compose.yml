@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  playwright-smoke:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./test-results:/app/tests/e2e/test-results
+      - ./playwright-report:/app/tests/e2e/playwright-report
+    environment:
+      - CI=true
+      - PLAYWRIGHT_HEADLESS=true
+    command: pnpm exec playwright test --project=smoke --grep=@smoke
+
+  playwright-critical:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./test-results:/app/tests/e2e/test-results
+      - ./playwright-report:/app/tests/e2e/playwright-report
+    environment:
+      - CI=true
+      - PLAYWRIGHT_HEADLESS=true
+    command: pnpm exec playwright test --project=critical --grep=@critical
+
+  playwright-regression:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./test-results:/app/tests/e2e/test-results
+      - ./playwright-report:/app/tests/e2e/playwright-report
+    environment:
+      - CI=true
+      - PLAYWRIGHT_HEADLESS=true
+    command: pnpm exec playwright test --project=regression --grep=@regression
+
+  playwright-visual:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./test-results:/app/tests/e2e/test-results
+      - ./playwright-report:/app/tests/e2e/playwright-report
+      - ./baselines:/app/tests/e2e/baselines
+    environment:
+      - CI=true
+      - PLAYWRIGHT_HEADLESS=true
+    command: pnpm exec playwright test visual-regression.spec.ts

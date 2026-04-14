@@ -104,10 +104,4 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT NOT NULL,
     updated_at INTEGER DEFAULT (strftime('%s', 'now'))
 );
-
-CREATE INDEX IF NOT EXISTS idx_system_metrics_timestamp 
-ON system_metrics(timestamp);
-
-CREATE INDEX IF NOT EXISTS idx_network_metrics_timestamp 
-ON network_metrics(timestamp);
 "#;

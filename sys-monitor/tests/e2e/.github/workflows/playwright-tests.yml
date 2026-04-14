@@ -1,0 +1,156 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      
+      - name: Run smoke tests
+        run: pnpm exec playwright test --project=smoke --grep=@smoke
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: playwright-report/
+          retention-days: 7
+
+  critical:
+    name: Critical Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      
+      - name: Run critical tests
+        run: pnpm exec playwright test --project=critical --grep=@critical
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-critical-report
+          path: playwright-report/
+          retention-days: 7
+
+  regression:
+    name: Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    strategy:
+      matrix:
+        shard: [1/4, 2/4, 3/4, 4/4]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+      
+      - name: Run regression tests (sharded)
+        run: pnpm exec playwright test --project=regression --grep=@regression --shard=${{ matrix.shard }}
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-regression-report-${{ matrix.shard }}
+          path: playwright-report/
+          retention-days: 7
+
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      
+      - name: Run visual regression tests
+        run: pnpm exec playwright test visual-regression.spec.ts
+      
+      - name: Upload visual test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-report
+          path: playwright-report/
+          retention-days: 7
+      
+      - name: Upload baseline screenshots
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-baselines
+          path: test-results/output/
+          retention-days: 30

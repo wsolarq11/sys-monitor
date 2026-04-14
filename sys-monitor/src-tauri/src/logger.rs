@@ -2,7 +2,8 @@ use std::fs::{File, OpenOptions};
 use std::io::{self, Write};
 use std::path::Path;
 use std::sync::Mutex;
-use chrono::Local;
+use chrono::{Local, Utc};
+use serde_json::json;
 
 static LOG_FILE: Mutex<Option<File>> = Mutex::new(None);
 
@@ -16,19 +17,24 @@ pub fn init_logger() -> io::Result<()> {
     
     *LOG_FILE.lock().unwrap() = Some(file);
     
-    // 直接写入初始化日志，避免递归调用
-    let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-    let init_message = format!("[{}] [INFO] === SysMonitor 日志系统初始化 ===\n", timestamp);
-    let file_message = format!("[{}] [INFO] 日志文件: {}\n", timestamp, log_path);
+    // 结构化日志初始化
+    let structured_log = json!({
+        "timestamp": Utc::now().to_rfc3339(),
+        "level": "INFO",
+        "message": "SysMonitor 日志系统初始化",
+        "app": "sys-monitor",
+        "version": env!("CARGO_PKG_VERSION"),
+        "log_file": log_path,
+        "environment": std::env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| "development".to_string())
+    });
     
-    // 输出到控制台
-    println!("{}", init_message.trim());
-    println!("{}", file_message.trim());
+    // 输出结构化日志到控制台 (Loki兼容格式)
+    println!("{}", structured_log.to_string());
     
     // 写入文件
     if let Some(ref mut file) = *LOG_FILE.lock().unwrap() {
-        let _ = file.write_all(init_message.as_bytes());
-        let _ = file.write_all(file_message.as_bytes());
+        let _ = file.write_all(structured_log.to_string().as_bytes());
+        let _ = file.write_all(b"\n");
         let _ = file.flush();
     }
     
@@ -36,16 +42,38 @@ pub fn init_logger() -> io::Result<()> {
 }
 
 fn write_log(level: &str, message: &str) {
-    let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S%.3f");
-    let log_message = format!("[{}] [{}] {}\n", timestamp, level, message);
+    let timestamp = Utc::now().to_rfc3339();
     
-    // 输出到控制台
-    println!("{}", log_message.trim());
+    // 创建结构化日志
+    let structured_log = json!({
+        "timestamp": timestamp,
+        "level": level,
+        "message": message,
+        "app": "sys-monitor",
+        "version": env!("CARGO_PKG_VERSION"),
+        "environment": std::env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| "development".to_string()),
+        "thread_id": format!("{:?}", std::thread::current().id())
+    });
+    
+    // 输出结构化日志到控制台 (Loki兼容格式)
+    println!("{}", structured_log.to_string());
     
     // 写入文件
     if let Some(ref mut file) = *LOG_FILE.lock().unwrap() {
-        let _ = file.write_all(log_message.as_bytes());
+        let _ = file.write_all(structured_log.to_string().as_bytes());
+        let _ = file.write_all(b"\n");
         let _ = file.flush();
+    }
+    
+    // 根据日志级别发送到Sentry
+    match level {
+        "ERROR" => {
+            sentry::capture_message(&format!("{}: {}", level, message), sentry::Level::Error);
+        }
+        "WARN" => {
+            sentry::capture_message(&format!("{}: {}", level, message), sentry::Level::Warning);
+        }
+        _ => {}
     }
 }
 

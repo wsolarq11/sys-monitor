@@ -330,4 +330,122 @@ impl DatabaseRepository {
         )?;
         Ok(affected > 0)
     }
+
+    /// 批量插入 folder items，使用事务每 500 条提交一次
+    pub fn insert_folder_items_batch(&mut self, items: &[FolderItem]) -> Result<usize> {
+        let tx = self.conn.transaction()?;
+        let mut inserted = 0;
+        let batch_size = 500;
+        
+        for chunk in items.chunks(batch_size) {
+            for item in chunk {
+                tx.execute(
+                    "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    rusqlite::params![
+                        item.scan_id,
+                        item.path,
+                        item.name,
+                        item.size,
+                        item.item_type,
+                        item.extension,
+                        item.parent_path,
+                    ],
+                )?;
+                inserted += 1;
+            }
+        }
+        
+        tx.commit()?;
+        Ok(inserted)
+    }
+
+    /// 批量插入 file type stats，使用事务
+    pub fn insert_file_type_stats_batch(&mut self, stats: &[FileTypeStat]) -> Result<usize> {
+        let tx = self.conn.transaction()?;
+        let mut inserted = 0;
+        
+        for stat in stats {
+            tx.execute(
+                "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
+                 VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![
+                    stat.scan_id,
+                    stat.file_type,
+                    stat.count,
+                    stat.total_size,
+                ],
+            )?;
+            inserted += 1;
+        }
+        
+        tx.commit()?;
+        Ok(inserted)
+    }
+
+    /// 原子性事务方法：创建扫描、插入 items、插入统计、更新结果
+    pub fn create_scan_with_items(
+        &mut self,
+        path: &str,
+        scan_timestamp: i64,
+        items: &[FolderItem],
+        stats: &[FileTypeStat],
+        total_size: u64,
+        file_count: u64,
+        folder_count: u64,
+        scan_duration_ms: u64,
+    ) -> Result<i64> {
+        let tx = self.conn.transaction()?;
+        
+        // 1. 创建扫描记录
+        tx.execute(
+            "INSERT INTO folder_scans (path, scan_timestamp, total_size, file_count, folder_count, scan_duration_ms)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            rusqlite::params![
+                path,
+                scan_timestamp,
+                total_size,
+                file_count,
+                folder_count,
+                scan_duration_ms,
+            ],
+        )?;
+        let scan_id = tx.last_insert_rowid();
+        
+        // 2. 批量插入 folder items
+        for item in items {
+            tx.execute(
+                "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                rusqlite::params![
+                    scan_id,
+                    item.path,
+                    item.name,
+                    item.size,
+                    item.item_type,
+                    item.extension,
+                    item.parent_path,
+                ],
+            )?;
+        }
+        
+        // 3. 批量插入 file type stats
+        for stat in stats {
+            tx.execute(
+                "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
+                 VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![
+                    scan_id,
+                    stat.file_type,
+                    stat.count,
+                    stat.total_size,
+                ],
+            )?;
+        }
+        
+        // 4. 提交事务
+        tx.commit()?;
+        
+        Ok(scan_id)
+    }
 }
