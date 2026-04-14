@@ -1,0 +1,120 @@
+{
+  "timestamp": "2026-04-14T00:00:00Z",
+  "test_run_id": "TR-20260414-001",
+  "project": "FolderSizeMonitor",
+  "version": "0.1.0",
+  "summary": {
+    "total_tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 520
+  },
+  "test_suites": [
+    {
+      "name": "integration_tests",
+      "tests": 15,
+      "passed": 15,
+      "failed": 0,
+      "suites": [
+        {
+          "name": "test_file_type_classification",
+          "tests": 11,
+          "passed": 11,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_small_folder",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_empty_folder",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_deep_nested_folder",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_special_characters",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_large_folder",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_error_handling",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_database_operations",
+          "tests": 3,
+          "passed": 3,
+          "failed": 0
+        },
+        {
+          "name": "test_scan_history",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_delete_folder_scan_db",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_delete_folder_scan_cmd",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        },
+        {
+          "name": "test_file_type_distribution",
+          "tests": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      ]
+    }
+  ],
+  "blockers": [],
+  "bugs": [],
+  "deprecated": [],
+  "tech_debt": [],
+  "quality_metrics": {
+    "test_coverage": {
+      "integration": {
+        "folders_scanned": 7,
+        "file_types_tested": 11,
+        "edge_cases_covered": 5
+      },
+      "unit": {
+        "modules_tested": 8,
+        "functions_tested": 15
+      }
+    },
+    "build_status": "passed",
+    "lint_status": "passed",
+    "type_check_status": "passed"
+  },
+  "recommendations": [
+    "Consider adding more edge case tests for special characters in file paths",
+    "Add performance tests for large folder scanning",
+    "Consider adding integration tests for the Tauri commands"
+  ]
+}

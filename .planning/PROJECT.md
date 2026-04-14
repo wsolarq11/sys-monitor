@@ -16,11 +16,11 @@
 
 ### Active
 
-- [ ] 系统资源监控 - CPU、内存、磁盘使用率实时采集和展示
-- [ ] 磁盘/文件夹大小监控 - 文件夹大小分析、磁盘空间趋势追踪
+- [x] 系统资源监控 - CPU、内存、磁盘使用率实时采集和展示
+- [x] 磁盘/文件夹大小监控 - 文件夹大小分析、磁盘空间趋势追踪
 - [ ] 网络监控 - 网络流量、连接状态、带宽使用监控
 - [ ] 日志监控 - 系统日志、应用日志的采集和可视化
-- [ ] 实时监控界面 - Tauri v2 + React 构建的响应式 GUI
+- [x] 实时监控界面 - Tauri v2 + React 构建的响应式 GUI
 - [ ] 历史数据存储 - SQLite 数据库存储时间序列监控数据
 - [ ] 告警通知系统 - 阈值配置和超限通知
 - [ ] 数据导出功能 - 支持 CSV/JSON 格式导出监控数据
@@ -84,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 after initialization*
+*Last updated: 2026-04-14 after Phase 3 completion*

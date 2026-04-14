@@ -1,30 +1,16 @@
 use tauri::command;
-use crate::db::repository::DatabaseRepository;
-use crate::models::metrics::SystemMetric;
 use crate::error::AppError;
+use std::path::Path;
 
 #[command]
-pub fn save_system_metric(metric: SystemMetric) -> Result<(), AppError> {
-    let repo = DatabaseRepository::new("sysmonitor.db")
-        .map_err(|e| AppError::System(e.to_string()))?;
+pub fn get_db_path() -> Result<String, AppError> {
+    // 使用当前工作目录来存储数据库文件
+    let current_dir = std::env::current_dir()
+        .map_err(|e| AppError::System(format!("Failed to get current directory: {}", e)))?;
     
-    repo.init()
-        .map_err(|e| AppError::Database(e))?;
+    let db_path = current_dir.join("sysmonitor.db");
     
-    repo.insert_system_metric(&metric)
-        .map_err(|e| AppError::Database(e))?;
+    println!("Database path: {}", db_path.display());
     
-    Ok(())
-}
-
-#[command]
-pub fn get_recent_metrics(limit: u32) -> Result<Vec<SystemMetric>, AppError> {
-    let repo = DatabaseRepository::new("sysmonitor.db")
-        .map_err(|e| AppError::System(e.to_string()))?;
-    
-    repo.init()
-        .map_err(|e| AppError::Database(e))?;
-    
-    repo.get_recent_metrics(limit)
-        .map_err(|e| AppError::Database(e))
+    Ok(db_path.to_string_lossy().to_string())
 }
