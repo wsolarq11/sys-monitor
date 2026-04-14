@@ -4356,7 +4356,7 @@ dependencies = [
 
 [[package]]
 name = "sys-monitor"
-version = "1.0.0"
+version = "2.0.0"
 dependencies = [
  "chrono",
  "rusqlite",

@@ -1,7 +1,7 @@
 [package]
 name = "sys-monitor"
-version = "1.0.0"
-description = "A cross-platform system monitoring dashboard with runtime monitoring capabilities"
+version = "2.0.0"
+description = "A cross-platform system monitoring dashboard with runtime monitoring capabilities - Refactored with Service Layer, Real-time Progress, and Performance Optimization"
 authors = ["Administrator"]
 edition = "2021"
 
