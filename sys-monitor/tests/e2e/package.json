@@ -1,15 +1,16 @@
 {
-  "name": "sys-monitor-e2e",
+  "name": "sys-monitor-e2e-tests",
   "version": "1.0.0",
-  "description": "E2E tests for SysMonitor",
+  "description": "End-to-end tests for SysMonitor application",
   "scripts": {
     "test": "playwright test",
-    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
-    "codegen": "playwright codegen"
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
-    "@tauri-apps/cli": "^2.10.1"
+    "@types/node": "^20.0.0"
   }
 }

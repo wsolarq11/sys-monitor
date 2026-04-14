@@ -1,25 +1,21 @@
 import { defineConfig, devices } from '@playwright/test';
 
-/**
- * Playwright配置 - 全栈E2E测试
- * 针对已打包的Tauri应用程序进行测试
- * @see https://playwright.dev/docs/test-configuration
- */
 export default defineConfig({
-  testDir: '.',
-  fullyParallel: false, // Tauri应用只能单实例运行
+  testDir: './tests',
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: 1,
+  workers: process.env.CI ? 1 : undefined,
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['list']
+    ['html'],
+    ['json', { outputFile: 'test-results.json' }],
+    ['junit', { outputFile: 'junit-results.xml' }]
   ],
   use: {
     baseURL: 'http://localhost:1420',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: 'retain-on-failure'
   },
   projects: [
     {
@@ -27,5 +23,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  timeout: 120000,
+  // For Tauri applications, we'll test the built application
+  // Remove webServer configuration since we're testing a desktop app
 });
