@@ -34,3 +34,33 @@ pub struct FileTypeStat {
     pub count: u64,
     pub total_size: u64,
 }
+
+/// Watched folder configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WatchedFolder {
+    pub id: i64,
+    pub path: String,
+    pub alias: Option<String>,
+    pub is_active: bool,
+    pub recursive: bool,
+    pub debounce_ms: u64,
+    pub size_threshold_bytes: Option<u64>,
+    pub file_count_threshold: Option<u64>,
+    pub notify_on_create: bool,
+    pub notify_on_delete: bool,
+    pub notify_on_modify: bool,
+    pub last_scan_timestamp: Option<i64>,
+    pub last_event_timestamp: Option<i64>,
+    pub total_events_count: u64,
+}
+
+/// Folder change event
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FolderEvent {
+    pub id: i64,
+    pub watched_folder_id: i64,
+    pub event_type: String,
+    pub file_path: String,
+    pub file_size: Option<u64>,
+    pub timestamp: i64,
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { FolderAnalysisView, type FolderScan, type ScanResultData } from './FolderAnalysisView';
+import { WatchedFoldersList } from './WatchedFoldersList';
 import { getPathValidationError } from '../../utils/validation';
 
 /**
@@ -117,16 +118,22 @@ export function FolderAnalysisContainer() {
   }, [selectedPath, dbPath]);
 
   return (
-    <FolderAnalysisView
-      selectedPath={selectedPath}
-      onPathChange={handlePathChange}
-      onSelectFolder={handleSelectFolder}
-      onScan={handleScan}
-      isScanning={isScanning}
-      error={error}
-      scanProgress={scanProgress}
-      scanResult={scanResult}
-      scans={scans}
-    />
+    <div className="space-y-6">
+      {/* 监控文件夹列表 */}
+      <WatchedFoldersList />
+      
+      {/* 单次扫描UI */}
+      <FolderAnalysisView
+        selectedPath={selectedPath}
+        onPathChange={handlePathChange}
+        onSelectFolder={handleSelectFolder}
+        onScan={handleScan}
+        isScanning={isScanning}
+        error={error}
+        scanProgress={scanProgress}
+        scanResult={scanResult}
+        scans={scans}
+      />
+    </div>
   );
 }

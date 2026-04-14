@@ -99,6 +99,50 @@ CREATE INDEX IF NOT EXISTS idx_folder_scans_timestamp ON folder_scans(scan_times
 CREATE INDEX IF NOT EXISTS idx_folder_items_scan ON folder_items(scan_id);
 CREATE INDEX IF NOT EXISTS idx_file_type_stats_scan ON file_type_stats(scan_id);
 
+-- Watched folders configuration
+CREATE TABLE IF NOT EXISTS watched_folders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL UNIQUE,
+    alias TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    recursive INTEGER NOT NULL DEFAULT 1,
+    debounce_ms INTEGER NOT NULL DEFAULT 500,
+    size_threshold_bytes INTEGER,
+    file_count_threshold INTEGER,
+    notify_on_create INTEGER NOT NULL DEFAULT 1,
+    notify_on_delete INTEGER NOT NULL DEFAULT 1,
+    notify_on_modify INTEGER NOT NULL DEFAULT 0,
+    last_scan_timestamp INTEGER,
+    last_event_timestamp INTEGER,
+    total_events_count INTEGER DEFAULT 0,
+    created_at INTEGER DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+);
+
+-- Folder change events history
+CREATE TABLE IF NOT EXISTS folder_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    watched_folder_id INTEGER NOT NULL,
+    event_type TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    file_size INTEGER,
+    file_extension TEXT,
+    folder_total_size INTEGER,
+    folder_file_count INTEGER,
+    timestamp INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    processed INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (watched_folder_id) REFERENCES watched_folders(id) ON DELETE CASCADE
+);
+
+-- Indexes for watched folders and events
+CREATE INDEX IF NOT EXISTS idx_watched_folders_active ON watched_folders(is_active);
+CREATE INDEX IF NOT EXISTS idx_watched_folders_path ON watched_folders(path);
+CREATE INDEX IF NOT EXISTS idx_folder_events_folder_id ON folder_events(watched_folder_id);
+CREATE INDEX IF NOT EXISTS idx_folder_events_timestamp ON folder_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_folder_events_type ON folder_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_folder_events_folder_time 
+    ON folder_events(watched_folder_id, timestamp DESC);
+
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,

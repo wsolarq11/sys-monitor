@@ -449,3 +449,175 @@ impl DatabaseRepository {
         Ok(scan_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+    use crate::models::metrics::{SystemMetric, CpuCoreMetric, DiskMetric, NetworkMetric};
+    use crate::models::folder::{FolderItem, FileTypeStat};
+
+    fn create_test_repo() -> DatabaseRepository {
+        let dir = tempdir().expect("Failed to create temp dir");
+        let db_path = dir.path().join("test.db");
+        DatabaseRepository::new(db_path.to_str().unwrap()).expect("Failed to create repo")
+    }
+
+    #[test]
+    fn test_repository_initialization() {
+        let _repo = create_test_repo();
+        assert!(true);
+    }
+
+    #[test]
+    fn test_insert_and_get_system_metrics() {
+        let repo = create_test_repo();
+        let metric = SystemMetric {
+            id: None, timestamp: 1234567890, cpu_usage: 45.5, memory_usage: 60.2,
+            memory_total: Some(16.0), disk_usage: Some(50.0), disk_total: Some(500.0),
+        };
+        let id = repo.insert_system_metric(&metric).expect("Failed to insert");
+        assert!(id > 0);
+        let metrics = repo.get_system_metrics(10).expect("Failed to get metrics");
+        assert_eq!(metrics.len(), 1);
+        assert_eq!(metrics[0].cpu_usage, 45.5);
+    }
+
+    #[test]
+    fn test_insert_cpu_core() {
+        let repo = create_test_repo();
+        let core = CpuCoreMetric {
+            id: None, metric_id: 1, core_name: "Core 0".to_string(), usage_percent: 75.0,
+        };
+        repo.insert_cpu_core(&core).expect("Failed to insert CPU core");
+        let cores = repo.get_cpu_cores(1).expect("Failed to get cores");
+        assert_eq!(cores.len(), 1);
+    }
+
+    #[test]
+    fn test_insert_and_get_disk_metrics() {
+        let repo = create_test_repo();
+        let metric = DiskMetric {
+            id: None, metric_id: 1, mount_point: "/".to_string(),
+            total_bytes: 500_000_000_000, available_bytes: 250_000_000_000,
+            used_bytes: 250_000_000_000, usage_percent: 50.0, file_system: Some("ext4".to_string()),
+        };
+        let id = repo.insert_disk_metric(&metric).expect("Failed to insert");
+        assert!(id > 0);
+        let metrics = repo.get_disk_metrics(1).expect("Failed to get");
+        assert_eq!(metrics.len(), 1);
+    }
+
+    #[test]
+    fn test_insert_and_get_network_metrics() {
+        let repo = create_test_repo();
+        let metric = NetworkMetric {
+            id: None, timestamp: 1234567890, interface_name: "eth0".to_string(),
+            bytes_sent: 1000000, bytes_recv: 2000000, packets_sent: 1000, packets_recv: 2000,
+        };
+        let id = repo.insert_network_metric(&metric).expect("Failed to insert");
+        assert!(id > 0);
+        let metrics = repo.get_network_metrics(10).expect("Failed to get");
+        assert_eq!(metrics.len(), 1);
+    }
+
+    #[test]
+    fn test_folder_scan_lifecycle() {
+        let mut repo = create_test_repo();
+        let scan_id = repo.insert_folder_scan("/test/path", 1000000, 100, 10, 500).expect("Failed to insert");
+        assert!(scan_id > 0);
+        repo.update_folder_scan(scan_id, 2000000, 200, 20, 1000).expect("Failed to update");
+        let scans = repo.get_folder_scans("/test/path", 10).expect("Failed to get");
+        assert_eq!(scans.len(), 1);
+        assert_eq!(scans[0].total_size, 2000000);
+        let deleted = repo.delete_folder_scan(scan_id).expect("Failed to delete");
+        assert!(deleted);
+    }
+
+    #[test]
+    fn test_insert_folder_item() {
+        let repo = create_test_repo();
+        let item = FolderItem {
+            id: None, scan_id: 1, path: "/test/file.txt".to_string(), name: "file.txt".to_string(),
+            size: 1024, item_type: "file".to_string(), extension: Some(".txt".to_string()),
+            parent_path: Some("/test".to_string()),
+        };
+        let id = repo.insert_folder_item(&item).expect("Failed to insert");
+        assert!(id > 0);
+        let items = repo.get_folder_items(1).expect("Failed to get");
+        assert_eq!(items.len(), 1);
+    }
+
+    #[test]
+    fn test_insert_file_type_stat() {
+        let repo = create_test_repo();
+        let stat = FileTypeStat {
+            id: None, scan_id: 1, file_type: ".txt".to_string(), count: 50, total_size: 51200,
+        };
+        let id = repo.insert_file_type_stat(&stat).expect("Failed to insert");
+        assert!(id > 0);
+        let stats = repo.get_file_type_stats(1).expect("Failed to get");
+        assert_eq!(stats.len(), 1);
+    }
+
+    #[test]
+    fn test_batch_insert_folder_items() {
+        let mut repo = create_test_repo();
+        let items = vec![
+            FolderItem { id: None, scan_id: 1, path: "/a.txt".to_string(), name: "a.txt".to_string(), size: 100, item_type: "file".to_string(), extension: Some(".txt".to_string()), parent_path: Some("/".to_string()) },
+            FolderItem { id: None, scan_id: 1, path: "/b.txt".to_string(), name: "b.txt".to_string(), size: 200, item_type: "file".to_string(), extension: Some(".txt".to_string()), parent_path: Some("/".to_string()) },
+        ];
+        let count = repo.insert_folder_items_batch(&items).expect("Failed to batch insert");
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn test_batch_insert_file_type_stats() {
+        let mut repo = create_test_repo();
+        let stats = vec![
+            FileTypeStat { id: None, scan_id: 1, file_type: ".txt".to_string(), count: 10, total_size: 1000 },
+            FileTypeStat { id: None, scan_id: 1, file_type: ".jpg".to_string(), count: 5, total_size: 5000 },
+        ];
+        let count = repo.insert_file_type_stats_batch(&stats).expect("Failed to batch insert");
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn test_watched_folder_crud() {
+        let mut repo = create_test_repo();
+        let id = repo.insert_watched_folder("/watch/path", Some("Test")).expect("Failed to insert");
+        assert!(id > 0);
+        let folders = repo.get_all_watched_folders().expect("Failed to get");
+        assert_eq!(folders.len(), 1);
+        assert!(folders[0].is_active);
+        repo.update_watched_folder_status(id, false).expect("Failed to update");
+        let folders = repo.get_all_watched_folders().expect("Failed to get");
+        assert!(!folders[0].is_active);
+        let deleted = repo.delete_watched_folder(id).expect("Failed to delete");
+        assert!(deleted);
+    }
+
+    #[test]
+    fn test_insert_and_get_folder_events() {
+        let mut repo = create_test_repo();
+        let event_id = repo.insert_folder_event(1, "Created", "/test/new_file.txt", Some(1024)).expect("Failed to insert");
+        assert!(event_id > 0);
+        let events = repo.get_folder_events(1, 10).expect("Failed to get");
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, "Created");
+    }
+
+    #[test]
+    fn test_insert_alert() {
+        let repo = create_test_repo();
+        let alert_id = repo.insert_alert("folder_size", "/test/path", Some(1000000.0), Some(2000000.0)).expect("Failed to insert");
+        assert!(alert_id > 0);
+    }
+
+    #[test]
+    fn test_insert_alert() {
+        let repo = create_test_repo();
+        let alert_id = repo.insert_alert("folder_size", "/test/path", Some(1000000.0), Some(2000000.0)).expect("Failed to insert");
+        assert!(alert_id > 0);
+    }
+}

@@ -1,11 +1,13 @@
 use crate::db::repository::DatabaseRepository;
-use crate::models::folder::{FileTypeStat, FolderItem, FolderScan};
+use crate::models::folder::{FileTypeStat, FolderItem, FolderScan, WatchedFolder};
 use crate::utils::file_types::classify_file;
 use crate::error::AppError;
 use crate::logger;
+use crate::services::file_watcher_service::FileWatcherService;
 use std::path::Path;
 use std::time::Instant;
-use tauri::{Manager, Runtime};
+use std::sync::Arc;
+use tauri::{Manager, Runtime, State};
 use tauri_plugin_dialog::DialogExt;
 
 #[tauri::command]
@@ -178,4 +180,136 @@ pub async fn select_folder<R: Runtime>(app: tauri::AppHandle<R>) -> Result<Strin
         Some(p) => Ok(p.to_string()),
         None => Err("No folder selected".to_string()),
     }
+}
+
+// ========== Watched Folders Commands ==========
+
+#[tauri::command]
+pub async fn add_watched_folder<R: Runtime>(
+    app: tauri::AppHandle<R>, 
+    path: String, 
+    alias: Option<String>,
+    db_path: String
+) -> Result<i64, AppError> {
+    logger::log_info(&format!("add_watched_folder - 路径: {}, 别名: {:?}", path, alias));
+    
+    let mut repo = DatabaseRepository::new(&db_path)
+        .map_err(|e| {
+            logger::log_error(&format!("数据库连接失败: {}", e));
+            AppError::database(e.to_string())
+        })?;
+    
+    let folder_id = repo.insert_watched_folder(&path, alias.as_deref())
+        .map_err(|e| {
+            logger::log_error(&format!("添加监控文件夹失败: {}", e));
+            AppError::database(e.to_string())
+        })?;
+    
+    // 获取文件夹信息并启动监听
+    if let Ok(folders) = repo.get_all_watched_folders() {
+        if let Some(folder_info) = folders.iter().find(|f| f.id == folder_id) {
+            let watcher_service: State<Arc<FileWatcherService>> = app.state();
+            if let Err(e) = watcher_service.add_watch(folder_info).await {
+                logger::log_warn(&format!("启动文件监听失败: {}", e));
+            }
+        }
+    }
+    
+    logger::log_info(&format!("成功添加监控文件夹, ID: {}", folder_id));
+    Ok(folder_id)
+}
+
+#[tauri::command]
+pub async fn remove_watched_folder<R: Runtime>(
+    app: tauri::AppHandle<R>, 
+    folder_id: i64,
+    db_path: String
+) -> Result<(), AppError> {
+    logger::log_info(&format!("remove_watched_folder - ID: {}", folder_id));
+    
+    // 先停止文件监听
+    let watcher_service: State<Arc<FileWatcherService>> = app.state();
+    if let Err(e) = watcher_service.remove_watch(folder_id).await {
+        logger::log_warn(&format!("停止文件监听失败: {}", e));
+    }
+    
+    let mut repo = DatabaseRepository::new(&db_path)
+        .map_err(|e| AppError::database(e.to_string()))?;
+    
+    repo.delete_watched_folder(folder_id)
+        .map_err(|e| AppError::database(e.to_string()))?;
+    
+    logger::log_info(&format!("成功移除监控文件夹, ID: {}", folder_id));
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_watched_folders<R: Runtime>(
+    _app: tauri::AppHandle<R>,
+    db_path: String
+) -> Result<Vec<WatchedFolder>, AppError> {
+    let repo = DatabaseRepository::new(&db_path)
+        .map_err(|e| AppError::database(e.to_string()))?;
+    
+    let folders = repo.get_all_watched_folders()
+        .map_err(|e| AppError::database(e.to_string()))?;
+    
+    Ok(folders)
+}
+
+#[tauri::command]
+pub async fn toggle_watched_folder_active<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    folder_id: i64,
+    is_active: bool,
+    db_path: String
+) -> Result<bool, AppError> {
+    logger::log_info(&format!("toggle_watched_folder_active - ID: {}, 新状态: {}", folder_id, is_active));
+    
+    // 获取文件夹信息
+    let mut repo = DatabaseRepository::new(&db_path)
+        .map_err(|e| {
+            logger::log_error(&format!("数据库连接失败: {}", e));
+            AppError::database(e.to_string())
+        })?;
+    
+    let folders = repo.get_all_watched_folders()
+        .map_err(|e| {
+            logger::log_error(&format!("获取监控文件夹列表失败: {}", e));
+            AppError::database(e.to_string())
+        })?;
+    
+    let folder_info = folders.iter().find(|f| f.id == folder_id)
+        .ok_or_else(|| {
+            logger::log_error(&format!("未找到文件夹 ID: {}", folder_id));
+            AppError::invalid_parameter(&format!("Folder with id {} not found", folder_id))
+        })?;
+    
+    // 更新数据库状态
+    repo.update_watched_folder_status(folder_id, is_active)
+        .map_err(|e| {
+            logger::log_error(&format!("更新文件夹状态失败: {}", e));
+            AppError::database(e.to_string())
+        })?;
+    
+    // 根据新状态启动或停止文件监听
+    let watcher_service: State<Arc<FileWatcherService>> = app.state();
+    
+    if is_active {
+        // 设为 active，启动监听
+        if let Err(e) = watcher_service.add_watch(folder_info).await {
+            logger::log_warn(&format!("启动文件监听失败: {}", e));
+            return Err(AppError::file_system(format!("Failed to start file watcher: {}", e)));
+        }
+        logger::log_info(&format!("成功启动文件夹监听, ID: {}", folder_id));
+    } else {
+        // 设为 inactive，停止监听
+        if let Err(e) = watcher_service.remove_watch(folder_id).await {
+            logger::log_warn(&format!("停止文件监听失败: {}", e));
+        }
+        logger::log_info(&format!("成功停止文件夹监听, ID: {}", folder_id));
+    }
+    
+    logger::log_info(&format!("成功切换文件夹状态, ID: {}, 新状态: {}", folder_id, is_active));
+    Ok(true)
 }

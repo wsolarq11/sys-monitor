@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 import * as Sentry from "@sentry/react"
+import { Toaster } from 'sonner'
 
 // Sentry错误追踪初始化
 Sentry.init({
@@ -28,6 +29,18 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />} showDialog>
       <App />
+      <Toaster 
+        position="top-right" 
+        richColors 
+        expand={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
     </Sentry.ErrorBoundary>
   </React.StrictMode>,
 )

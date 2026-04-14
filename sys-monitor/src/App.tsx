@@ -1,15 +1,20 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { FolderAnalysisContainer } from './components/FolderAnalysis/FolderAnalysisContainer';
+import { AdvancedToolsContainer } from './components/AdvancedTools/AdvancedToolsContainer';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { MonitorProvider, useMonitor } from './contexts/MonitorContext';
 import { getMetricsCollector } from './utils/metricsCollector';
 import { getUserBehaviorAnalyzer } from './utils/userBehaviorAnalyzer';
 import { getAlertManager } from './utils/alertManager';
+import { useFolderWatcher } from './hooks/useFolderWatcher';
 
 // App 内容组件（使用 Monitor Context）
 function AppContent() {
+  // 启用文件夹实时监控
+  useFolderWatcher();
+  
   // 从 Context 获取监控器实例
   const { resourceMonitor, anomalyDetector, chaosManager } = useMonitor();
   
@@ -145,6 +150,9 @@ function AppContent() {
                   <Link to="/folder-analysis" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Folder Analysis
                   </Link>
+                  <Link to="/tools" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    高级工具
+                  </Link>
                 </div>
               </div>
             </div>
@@ -155,6 +163,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/folder-analysis" element={<FolderAnalysisContainer />} />
+            <Route path="/tools" element={<AdvancedToolsContainer />} />
           </Routes>
         </main>
       </div>
