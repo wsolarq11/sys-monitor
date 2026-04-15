@@ -84,6 +84,26 @@ trigger: always_on
 - ✅ full_system_scan.py 检测双docs目录
 - ✅ 创建目录时明确归属
 
+### 2026-04-15: scripts目录临时脚本冗余教训
+**问题**: scripts/ 目录包含多个一次性临时脚本，造成混乱
+**根源**: 
+- 创建了 urgent_fix_rules.py、final_fix_all.py 等临时脚本
+- 任务完成后未删除
+- verify-setup.sh 和 verify-setup.py 功能重复
+
+**解决**: 
+1. ✅ 删除 urgent_fix_rules.py (临时脚本)
+2. ✅ 删除 final_fix_all.py (临时脚本)
+3. ✅ 删除 verify-setup.sh (与Python版本重复)
+4. ✅ 保留9个核心可复用脚本
+
+**核心教训**: **"scripts/ 仅保留可复用的工具脚本，一次性临时脚本用完即删，避免同一功能的多个版本"**
+
+**永久保障**:
+- ✅ 创建脚本时明确是否为临时脚本
+- ✅ 任务完成后立即清理临时脚本
+- ✅ 定期审查scripts/目录，删除过时脚本
+
 ---
 
 ## Rules 优先级
