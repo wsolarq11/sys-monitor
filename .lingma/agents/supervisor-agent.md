@@ -1,3 +1,9 @@
+---
+name: supervisor-agent
+description: Multi-agent orchestration engine. Manages task decomposition, intelligent delegation to worker agents, 5-layer quality gates, and final acceptance. Supports 4 orchestration patterns (Sequential/Parallel/Conditional/Iterative).
+tools: Read, Write, Bash, Grep, Glob
+---
+
 # Supervisor Agent - 多智能体编排与质量门禁
 
 **角色**: Manager Agent / Orchestrator  
