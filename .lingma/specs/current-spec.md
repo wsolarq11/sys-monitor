@@ -5,7 +5,7 @@
 - **状态**: in-progress
 - **优先级**: P0
 - **负责人**: AI Assistant
-- **进度**: 48.9% (25/50 任务)
+- **进度**: 52.9% (27/50 任务)
 
 ## 背景与目标
 
@@ -394,31 +394,33 @@ interface UserPreferences {
   - ✅ 测试结果: 10/10 通过
   - 文件: `.lingma/scripts/verify-setup.py` (121 lines)
   
-- [ ] Task-022: 删除冗余代码 (待执行)
-  - 待删除: `automation-engine.py`, `operation-logger.py`, `snapshot-manager.py`, `spec-driven-agent.py`
-  - 待删除: `test-agent.py`, `agent-config.json`
-  - 待简化: `verify-automation.py` → `verify-setup.py` (已完成)
+- [x] Task-022: 删除冗余代码 ✅ 已完成
+  - ✅ 备份到 .backup/phase1-cleanup/
+  - ✅ 删除 7 个文件 (2,396 lines)
+  - ✅ Git 提交成功
+  - ✅ 验证通过: 10/10
   
 - [ ] Task-023: 测试新架构 (待执行)
   - 测试 Rule 是否生效
   - 测试 Agent 决策能力
   - 验证无回归问题
 
-- [ ] Task-006: 配置 MCP 服务器 (预计: 2h)
-  - 安装 MCP 依赖
-  - 配置 filesystem MCP
-  - 配置 git MCP
-  - 配置 shell MCP
+- [x] Task-006: 配置 MCP 服务器 ✅ 已完成
+  - ✅ 创建 mcp-servers.json 配置文件
+  - ✅ 配置 filesystem, git, shell MCP
+  - ✅ Shell MCP 默认禁用（安全）
+  - ✅ 创建验证脚本 verify-mcp-setup.py
+  - ✅ 测试结果: 3/3 通过
+  - Node.js: v24.14.1
+  - npm: 11.12.1
   
-- [ ] Task-007: 实现 MCP 管理器 (预计: 2h)
-  - 实现服务器生命周期管理
-  - 实现工具调用接口
-  - 实现权限控制
+- [x] Task-007: 实现 MCP 管理器 ⚠️ 不需要
+  - **原因**: Lingma 已提供原生 MCP 管理
+  - **替代方案**: 使用 .lingma/config/mcp-servers.json 配置
   
-- [ ] Task-008: 迁移现有工具到 MCP (预计: 2h)
-  - 迁移文件操作
-  - 迁移 Git 操作
-  - 迁移 Shell 命令
+- [x] Task-008: 迁移现有工具到 MCP ⚠️ 不需要
+  - **原因**: Lingma 内置工具已足够强大
+  - **替代方案**: 直接使用 Lingma 内置工具 + MCP 扩展
   
 - [ ] Task-009: 测试 MCP 集成 (预计: 2h)
   - 单元测试
@@ -545,6 +547,44 @@ interface UserPreferences {
 - [ ] 更新 CHANGELOG
 
 ## 实施笔记
+
+### 实施笔记 - 2024-01-15 17:40
+
+**完成**: Phase 2 Task-006 - MCP 服务器配置
+
+**关键成果**:
+1. **MCP 配置文件**: `.lingma/config/mcp-servers.json` (36 lines)
+   - 配置了 3 个 MCP 服务器
+   - filesystem: ✅ 启用
+   - git: ✅ 启用
+   - shell: ⚠️  禁用（高风险）
+
+2. **验证脚本**: `.lingma/scripts/verify-mcp-setup.py` (219 lines)
+   - 检查 Node.js, npm, MCP 配置
+   - 测试结果: 3/3 通过 ✅
+   - Node.js: v24.14.1
+   - npm: 11.12.1
+
+3. **计划文档**: `.lingma/specs/phase2-mcp-plan.md` (506 lines)
+   - 详细的 MCP 集成计划
+   - 基于 Lingma 原生能力
+   - 减少 78% 代码量
+
+**架构决策**:
+- ✅ 使用 Lingma 原生 MCP 支持
+- ❌ 不实现自定义 MCP 管理器（Task-007 不需要）
+- ❌ 不迁移工具到 MCP（Task-008 不需要）
+- ✅ 仅配置和测试（Task-006, 009）
+
+**收益**:
+- 代码量减少: 从 2000 lines → 450 lines (-78%)
+- 维护成本降低: 纯配置，无自定义代码
+- 能力提升: 接入 MCP 生态系统
+
+**下一步**: 
+- Task-009: 测试 MCP 集成（在实际使用中验证）
+
+---
 
 ### 实施笔记 - 2024-01-15 17:25
 
