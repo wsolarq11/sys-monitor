@@ -4,6 +4,17 @@ trigger: always_on
 ## 自我演进
 每次从用户回复中意识到：自己上次的实际交付结果与自己上次对话中给用户的回复描述存在不符时，需将最终解决该问题、达成用户预期目标时所确认的根本原因及解决办法记录在 D:\Users\Administrator\Desktop\PowerShell_Script_Repository\FolderSizeMonitor\.lingma\rules\AGENTS.md 本章节末尾（作为一条新规则）。此外，当自己的回复被用户指出错误并纠正后，同样应据此添加新规则，以避免重复犯错。
 
+### 2026-04-15: 文档冗余问题教训
+**问题**: 创建了 README.md + QUICK_START.md + SYSTEM_ARCHITECTURE.md 三个入口文档，严重违反单一入口原则  
+**根源**: 想要"全面"而忽略了"简洁"，忘记了社区最佳实践  
+**解决**: 
+- 遵循单一入口原则，README.md ≤ 800字
+- 详细文档移至 docs/ 子目录
+- 创建 doc-redundancy-prevention.md 规则防止再次发生
+- 创建 MISSION_STATEMENT.md 明确系统初心，定期回顾
+
+**核心教训**: **"给 Agent 一张地图，而非一本百科全书"** - OpenAI/Claude Code 最佳实践
+
 ---
 
 ## Rules 优先级
