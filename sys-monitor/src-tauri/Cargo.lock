@@ -4767,7 +4767,7 @@ dependencies = [
 
 [[package]]
 name = "sys-monitor"
-version = "2.0.0"
+version = "0.0.1"
 dependencies = [
  "chrono",
  "notify",
@@ -4782,7 +4782,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-shell",
  "tempfile",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tokio",
  "tokio-util",
  "walkdir",
