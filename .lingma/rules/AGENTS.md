@@ -39,6 +39,33 @@ trigger: always_on
 
 *AGENTS.md作为核心Rule允许≤5KB
 
+### 2026-04-15: .lingma目录结构冗余教训
+**问题**: .lingma/ 根目录存在多个冗余子目录和文件，违反单一入口原则
+**根源**: 
+- 创建了 .lingma/reports/ (36个报告) 而非使用 .lingma/docs/reports/
+- 创建了 .lingma/scripts/ (6个脚本) 而非使用项目根目录 scripts/
+- 创建了 .lingma/hooks/ (冗余pre-commit) 而非仅使用 .git/hooks/
+- .lingma/ 根目录放置 MISSION_STATEMENT.md
+- .lingma/skills/ 根目录放置3个.md文件而非子目录结构
+- skills子目录包含额外文档(INSTALLATION_GUIDE.md等)
+
+**解决**: 
+1. ✅ .lingma/reports/ → .lingma/docs/reports/archive/
+2. ✅ .lingma/scripts/ → scripts/
+3. ✅ .lingma/hooks/ → 删除（Git Hook仅在.git/hooks/生效）
+4. ✅ .lingma/MISSION_STATEMENT.md → .lingma/docs/guides/
+5. ✅ .lingma/backups/README.md → .lingma/docs/reports/archive/
+6. ✅ .lingma/skills/*.md → .lingma/docs/skills/
+7. ✅ skills子目录额外文档 → docs/skills/
+
+**核心教训**: **".lingma/ 仅保留核心组件(agents/rules/skills/config)，所有文档移至docs/，所有脚本移至scripts/"**
+
+**永久保障**:
+- ✅ full_system_scan.py 自动检测.lingma/目录结构
+- ✅ Git Hook 阻止不规范的文件放置
+- ✅ CI/CD 每周扫描冗余
+- ✅ 创建任何新目录前先检查是否已存在类似目录
+
 ---
 
 ## Rules 优先级
