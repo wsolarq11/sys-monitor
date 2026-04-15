@@ -1,7 +1,4 @@
----
-trigger: always_on
----
-# Rules Index
+# Rules 索引
 
 此目录包含项目级别的规则，AI 在每次会话中都会遵循这些规则。
 
