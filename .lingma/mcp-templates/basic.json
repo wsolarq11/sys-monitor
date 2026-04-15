@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "env": {},
+      "disabled": false,
+      "description": "文件系统操作 MCP - 提供文件读写、目录列表、搜索等功能"
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git"
+      ],
+      "env": {},
+      "disabled": false,
+      "description": "Git 操作 MCP - 提供 commit 历史、分支管理、diff 查看等功能"
+    }
+  }
+}
