@@ -6,6 +6,12 @@
 
 **核心原则**: 使用 Lingma 原生 Memory，而非自定义实现
 
+**职责边界**: 
+- ✅ 专注 Memory 操作（创建、查询、更新、删除）
+- ✅ 学习用户偏好和行为模式
+- ❌ 不直接修改 Spec（委托给 spec-driven-development Skill）
+- ❌ 不执行具体开发任务（委托给 Agent）
+
 ---
 
 ## 记忆类型

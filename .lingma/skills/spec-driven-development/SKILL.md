@@ -11,6 +11,7 @@ description: Spec-driven development workflow that maintains specification docum
 2. **跨会话持久化**: Spec 在会话间保持不变和同步
 3. **自主开发**: 基于清晰的 spec  autonomously 执行开发任务
 4. **最小交互**: 仅在需求不明确时与用户确认
+5. **职责边界**: 专注 Spec 管理，Memory 操作委托给 memory-management Skill
 
 ## Spec 文件结构
 
