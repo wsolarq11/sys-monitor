@@ -4,6 +4,7 @@ import App from './App'
 import './index.css'
 import * as Sentry from "@sentry/react"
 import { Toaster } from 'sonner'
+import { reportWebVitals } from './utils/webVitalsReporter'
 
 // Sentry错误追踪初始化
 Sentry.init({
@@ -25,6 +26,26 @@ Sentry.init({
   debug: import.meta.env.MODE === "development",
 });
 
+// Web Vitals 性能监控（遵循 React Performance Optimization Skill）
+const reportWebVitalsCallback = (metric: any) => {
+  console.log(`[Web Vitals] ${metric.name}:`, metric.value, `(${metric.rating})`);
+  
+  // 发送到 Sentry
+  Sentry.setContext('web_vitals', {
+    [metric.name]: {
+      value: metric.value,
+      rating: metric.rating,
+      delta: metric.delta,
+      id: metric.id
+    }
+  });
+  
+  // 记录到性能收集器
+  if (window.__METRICS_COLLECTOR__) {
+    window.__METRICS_COLLECTOR__.recordMetric(metric.name, metric.value);
+  }
+};
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <Sentry.ErrorBoundary fallback={<ErrorFallback />} showDialog>
@@ -44,6 +65,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     </Sentry.ErrorBoundary>
   </React.StrictMode>,
 )
+
+// 启动 Web Vitals 监控（延迟加载，不影响首屏）
+if (typeof reportWebVitals === 'function') {
+  reportWebVitals(reportWebVitalsCallback);
+}
 
 // 错误边界回退组件
 function ErrorFallback() {
