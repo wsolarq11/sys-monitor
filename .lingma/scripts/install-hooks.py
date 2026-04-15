@@ -1,224 +1,191 @@
 #!/usr/bin/env python3
 """
-Spec触发器安装脚本
+Git Hook安装脚本 - 自动部署Spec强制验证Hook
 
-用途：
-1. 自动安装Git Hooks到 .git/hooks/
+功能:
+1. 复制pre-commit.sh到.git/hooks/pre-commit
 2. 设置执行权限
-3. 验证安装结果
-4. 提供卸载功能
+3. 验证安装成功
+4. 提供使用说明
 
-使用：
-    python install-hooks.py          # 安装
+使用方式:
+    python install-hooks.py
     python install-hooks.py --uninstall  # 卸载
 """
 
 import os
 import sys
+import stat
 import shutil
 from pathlib import Path
 
 
-def get_repo_root() -> Path:
-    """获取仓库根目录"""
-    try:
-        import subprocess
-        result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return Path(result.stdout.strip())
-    except Exception as e:
-        print(f"❌ 错误: 无法获取仓库根目录: {e}")
-        sys.exit(1)
+def find_project_root() -> str:
+    """查找项目根目录(包含.git的目录)"""
+    current_dir = os.getcwd()
+    
+    while current_dir != os.path.dirname(current_dir):
+        if os.path.exists(os.path.join(current_dir, '.git')):
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    
+    raise FileNotFoundError("未找到Git仓库，请在项目根目录运行此脚本")
 
 
-def install_hook(hook_name: str, hooks_source_dir: Path, git_hooks_dir: Path) -> bool:
-    """
-    安装单个Git Hook
+def install_hooks():
+    """安装Git Hooks"""
+    project_root = find_project_root()
     
-    Args:
-        hook_name: Hook名称（如 pre-commit, post-checkout）
-        hooks_source_dir: 源文件目录
-        git_hooks_dir: Git hooks目录
-        
-    Returns:
-        是否成功
-    """
-    # 确定文件名（Windows不需要扩展名，但为了兼容性保留.sh）
-    source_file = hooks_source_dir / f"{hook_name}.sh"
-    target_file = git_hooks_dir / hook_name
+    hooks_source_dir = os.path.join(project_root, '.lingma', 'hooks')
+    hooks_target_dir = os.path.join(project_root, '.git', 'hooks')
     
-    if not source_file.exists():
-        print(f"⚠️  跳过: 源文件不存在 {source_file}")
-        return False
+    # 确保目标目录存在
+    os.makedirs(hooks_target_dir, exist_ok=True)
     
-    try:
-        # 复制文件
-        shutil.copy2(source_file, target_file)
-        
-        # 设置执行权限（Unix系统）
-        if os.name != 'nt':  # 非Windows
-            os.chmod(target_file, 0o755)
-        
-        print(f"✅ 已安装: {hook_name}")
-        return True
-        
-    except Exception as e:
-        print(f"❌ 安装失败 {hook_name}: {e}")
-        return False
-
-
-def uninstall_hook(hook_name: str, git_hooks_dir: Path) -> bool:
-    """
-    卸载单个Git Hook
+    print("=" * 60)
+    print("Git Hook 安装程序")
+    print("=" * 60)
+    print(f"项目根目录: {project_root}")
+    print(f"Hook源目录: {hooks_source_dir}")
+    print(f"Hook目标目录: {hooks_target_dir}")
+    print("=" * 60)
+    print()
     
-    Args:
-        hook_name: Hook名称
-        git_hooks_dir: Git hooks目录
-        
-    Returns:
-        是否成功
-    """
-    target_file = git_hooks_dir / hook_name
+    # 安装pre-commit hook
+    pre_commit_source = os.path.join(hooks_source_dir, 'pre-commit.sh')
+    pre_commit_target = os.path.join(hooks_target_dir, 'pre-commit')
     
-    if not target_file.exists():
-        print(f"⚠️  跳过: Hook不存在 {target_file}")
-        return True
-    
-    try:
-        target_file.unlink()
-        print(f"✅ 已卸载: {hook_name}")
-        return True
-    except Exception as e:
-        print(f"❌ 卸载失败 {hook_name}: {e}")
-        return False
-
-
-def verify_installation(git_hooks_dir: Path) -> bool:
-    """
-    验证Hook安装
-    
-    Args:
-        git_hooks_dir: Git hooks目录
-        
-    Returns:
-        是否全部安装成功
-    """
-    required_hooks = ["pre-commit", "post-checkout"]
-    all_installed = True
-    
-    print("\n🔍 验证安装:")
-    for hook_name in required_hooks:
-        hook_file = git_hooks_dir / hook_name
-        if hook_file.exists():
-            print(f"  ✅ {hook_name}")
-        else:
-            print(f"  ❌ {hook_name} (缺失)")
-            all_installed = False
-    
-    return all_installed
-
-
-def install_all(repo_root: Path):
-    """安装所有Hooks"""
-    hooks_source_dir = repo_root / ".lingma" / "hooks"
-    git_hooks_dir = repo_root / ".git" / "hooks"
-    
-    # 检查源目录
-    if not hooks_source_dir.exists():
-        print(f"❌ 错误: Hooks源目录不存在: {hooks_source_dir}")
+    if not os.path.exists(pre_commit_source):
+        print(f"❌ 错误: 找不到Hook源文件: {pre_commit_source}")
         sys.exit(1)
     
-    # 创建.git/hooks目录（如果不存在）
-    git_hooks_dir.mkdir(parents=True, exist_ok=True)
+    print("📦 安装 pre-commit hook...")
     
-    print("🔧 开始安装Git Hooks...\n")
+    # 复制文件
+    shutil.copy2(pre_commit_source, pre_commit_target)
     
-    # 安装所有.sh文件
-    installed_count = 0
-    failed_count = 0
-    
-    for hook_file in hooks_source_dir.glob("*.sh"):
-        hook_name = hook_file.stem  # 去掉 .sh 扩展名
-        if install_hook(hook_name, hooks_source_dir, git_hooks_dir):
-            installed_count += 1
-        else:
-            failed_count += 1
+    # 设置执行权限 (Unix/Linux/Mac)
+    if os.name != 'nt':  # 非Windows系统
+        current_permissions = os.stat(pre_commit_target).st_mode
+        os.chmod(pre_commit_target, current_permissions | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        print("   ✅ 已设置执行权限")
+    else:
+        # Windows系统不需要chmod，但需要确保文件编码正确
+        print("   ℹ️  Windows系统跳过权限设置")
     
     # 验证安装
-    all_ok = verify_installation(git_hooks_dir)
-    
-    print(f"\n📊 安装结果:")
-    print(f"  成功: {installed_count}")
-    print(f"  失败: {failed_count}")
-    
-    if all_ok and failed_count == 0:
-        print("\n✅ 所有Hooks安装成功！")
-        print("\n💡 提示:")
-        print("  - pre-commit: 提交前强制验证Spec")
-        print("  - post-checkout: 切换分支后检查Spec状态")
-        print("  - 运行测试: git commit --allow-empty -m 'test'")
+    if os.path.exists(pre_commit_target):
+        print(f"   ✅ Hook已安装: {pre_commit_target}")
+        
+        # 检查文件大小
+        file_size = os.path.getsize(pre_commit_target)
+        print(f"   📄 文件大小: {file_size} bytes")
     else:
-        print("\n⚠️  部分Hooks安装失败，请检查错误信息")
+        print(f"   ❌ Hook安装失败")
         sys.exit(1)
+    
+    print()
+    print("=" * 60)
+    print("✅ Git Hook 安装成功!")
+    print("=" * 60)
+    print()
+    print("📖 使用说明:")
+    print("  • 每次commit时会自动执行Spec验证")
+    print("  • 如果验证失败，提交将被阻止")
+    print("  • 紧急情况可使用 --no-verify 跳过验证:")
+    print("    git commit --no-verify -m \"your message\"")
+    print()
+    print("🧪 测试安装:")
+    print("  1. 修改任意文件")
+    print("  2. git add .")
+    print("  3. git commit -m \"test\"")
+    print("  4. 观察Spec验证输出")
+    print()
+    print("🔧 卸载Hook:")
+    print("  python install-hooks.py --uninstall")
+    print()
 
 
-def uninstall_all(repo_root: Path):
-    """卸载所有Hooks"""
-    git_hooks_dir = repo_root / ".git" / "hooks"
+def uninstall_hooks():
+    """卸载Git Hooks"""
+    project_root = find_project_root()
+    hooks_target_dir = os.path.join(project_root, '.git', 'hooks')
     
-    if not git_hooks_dir.exists():
-        print("⚠️  Git hooks目录不存在")
-        return
+    print("=" * 60)
+    print("Git Hook 卸载程序")
+    print("=" * 60)
+    print()
     
-    print("🔧 开始卸载Git Hooks...\n")
+    pre_commit_target = os.path.join(hooks_target_dir, 'pre-commit')
     
-    uninstalled_count = 0
+    if os.path.exists(pre_commit_target):
+        print("🗑️  删除 pre-commit hook...")
+        os.remove(pre_commit_target)
+        print("   ✅ Hook已卸载")
+    else:
+        print("   ℹ️  Hook不存在，无需卸载")
     
-    for hook_file in git_hooks_dir.glob("*"):
-        if hook_file.is_file():
-            # 检查是否是我们安装的hook
-            hook_name = hook_file.name
-            source_file = repo_root / ".lingma" / "hooks" / f"{hook_name}.sh"
-            
-            if source_file.exists():
-                if uninstall_hook(hook_name, git_hooks_dir):
-                    uninstalled_count += 1
+    print()
+    print("✅ Git Hook 卸载完成")
+    print()
+
+
+def verify_installation():
+    """验证Hook安装状态"""
+    project_root = find_project_root()
+    pre_commit_target = os.path.join(project_root, '.git', 'hooks', 'pre-commit')
     
-    print(f"\n📊 卸载结果:")
-    print(f"  已卸载: {uninstalled_count}")
-    print("\n✅ Hooks卸载完成")
+    print("=" * 60)
+    print("Git Hook 安装状态检查")
+    print("=" * 60)
+    print()
+    
+    if os.path.exists(pre_commit_target):
+        print("✅ pre-commit hook 已安装")
+        print(f"   路径: {pre_commit_target}")
+        print(f"   大小: {os.path.getsize(pre_commit_target)} bytes")
+        
+        # 检查执行权限
+        if os.access(pre_commit_target, os.X_OK):
+            print("   ✅ 具有执行权限")
+        else:
+            print("   ⚠️  缺少执行权限")
+        
+        print()
+        sys.exit(0)  # 成功
+    else:
+        print("❌ pre-commit hook 未安装")
+        print()
+        print("   运行以下命令安装:")
+        print("   python install-hooks.py")
+        print()
+        sys.exit(1)  # 失败
 
 
 def main():
-    """命令行入口"""
+    """主函数"""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Spec触发器安装工具")
-    parser.add_argument(
-        "--uninstall",
-        action="store_true",
-        help="卸载Hooks"
-    )
-    parser.add_argument(
-        "--repo-root",
-        type=Path,
-        default=None,
-        help="仓库根目录（默认自动检测）"
-    )
+    parser = argparse.ArgumentParser(description='Git Hook安装/卸载工具')
+    parser.add_argument('--uninstall', action='store_true', help='卸载Hooks')
+    parser.add_argument('--verify', action='store_true', help='验证安装状态')
     
     args = parser.parse_args()
     
-    repo_root = args.repo_root or get_repo_root()
+    try:
+        if args.uninstall:
+            uninstall_hooks()
+        elif args.verify:
+            verify_installation()
+        else:
+            install_hooks()
     
-    if args.uninstall:
-        uninstall_all(repo_root)
-    else:
-        install_all(repo_root)
+    except Exception as e:
+        print(f"❌ 错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-04-16T00:13:24.794078",
+  "checks": [
+    {
+      "name": "Spec验证中间件",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 13503 bytes"
+    },
+    {
+      "name": "Spec Worker引擎",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 19623 bytes"
+    },
+    {
+      "name": "Hook安装脚本",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 6153 bytes"
+    },
+    {
+      "name": "pre-commit Hook模板",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 1177 bytes"
+    },
+    {
+      "name": "post-checkout Hook模板",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 938 bytes"
+    },
+    {
+      "name": "当前Spec文件",
+      "passed": true,
+      "warning": false,
+      "message": "大小: 30725 bytes"
+    },
+    {
+      "name": "pre-commit Hook",
+      "passed": true,
+      "warning": false,
+      "message": "已安装 (可执行)"
+    },
+    {
+      "name": "post-checkout Hook",
+      "passed": true,
+      "warning": false,
+      "message": "已安装 (可执行)"
+    },
+    {
+      "name": "Spec验证器执行",
+      "passed": true,
+      "warning": false,
+      "message": "退出码: 1"
+    },
+    {
+      "name": "输出格式",
+      "passed": true,
+      "warning": true,
+      "message": "输出基本正常"
+    },
+    {
+      "name": "Worker状态查询",
+      "passed": true,
+      "warning": false,
+      "message": ""
+    },
+    {
+      "name": "输出内容",
+      "passed": true,
+      "warning": true,
+      "message": "输出基本正常"
+    },
+    {
+      "name": "安装脚本帮助",
+      "passed": true,
+      "warning": false,
+      "message": "参数说明正常"
+    },
+    {
+      "name": "目录: .lingma/scripts",
+      "passed": true,
+      "warning": false,
+      "message": "存在"
+    },
+    {
+      "name": "目录: .lingma/hooks",
+      "passed": true,
+      "warning": false,
+      "message": "存在"
+    },
+    {
+      "name": "目录: .lingma/specs",
+      "passed": true,
+      "warning": false,
+      "message": "存在"
+    },
+    {
+      "name": "目录: .lingma/logs",
+      "passed": true,
+      "warning": false,
+      "message": "存在"
+    },
+    {
+      "name": "目录: .lingma/worker/tasks",
+      "passed": true,
+      "warning": false,
+      "message": "存在"
+    }
+  ],
+  "passed": 16,
+  "failed": 0,
+  "warnings": 2
+}

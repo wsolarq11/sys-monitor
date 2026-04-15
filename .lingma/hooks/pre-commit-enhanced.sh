@@ -1,12 +1,13 @@
 #!/bin/bash
-# Git pre-commit hook - Spec强制验证
+# Git pre-commit hook - Spec强制验证（增强版）
 # 
 # 功能:
 # 1. 检查current-spec.md是否存在且状态为in-progress
 # 2. 检查是否有未回答的澄清问题[NEEDS CLARIFICATION]
-# 3. 阻止无Spec提交或Spec不完整的提交
-# 4. 落盘审计日志到.lingma/logs/audit.log
-# 5. exit 1阻断提交
+# 3. 调用rule-engine验证Spec合规性
+# 4. 阻止无Spec提交或Spec不完整的提交
+# 5. 落盘审计日志到.lingma/logs/audit.log
+# 6. exit 1阻断提交
 #
 # 安装: 复制此文件到 .git/hooks/pre-commit 并赋予执行权限
 # 绕过: git commit --no-verify (仅紧急情况使用)
@@ -23,6 +24,7 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
 SPEC_PATH="$PROJECT_ROOT/.lingma/specs/current-spec.md"
 VALIDATOR_SCRIPT="$PROJECT_ROOT/.lingma/scripts/spec-validator.py"
+RULE_ENGINE_SCRIPT="$PROJECT_ROOT/.lingma/scripts/rule-engine.py"
 AUDIT_LOG="$PROJECT_ROOT/.lingma/logs/audit.log"
 
 # 确保日志目录存在
@@ -146,6 +148,54 @@ if [ "$SPEC_STATUS" != "in-progress" ] && [ "$SPEC_STATUS" != "review" ]; then
     
     # 警告但不阻止(可根据需要改为exit 1)
     log_audit "pre-commit-check" "warning" "Spec状态异常: $SPEC_STATUS"
+fi
+
+# 检查6: 调用rule-engine验证规则合规性
+if [ -f "$RULE_ENGINE_SCRIPT" ]; then
+    echo "   正在验证规则合规性..."
+    
+    RULE_OUTPUT=$(python3 "$RULE_ENGINE_SCRIPT" --validate-spec --json 2>&1) || RULE_EXIT=$?
+    
+    if [ "${RULE_EXIT:-0}" -eq 0 ]; then
+        # 检查是否有ERROR级别的违规
+        HAS_ERRORS=$(python3 -c "
+import json
+violations = json.loads('''$RULE_OUTPUT''')
+has_error = any(v.get('severity') == 'ERROR' for v in violations)
+print('yes' if has_error else 'no')
+" 2>/dev/null || echo "no")
+        
+        if [ "$HAS_ERRORS" = "yes" ]; then
+            echo -e "${RED}❌ 规则验证失败：存在严重违规${NC}"
+            echo ""
+            
+            # 显示违规信息
+            python3 -c "
+import json
+violations = json.loads('''$RULE_OUTPUT''')
+for v in violations:
+    if v.get('severity') == 'ERROR':
+        print(f\"[{v['severity']}] {v['message']}\")
+        if v.get('suggestion'):
+            print(f\"  建议: {v['suggestion']}\")
+" 2>/dev/null
+            
+            echo ""
+            echo "请修复上述违规后重新提交。"
+            
+            log_audit "rule-validation" "failed" "存在严重规则违规"
+            exit 1
+        else
+            echo -e "${GREEN}✅ 规则验证通过${NC}"
+            log_audit "rule-validation" "passed" "规则验证通过"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  规则验证脚本执行失败，跳过规则检查${NC}"
+        log_audit "rule-validation" "warning" "规则引擎执行失败"
+    fi
+else
+    echo -e "${YELLOW}⚠️  rule-engine.py不存在，跳过规则验证${NC}"
+    log_audit "rule-validation" "warning" "规则引擎脚本不存在"
 fi
 
 # 所有检查通过

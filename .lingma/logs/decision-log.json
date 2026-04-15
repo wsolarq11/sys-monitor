@@ -65,5 +65,42 @@
     "evaluation_time_ms": 0.02,
     "timestamp": "2026-04-15T16:56:53.058268",
     "recommendation": "🚫 需要明确授权 (风险: critical, 置信度: 50%)"
+  },
+  {
+    "timestamp": "2026-04-16T00:56:15.831883",
+    "agent": "orchestrator",
+    "action": "TEST_ACTION",
+    "metadata": {
+      "test_key": "test_value",
+      "timestamp": "2026-04-16T00:56:15.831875"
+    }
+  },
+  {
+    "timestamp": "2026-04-16T00:57:25.020122",
+    "agent": "orchestrator",
+    "action": "TEST_ACTION",
+    "metadata": {
+      "test_key": "test_value",
+      "timestamp": "2026-04-16T00:57:25.020115"
+    }
+  },
+  {
+    "timestamp": "2026-04-16T00:58:45.357519",
+    "agent": "orchestrator",
+    "action": "TEST_ACTION",
+    "metadata": {
+      "test_key": "test_value",
+      "timestamp": "2026-04-16T00:58:45.357510"
+    }
+  },
+  {
+    "timestamp": "2026-04-16T00:58:45.403343",
+    "agent": "orchestrator",
+    "action": "REQUEST_SUBMITTED",
+    "metadata": {
+      "task_id": "3af88781-ec0c-4731-9847-aca63c4bec93",
+      "user_request": "测试功能实现",
+      "priority": "MEDIUM"
+    }
   }
 ]

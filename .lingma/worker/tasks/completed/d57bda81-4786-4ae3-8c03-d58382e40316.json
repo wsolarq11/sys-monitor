@@ -1,0 +1,22 @@
+{
+  "task_id": "d57bda81-4786-4ae3-8c03-d58382e40316",
+  "task_type": "test_implementation",
+  "payload": {
+    "feature": "user_auth",
+    "language": "python"
+  },
+  "priority": 2,
+  "status": "completed",
+  "assigned_agent": "spec-driven-core-agent",
+  "timeout_seconds": 300,
+  "created_at": "2026-04-16T00:56:15.820306",
+  "started_at": "2026-04-16T00:56:15.823821",
+  "completed_at": "2026-04-16T00:56:15.824901",
+  "error": null,
+  "result": {
+    "output": "success",
+    "lines_added": 150
+  },
+  "retry_count": 0,
+  "max_retries": 3
+}

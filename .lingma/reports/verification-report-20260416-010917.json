@@ -1,0 +1,75 @@
+{
+  "timestamp": "2026-04-16T01:09:17.203086",
+  "project_root": "d:\\Users\\Administrator\\Desktop\\PowerShell_Script_Repository\\FolderSizeMonitor",
+  "total_checks": 16,
+  "passed": 15,
+  "failed": 1,
+  "success_rate": 93.75,
+  "results": [
+    {
+      "check": "Spec文件存在性",
+      "status": "PASS"
+    },
+    {
+      "check": "Spec文件格式",
+      "status": "PASS"
+    },
+    {
+      "check": "spec-validator.py存在",
+      "status": "PASS"
+    },
+    {
+      "check": "spec-worker.py存在",
+      "status": "PASS"
+    },
+    {
+      "check": "pre-commit.sh存在",
+      "status": "PASS"
+    },
+    {
+      "check": "install-hooks.py存在",
+      "status": "PASS"
+    },
+    {
+      "check": "Git Hooks目录结构",
+      "status": "PASS"
+    },
+    {
+      "check": "审计日志目录",
+      "status": "PASS"
+    },
+    {
+      "check": "Worker状态目录",
+      "status": "PASS"
+    },
+    {
+      "check": "Validator功能测试",
+      "status": "PASS"
+    },
+    {
+      "check": "Worker功能测试",
+      "status": "PASS"
+    },
+    {
+      "check": "Hook安装流程",
+      "status": "FAIL"
+    },
+    {
+      "check": "澄清问题检测",
+      "status": "PASS"
+    },
+    {
+      "check": "任务进度更新",
+      "status": "PASS"
+    },
+    {
+      "check": "审计日志记录",
+      "status": "PASS"
+    },
+    {
+      "check": "完整工作流集成",
+      "status": "PASS"
+    }
+  ],
+  "overall_status": "FAIL"
+}
