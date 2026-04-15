@@ -82,3 +82,24 @@ poetry.lock
 *.exe
 *.dll
 *.sys
+
+# ============================================
+# Lingma 系统运行时数据（不跟踪）
+# ============================================
+.lingma/cache/
+.lingma/logs/*.log
+.lingma/snapshots/
+.lingma/specs/spec-history/
+
+# 注意：以下 Lingma 文件/目录会被 Git 跟踪：
+# - .lingma/config/
+# - .lingma/rules/
+# - .lingma/skills/
+# - .lingma/agents/
+# - .lingma/docs/
+# - .lingma/reports/
+# - .lingma/scripts/
+# - .lingma/hooks/
+# - .lingma/specs/current-spec.md
+# - .lingma/specs/templates/
+# - .lingma/SYSTEM_ARCHITECTURE.md
