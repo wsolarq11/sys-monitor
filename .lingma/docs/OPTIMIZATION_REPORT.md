@@ -18,7 +18,6 @@
 - automation-policy.md: 11.2KB
 - doc-redundancy-prevention.md: 5.3KB
 - memory-usage.md: 13.9KB
-- spec-session-start.md: 15.8KB
 
 ### SKILLS
 
