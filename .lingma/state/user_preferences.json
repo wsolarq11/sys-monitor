@@ -1,0 +1,10 @@
+{
+  "user_id": "default",
+  "automation_level": "balanced",
+  "risk_threshold": 0.5,
+  "preferred_strategy_overrides": {},
+  "learning_enabled": true,
+  "learning_rate": 0.1,
+  "min_data_points": 10,
+  "last_updated": "2026-04-15T10:19:27.589184"
+}
