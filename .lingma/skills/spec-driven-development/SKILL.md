@@ -575,4 +575,50 @@ mv .lingma/specs/current-spec.md .lingma/specs/spec-history/$(date +%Y-%m-%d)-fe
 
 ---
 
+## 相关文件
+
+本 Skill 包含以下辅助文件，可根据需要查阅：
+
+### 📚 文档
+- **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** (390 lines)
+  - 详细的安装步骤
+  - 配置说明
+  - 故障排除
+  
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** 
+  - 快速开始指南
+  - 常用命令速查
+  - 工作流程图
+  
+- **[examples.md](examples.md)** (545 lines)
+  - 完整的使用示例
+  - 常见场景演示
+  - 最佳实践
+
+### 🛠️ 工具脚本
+- **[scripts/init-spec.sh](scripts/init-spec.sh)**
+  - 初始化 Spec 环境
+  - 创建目录结构
+  - 复制模板文件
+  
+- **[scripts/check-spec-status.py](scripts/check-spec-status.py)**
+  - 检查 Spec 状态
+  - 验证文件完整性
+  - 生成状态报告
+
+### 📝 模板文件
+- **[templates/feature-spec.md](templates/feature-spec.md)**
+  - Feature Spec 模板
+  - 包含完整的元数据和章节
+  - 可直接复制使用
+
+## 使用建议
+
+1. **首次使用**: 阅读 [INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)
+2. **快速上手**: 查看 [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+3. **深入学习**: 研究 [examples.md](examples.md) 中的示例
+4. **日常开发**: 直接使用本 SKILL.md 的工作流程
+
+---
+
 **记住**: Spec 是活的文档，它随着项目演进而演化。保持它的准确性和相关性比严格遵守更重要。
