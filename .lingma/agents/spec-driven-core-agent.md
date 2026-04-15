@@ -19,6 +19,7 @@ tools: Read, Write, Bash, Grep, Glob
 **自主执行**: 基于清晰的 spec 独立执行，减少人工干预  
 **智能澄清**: 仅在需求不明确时才询问用户  
 **透明进度**: 始终展示当前状态和下一步行动  
+**记忆驱动**: 利用 Lingma Memory 学习用户偏好，优化决策  
 
 ## 工作流程
 
@@ -30,15 +31,22 @@ tools: Read, Write, Bash, Grep, Glob
    - 读取 `.lingma/specs/current-spec.md`
    - 提取：状态、进度、待完成任务、需要澄清的问题
    
-2. **评估上下文风险**
+2. **加载用户偏好（Lingma Memory）**
+   - 查询 Lingma Memory 中的全局偏好
+   - 加载工程级记忆（项目特定配置）
+   - 根据记忆调整决策策略
+   - 示例：自动化策略、风险阈值、代码风格
+   
+3. **评估上下文风险**
    - 使用自动化引擎评估当前操作的风险
+   - 结合用户偏好调整风险评估
    - 决定执行策略（auto/snapshot/ask/approve）
    
-3. **分析用户意图**
+4. **分析用户意图**
    - 理解用户第一条消息的意图
    - 关联到当前 spec 上下文
    
-4. **生成综合响应**
+5. **生成综合响应**
    - 显示当前进度
    - 列出待完成任务
    - 提出需要澄清的问题（如有）
@@ -50,6 +58,7 @@ tools: Read, Write, Bash, Grep, Glob
 
 1. **加载相关 Skills**
    - 从 `.lingma/skills/` 加载适用的 skill
+   - 特别关注 `memory-management.md` Skill
    - 应用 skill 定义的工作流程
    
 2. **应用 Rules 约束**
@@ -58,11 +67,14 @@ tools: Read, Write, Bash, Grep, Glob
    
 3. **风险评估与策略选择**
    ```
-   IF 风险 < 0.2 AND 置信度 > 0.8:
+   # 获取用户偏好的风险阈值（从 Memory）
+   user_risk_threshold = get_memory("risk_threshold") or 0.5
+   
+   IF 风险 < user_risk_threshold * 0.4 AND 置信度 > 0.8:
       → auto_execute (直接执行)
-   ELIF 风险 < 0.5:
+   ELIF 风险 < user_risk_threshold:
       → execute_with_snapshot (创建快照后执行)
-   ELIF 风险 < 0.8:
+   ELIF 风险 < user_risk_threshold * 1.6:
       → ask_user (询问用户)
    ELSE:
       → require_explicit_approval (需要明确授权)
@@ -73,7 +85,13 @@ tools: Read, Write, Bash, Grep, Glob
    - 记录操作日志
    - 验证执行结果
    
-5. **更新 Spec**
+5. **学习与记忆更新**
+   - 检测用户是否覆盖了你的决策
+   - 如果覆盖，记录并更新 Memory
+   - 示例："用户选择了不同的策略，更新偏好"
+   - 调用 memory-management Skill 创建/更新记忆
+   
+6. **更新 Spec**
    - 标记任务完成
    - 添加实施笔记
    - 更新进度

@@ -5,7 +5,7 @@
 - **状态**: in-progress
 - **优先级**: P0
 - **负责人**: AI Assistant
-- **进度**: 58.9% (30/50 任务)
+- **进度**: 60.9% (31/50 任务)
 
 ## 背景与目标
 
@@ -432,13 +432,13 @@ interface UserPreferences {
 
 ### Phase 3: 学习系统 (预计: 6h)
 
-- [x] Task-010: 实现上下文管理器 (预计: 2h) ✅ 已完成
-  - ✅ 实现上下文存储（JSON + SQLite）
-  - ✅ 实现上下文查询接口
-  - ✅ 实现上下文更新机制
-  - ✅ 编写单元测试
-  - 文件: `.lingma/scripts/context-manager.py` (548 lines)
-  - 测试结果: 所有功能正常
+- [x] Task-010: 实现上下文管理器 (预计: 2h) ✅ 已完成（改用 Lingma Memory）
+  - ✅ 删除自定义 context-manager.py（冗余实现）
+  - ✅ 创建 memory-management Skill（564 lines）
+  - ✅ 更新 spec-driven-core-agent 集成 Memory
+  - ✅ 创建 memory-usage Rule（499 lines）
+  - 方案：完全依赖 Lingma 原生 Memory 系统
+  - 优势：零维护成本、自动同步、智能推荐
   
 - [ ] Task-011: 实现偏好学习 (预计: 2h)
   - 实现模式识别
@@ -553,6 +553,56 @@ interface UserPreferences {
 - [ ] 更新 CHANGELOG
 
 ## 实施笔记
+
+### 实施笔记 - 2024-01-15 20:00
+
+**完成**: Phase 3 Task-010 - 改用 Lingma Memory（架构修正）
+
+**问题发现**:
+用户指出："不是说用原生能力替代上下文管理吗？"
+
+经过调研，确认 **Lingma 已经提供了原生的记忆系统（Memory）**：
+- 自动记忆：主动学习开发者偏好
+- 主动记忆：通过对话指令创建记忆
+- 记忆管理：查看、删除、更新记忆
+- 作用范围：全局（个人习惯）+ 工程级（项目特定）
+
+**修正行动**:
+1. **删除冗余实现**: `context-manager.py` (548 lines)
+   - 原因：与 Lingma Memory 功能重复
+   - 原则：优先使用原生能力
+
+2. **创建 Memory 集成 Skill**: `memory-management.md` (564 lines)
+   - 教导 Agent 如何使用 Lingma Memory
+   - 包含：创建、查询、更新、删除记忆的操作指南
+   - 提供实际应用场景和最佳实践
+
+3. **更新 Core Agent**: `spec-driven-core-agent.md`
+   - 添加 Memory 加载步骤（会话启动时）
+   - 在风险评估中使用用户偏好的风险阈值
+   - 添加学习与记忆更新步骤（任务完成后）
+
+4. **创建 Memory 使用 Rule**: `memory-usage.md` (499 lines)
+   - 规范何时应该/不应该创建记忆
+   - 定义记忆格式和管理操作
+   - 提供与自动化引擎集成的示例代码
+
+**关键成果**:
+- ✅ 零自定义实现，完全依赖 Lingma 原生能力
+- ✅ 完整的 Memory 管理文档和技能
+- ✅ Agent 已集成 Memory 使用逻辑
+- ✅ 清晰的记忆使用规范
+
+**技术亮点**:
+- **动态风险评估**: 根据用户偏好的风险阈值调整策略
+- **从覆盖中学习**: 检测用户决策覆盖，自动更新偏好
+- **透明化管理**: 创建记忆时告知用户，允许修改
+
+**下一步**: 
+- Task-011: 实现偏好学习（基于 Memory 的模式识别）
+- Task-012: 实现学习效果评估
+
+---
 
 ### 实施笔记 - 2024-01-15 19:30
 
