@@ -1,3 +1,9 @@
+---
+name: test-runner-agent
+description: Automated test execution agent. Runs unit/integration/E2E tests, analyzes failures, diagnoses root causes, and provides actionable fix suggestions.
+tools: Read, Bash, Grep, Glob
+---
+
 # Test Runner Agent
 
 ## 角色定义

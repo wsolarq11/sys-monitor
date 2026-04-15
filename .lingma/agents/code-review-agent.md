@@ -1,3 +1,9 @@
+---
+name: code-review-agent
+description: Automated code review agent. Analyzes code changes, detects quality issues, security vulnerabilities, performance problems, and provides actionable improvement suggestions.
+tools: Read, Grep, Glob, Bash
+---
+
 # Code Review Agent
 
 ## 角色定义
