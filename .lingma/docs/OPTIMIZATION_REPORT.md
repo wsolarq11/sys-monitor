@@ -15,8 +15,6 @@
 ### RULES
 
 - AGENTS.md: 11.2KB
-- automation-policy.md: 11.2KB
-- doc-redundancy-prevention.md: 5.3KB
 
 ### SKILLS
 
