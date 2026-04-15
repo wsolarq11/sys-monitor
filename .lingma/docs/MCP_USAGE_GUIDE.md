@@ -39,7 +39,26 @@ python .lingma/scripts/verify-mcp-setup.py
 核心检查: 3/3 通过
 ```
 
-### 3. 重启 IDE
+### 3. 同步配置到全局（重要！）
+
+Lingma IDE 读取的是**全局配置文件**，而非项目配置。
+
+```bash
+# 同步项目配置到全局
+python .lingma/scripts/sync-mcp-config.py
+```
+
+**这会**:
+- ✅ 将 `.lingma/config/mcp-servers.json` 复制到全局位置
+- ✅ 备份现有全局配置
+- ✅ 使 IDE 立即生效
+
+**全局配置位置**:
+```
+C:\Users\Administrator\AppData\Roaming\Lingma\SharedClientCache\mcp.json
+```
+
+### 4. 重启 IDE
 
 在 VS Code / JetBrains / Lingma IDE 中：
 1. 重新加载窗口（Ctrl+Shift+P → "Reload Window"）
