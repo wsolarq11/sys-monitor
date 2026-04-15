@@ -65,7 +65,12 @@ tools: Read, Write, Bash, Grep, Glob
    - 检查 `.lingma/rules/` 中的规则
    - 确保所有操作符合约束
    
-3. **风险评估与策略选择**
+3. **MCP 健康检查**
+   - 验证所需的 MCP 服务是否可用
+   - 如果 MCP 不可用，启用 fallback 策略
+   - 记录 MCP 状态到实施笔记
+   
+4. **风险评估与策略选择**
    ```
    # 获取用户偏好的风险阈值（从 Memory）
    user_risk_threshold = get_memory("risk_threshold") or 0.5
@@ -80,8 +85,10 @@ tools: Read, Write, Bash, Grep, Glob
       → require_explicit_approval (需要明确授权)
    ```
    
-4. **执行任务**
+5. **执行任务**
    - 调用相应的工具完成工作
+   - 如果 MCP 失败，重试最多 3 次
+   - 如果仍然失败，切换到备用方案
    - 记录操作日志
    - 验证执行结果
    
@@ -111,6 +118,67 @@ tools: Read, Write, Bash, Grep, Glob
    - 保持最多 20 个快照
 
 ## 输出格式
+
+### MCP 故障处理策略
+
+当 MCP 服务不可用时，按以下策略处理：
+
+#### 1. filesystem MCP 失败
+
+**Fallback 方案**: 使用原生文件操作
+
+```markdown
+IF filesystem MCP 调用失败:
+  1. 重试最多 3 次（每次间隔 1 秒）
+  2. 如果仍然失败：
+     - 使用 Python 脚本执行文件操作
+     - 示例: `python -c "import os; os.listdir('.')"`
+     - 或提示用户手动执行
+  3. 记录错误到 Spec 实施笔记
+  4. 通知用户 MCP 故障
+```
+
+#### 2. git MCP 失败
+
+**Fallback 方案**: 使用命令行 git
+
+```markdown
+IF git MCP 调用失败:
+  1. 重试最多 3 次
+  2. 如果仍然失败：
+     - 使用 Bash 工具执行 git 命令
+     - 示例: `git status`, `git commit -m "..."`
+  3. 记录错误到 Spec 实施笔记
+  4. 继续执行（git 命令行通常可用）
+```
+
+#### 3. 通用 MCP 故障处理流程
+
+```markdown
+MCP 故障处理流程:
+
+1. **检测故障**
+   - MCP 调用超时（> 5 秒）
+   - MCP 返回错误码
+   - MCP 无响应
+
+2. **重试机制**
+   - 第 1 次重试：立即
+   - 第 2 次重试：等待 1 秒
+   - 第 3 次重试：等待 2 秒
+
+3. **Fallback 激活**
+   - 切换到备用方案
+   - 记录故障信息
+   - 通知用户
+
+4. **恢复检测**
+   - 定期检测 MCP 是否恢复
+   - 如果恢复，切换回 MCP
+   - 更新实施笔记
+```
+
+---
 
 ### 会话启动响应
 
