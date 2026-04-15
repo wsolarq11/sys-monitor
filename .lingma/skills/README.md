@@ -28,6 +28,34 @@
   - 手动调用 `/memory` 命令
 - **状态**: ✅ Active
 
+### 3. [rust-best-practices.md](rust-best-practices.md) 🦀 Rust 最佳实践
+- **类型**: Domain Skill（领域技能）
+- **能力**:
+  - Rust 内存安全指导
+  - 错误处理规范化
+  - 并发安全模式
+  - 性能优化技巧
+  - Tauri 特定最佳实践
+- **触发方式**: 
+  - 编写 Rust 代码时自动加载
+  - 代码审查时应用
+  - 性能优化建议
+- **状态**: ✅ Active
+
+### 4. [react-performance-optimization.md](react-performance-optimization.md) ⚛️ React 性能优化
+- **类型**: Domain Skill（领域技能）
+- **能力**:
+  - 组件重渲染优化（React.memo/useMemo/useCallback）
+  - 代码分割和懒加载
+  - 数据获取优化（避免瀑布请求）
+  - Bundle 大小优化
+  - Web Vitals 监控
+- **触发方式**: 
+  - 编写 React 代码时自动加载
+  - 性能审查时应用
+  - Bundle 分析时参考
+- **状态**: ✅ Active
+
 ## 🏗️ 架构设计
 
 ### Skills 在自迭代流中的角色
@@ -138,8 +166,8 @@ touch .lingma/skills/new-skill/SKILL.md
 |------|------|------|
 | Workflow Skills | 1 | ✅ Active |
 | Utility Skills | 1 | ✅ Active |
-| Domain Skills | 0 | ⏳ Planned |
-| **总计** | **2** | **✅ Operational** |
+| Domain Skills | 2 | ✅ Active |
+| **总计** | **4** | **✅ Operational** |
 
 ### 完整性指标
 - **文件索引完整性**: 100% ✅
@@ -166,9 +194,9 @@ touch .lingma/skills/new-skill/SKILL.md
 - [ ] Code Review（代码审查）
 - [ ] Documentation Generation（文档生成）
 
-### Phase 3: 领域 Skills（远期）
-- [ ] Rust Best Practices
-- [ ] React Performance Optimization
+### Phase 3: 领域 Skills（已完成 ✅）
+- [x] Rust Best Practices
+- [x] React Performance Optimization
 - [ ] Kubernetes Deployment
 
 ## 📅 更新历史
