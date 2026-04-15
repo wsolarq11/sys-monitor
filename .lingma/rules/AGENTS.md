@@ -1,3 +1,6 @@
+---
+trigger: always_on
+---
 ## 自我演进
 每次从用户回复中意识到：自己上次的实际交付结果与自己上次对话中给用户的回复描述存在不符时，需将最终解决该问题、达成用户预期目标时所确认的根本原因及解决办法记录在 D:\Users\Administrator\Desktop\PowerShell_Script_Repository\FolderSizeMonitor\.lingma\rules\AGENTS.md 本章节末尾（作为一条新规则）。此外，当自己的回复被用户指出错误并纠正后，同样应据此添加新规则，以避免重复犯错。
 

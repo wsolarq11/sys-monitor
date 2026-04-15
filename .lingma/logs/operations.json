@@ -1,0 +1,97 @@
+[
+  {
+    "id": "0a9d91a4",
+    "timestamp": "2026-04-15T16:41:21.887839",
+    "operation": {
+      "type": "create_file",
+      "details": {
+        "file": "test1.txt"
+      }
+    },
+    "result": {
+      "status": "success",
+      "duration_ms": 150
+    },
+    "duration_ms": 150,
+    "session_id": "20260415_164121"
+  },
+  {
+    "id": "4e448a6b",
+    "timestamp": "2026-04-15T16:41:21.890068",
+    "operation": {
+      "type": "modify_file",
+      "details": {
+        "file": "test2.txt"
+      }
+    },
+    "result": {
+      "status": "success",
+      "duration_ms": 200
+    },
+    "duration_ms": 200,
+    "session_id": "20260415_164121"
+  },
+  {
+    "id": "6d19bb90",
+    "timestamp": "2026-04-15T16:41:21.891078",
+    "operation": {
+      "type": "run_tests",
+      "details": {
+        "test_suite": "unit_tests"
+      }
+    },
+    "result": {
+      "status": "success",
+      "duration_ms": 250
+    },
+    "duration_ms": 250,
+    "session_id": "20260415_164121"
+  },
+  {
+    "id": "f94e3483",
+    "timestamp": "2026-04-15T16:56:53.042745",
+    "operation": {
+      "type": "update_spec",
+      "description": "Update spec progress",
+      "parameters": {
+        "updates": {
+          "progress": "40%"
+        }
+      },
+      "details": {
+        "has_clear_intent": true,
+        "is_repetitive_task": true
+      }
+    },
+    "result": {
+      "status": "success",
+      "duration_ms": 2.11,
+      "strategy": "auto_execute"
+    },
+    "duration_ms": 2.11,
+    "session_id": "20260415_165653"
+  },
+  {
+    "id": "aa087283",
+    "timestamp": "2026-04-15T16:56:53.050053",
+    "operation": {
+      "type": "modify_file",
+      "description": "Modify a file",
+      "parameters": {
+        "path": ".lingma/config/test.txt",
+        "content": "Test content"
+      },
+      "details": {
+        "modifies_production_files": true,
+        "has_clear_intent": true
+      }
+    },
+    "result": {
+      "status": "failed",
+      "duration_ms": 0.86,
+      "strategy": "ask_user"
+    },
+    "duration_ms": 0.86,
+    "session_id": "20260415_165653"
+  }
+]

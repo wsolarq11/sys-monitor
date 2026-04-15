@@ -1,0 +1,36 @@
+{
+  "automation_level": "balanced",
+  "enabled": true,
+  "risk_thresholds": {
+    "auto_execute": 0.2,
+    "execute_with_snapshot": 0.5,
+    "ask_user": 0.8
+  },
+  "auto_execute_operations": [
+    "read_file",
+    "create_file",
+    "update_spec",
+    "run_tests"
+  ],
+  "require_confirmation_operations": [
+    "delete_file",
+    "modify_database",
+    "deploy"
+  ],
+  "snapshot_settings": {
+    "auto_create_before_risky_ops": true,
+    "max_snapshots": 20,
+    "cleanup_days": 7
+  },
+  "logging": {
+    "log_decisions": true,
+    "log_operations": true,
+    "log_errors": true,
+    "retention_days": 30
+  },
+  "learning": {
+    "enabled": false,
+    "collect_data": true,
+    "apply_learnings": false
+  }
+}

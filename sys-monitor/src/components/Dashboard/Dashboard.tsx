@@ -3,6 +3,7 @@ import { MemoryMonitor } from '../SystemMonitor/MemoryMonitor';
 import { CPUGraph } from '../SystemMonitor/CPUGraph';
 import { MemoryGraph } from '../SystemMonitor/MemoryGraph';
 import { DiskUsageCard } from '../SystemMonitor/DiskUsageCard';
+import BuildStatusCard from '../BuildStatus/BuildStatusCard';
 
 export function Dashboard() {
   return (
@@ -26,6 +27,16 @@ export function Dashboard() {
 
       <div className="grid grid-cols-1 gap-6">
         <DiskUsageCard />
+      </div>
+
+      {/* 远程构建状态监控 */}
+      <div className="grid grid-cols-1 gap-6 mt-6">
+        <BuildStatusCard 
+          owner={import.meta.env.VITE_GITHUB_OWNER || 'your-username'}
+          repo={import.meta.env.VITE_GITHUB_REPO || 'FolderSizeMonitor'}
+          token={import.meta.env.VITE_GITHUB_TOKEN}
+          refreshInterval={parseInt(import.meta.env.VITE_BUILD_REFRESH_INTERVAL) || 60000}
+        />
       </div>
     </div>
   );
