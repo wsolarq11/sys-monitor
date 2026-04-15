@@ -3,15 +3,15 @@ pub mod commands;
 #[allow(unused_imports)]
 pub mod db;
 #[allow(unused_imports)]
-pub mod models;
-#[allow(unused_imports)]
 pub mod error;
 #[allow(unused_imports)]
-pub mod utils;
+pub mod error_handling;
 #[allow(unused_imports)]
 pub mod logger;
 #[allow(unused_imports)]
-pub mod error_handling;
+pub mod models;
+#[allow(unused_imports)]
+pub mod utils;
 #[allow(unused_imports)]
 pub mod services {
     pub mod file_watcher_service;
@@ -20,13 +20,19 @@ pub mod services {
 use std::env;
 use std::sync::Arc;
 
-use tauri::Manager;
-use commands::system::{get_system_metrics, get_cpu_info, get_memory_info, get_disk_info, get_network_info};
 use commands::database::get_db_path;
-use commands::folder::{scan_folder, get_folder_scans, get_folder_items, get_file_type_stats, delete_folder_scan, select_folder, add_watched_folder, remove_watched_folder, list_watched_folders, toggle_watched_folder_active};
-use services::file_watcher_service::FileWatcherService;
-use error_handling::ErrorHandler;
+use commands::folder::{
+    add_watched_folder, delete_folder_scan, get_file_type_stats, get_folder_items,
+    get_folder_scans, list_watched_folders, remove_watched_folder, scan_folder, select_folder,
+    toggle_watched_folder_active,
+};
+use commands::system::{
+    get_cpu_info, get_disk_info, get_memory_info, get_network_info, get_system_metrics,
+};
 use error::ErrorMonitor;
+use error_handling::ErrorHandler;
+use services::file_watcher_service::FileWatcherService;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -35,8 +41,14 @@ pub fn run() {
         env::var("SENTRY_DSN").unwrap_or_else(|_| "".to_string()),
         sentry::ClientOptions {
             release: sentry::release_name!(),
-            environment: Some(env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| "development".to_string()).into()),
-            debug: env::var("SENTRY_DEBUG").map(|v| v == "true").unwrap_or(false),
+            environment: Some(
+                env::var("SENTRY_ENVIRONMENT")
+                    .unwrap_or_else(|_| "development".to_string())
+                    .into(),
+            ),
+            debug: env::var("SENTRY_DEBUG")
+                .map(|v| v == "true")
+                .unwrap_or(false),
             ..Default::default()
         },
     ));
@@ -53,13 +65,13 @@ pub fn run() {
     if let Err(e) = logger::init_logger() {
         ErrorHandler::handle_error(&e, "初始化日志系统");
     }
-    
+
     logger::log_info("SysMonitor 应用程序启动");
     sentry::capture_message("SysMonitor 应用程序启动", sentry::Level::Info);
-    
+
     // 记录启动统计
     ErrorHandler::track_error_metrics("app_start", "info");
-    
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
@@ -68,23 +80,23 @@ pub fn run() {
             // 初始化文件监听服务
             let (watcher_service, event_rx) = FileWatcherService::new(app.handle().clone());
             let watcher_arc = Arc::new(watcher_service);
-            
+
             // 管理状态
             app.manage(watcher_arc.clone());
-            
+
             // 启动事件处理循环(5秒防抖聚合)
             let watcher_for_spawn = watcher_arc.clone();
             tokio::spawn(async move {
                 watcher_for_spawn.start_event_processor(event_rx, 5).await;
             });
-            
+
             // 异步初始化: 从数据库加载所有活跃的监控文件夹并启动监听
             let watcher_for_init = watcher_arc.clone();
             let app_handle = app.handle().clone();
             tokio::spawn(async move {
                 initialize_watched_folders(watcher_for_init, app_handle).await;
             });
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -128,7 +140,10 @@ async fn initialize_watched_folders(
     let repo = match DatabaseRepository::new(&db_path) {
         Ok(repo) => repo,
         Err(e) => {
-            logger::log_error(&format!("初始化文件监听: 无法打开数据库 ({}): {}", db_path, e));
+            logger::log_error(&format!(
+                "初始化文件监听: 无法打开数据库 ({}): {}",
+                db_path, e
+            ));
             return;
         }
     };

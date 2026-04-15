@@ -11,20 +11,25 @@ pub fn get_extension(path: &str) -> Option<String> {
 /// Get file type category from extension
 pub fn get_file_type_category(extension: &str) -> String {
     let ext = extension.to_lowercase();
-    
+
     match ext.as_str() {
         // Images
-        "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "webp" | "ico" | "tiff" | "tif" => "Images",
+        "jpg" | "jpeg" | "png" | "gif" | "bmp" | "svg" | "webp" | "ico" | "tiff" | "tif" => {
+            "Images"
+        }
         // Videos
         "mp4" | "avi" | "mkv" | "mov" | "wmv" | "flv" | "webm" | "m4v" | "mpg" | "mpeg" => "Videos",
         // Audio
         "mp3" | "wav" | "flac" | "aac" | "ogg" | "oga" | "m4a" | "wma" | "aiff" | "alac" => "Audio",
         // Documents
-        "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" | "txt" | "rtf" | "odt" | "ods" | "odp" => "Documents",
+        "pdf" | "doc" | "docx" | "xls" | "xlsx" | "ppt" | "pptx" | "txt" | "rtf" | "odt"
+        | "ods" | "odp" => "Documents",
         // Archives
         "zip" | "rar" | "7z" | "tar" | "gz" | "bz2" | "xz" | "lz" | "lzma" | "zst" => "Archives",
         // Code
-        "rs" | "js" | "ts" | "py" | "java" | "cpp" | "h" | "c" | "cs" | "go" | "rb" | "php" | "swift" | "kt" | "scala" | "sql" | "html" | "css" | "json" | "xml" | "yaml" | "yml" | "md" | "csv" => "Code",
+        "rs" | "js" | "ts" | "py" | "java" | "cpp" | "h" | "c" | "cs" | "go" | "rb" | "php"
+        | "swift" | "kt" | "scala" | "sql" | "html" | "css" | "json" | "xml" | "yaml" | "yml"
+        | "md" | "csv" => "Code",
         // Shell scripts (special case - handled separately)
         "sh" | "bash" | "zsh" => "Scripts",
         // Fonts
@@ -37,7 +42,8 @@ pub fn get_file_type_category(extension: &str) -> String {
         "exe" | "msi" | "bat" | "cmd" | "app" | "deb" | "rpm" => "Executables",
         // Other
         _ => "Other",
-    }.to_string()
+    }
+    .to_string()
 }
 
 /// Classify a file by its extension

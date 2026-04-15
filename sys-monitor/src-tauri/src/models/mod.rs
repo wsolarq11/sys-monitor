@@ -1,7 +1,7 @@
-pub mod metrics;
 pub mod config;
 pub mod folder;
+pub mod metrics;
 
-pub use metrics::{SystemMetric, CpuCoreMetric, DiskMetric, NetworkMetric};
-pub use config::{AppConfig, AlertThresholds};
-pub use folder::{FolderScan, FolderItem, FileTypeStat};
+pub use config::{AlertThresholds, AppConfig};
+pub use folder::{FileTypeStat, FolderItem, FolderScan};
+pub use metrics::{CpuCoreMetric, DiskMetric, NetworkMetric, SystemMetric};

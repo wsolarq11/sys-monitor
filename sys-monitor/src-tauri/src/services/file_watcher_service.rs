@@ -261,7 +261,7 @@ impl FileWatcherService {
         }
         
         let summary = messages.join(", ");
-        let detail = if sample_files.len() > 0 {
+        let detail = if !sample_files.is_empty() {
             format!("\n示例: {}", sample_files.join("\n"))
         } else {
             String::new()
@@ -424,4 +424,18 @@ impl FileWatcherService {
         let mut watchers = self.watchers.write().await;
         watchers.clear();
     }
+}
+}
+    pub async fn get_watching_folders(&self) -> Vec<i64> {
+        let watchers = self.watchers.read().await;
+        watchers.keys().cloned().collect()
+    }
+
+    /// 停止所有监听
+    pub async fn stop_all(&self) {
+        let mut watchers = self.watchers.write().await;
+        watchers.clear();
+    }
+}
+}
 }

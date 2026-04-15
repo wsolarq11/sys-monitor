@@ -1,15 +1,15 @@
-use sysinfo::{System, Disks, Networks, CpuRefreshKind, RefreshKind};
-use tauri::command;
-use crate::models::metrics::SystemMetric;
 use crate::error::AppError;
-use std::sync::Mutex;
+use crate::models::metrics::SystemMetric;
 use std::sync::LazyLock;
+use std::sync::Mutex;
+use sysinfo::{CpuRefreshKind, Disks, Networks, RefreshKind, System};
+use tauri::command;
 
 static SYSTEM: LazyLock<Mutex<System>> = LazyLock::new(|| {
     Mutex::new(System::new_with_specifics(
         RefreshKind::new()
             .with_cpu(CpuRefreshKind::everything())
-            .with_memory(sysinfo::MemoryRefreshKind::everything())
+            .with_memory(sysinfo::MemoryRefreshKind::everything()),
     ))
 });
 
@@ -59,7 +59,7 @@ fn get_global_disk_total(disks: &Disks) -> f64 {
 pub fn get_system_metrics() -> Result<SystemMetric, AppError> {
     let mut sys = get_system();
     sys.refresh_all();
-    
+
     let disks = Disks::new_with_refreshed_list();
     let metric = SystemMetric {
         id: None,
@@ -70,23 +70,26 @@ pub fn get_system_metrics() -> Result<SystemMetric, AppError> {
         disk_usage: Some(get_global_disk_usage(&disks)),
         disk_total: Some(get_global_disk_total(&disks)),
     };
-    
+
     Ok(metric)
 }
 
 #[command]
 pub fn get_cpu_info() -> Result<serde_json::Value, AppError> {
     let sys = get_system();
-    
-    let cpus: Vec<serde_json::Value> = sys.cpus()
+
+    let cpus: Vec<serde_json::Value> = sys
+        .cpus()
         .iter()
-        .map(|cpu| serde_json::json!({
-            "name": cpu.brand(),
-            "usage": cpu.cpu_usage(),
-            "frequency": cpu.frequency()
-        }))
+        .map(|cpu| {
+            serde_json::json!({
+                "name": cpu.brand(),
+                "usage": cpu.cpu_usage(),
+                "frequency": cpu.frequency()
+            })
+        })
         .collect();
-    
+
     Ok(serde_json::json!({
         "cpu_count": cpus.len(),
         "cpus": cpus
@@ -96,7 +99,7 @@ pub fn get_cpu_info() -> Result<serde_json::Value, AppError> {
 #[command]
 pub fn get_memory_info() -> Result<serde_json::Value, AppError> {
     let sys = get_system();
-    
+
     Ok(serde_json::json!({
         "total": sys.total_memory(),
         "available": sys.available_memory(),
@@ -108,7 +111,7 @@ pub fn get_memory_info() -> Result<serde_json::Value, AppError> {
 #[command]
 pub fn get_disk_info() -> Result<serde_json::Value, AppError> {
     let disks = Disks::new_with_refreshed_list();
-    
+
     let disks_json: Vec<serde_json::Value> = disks
         .iter()
         .map(|disk: &sysinfo::Disk| {
@@ -125,7 +128,7 @@ pub fn get_disk_info() -> Result<serde_json::Value, AppError> {
             })
         })
         .collect();
-    
+
     Ok(serde_json::json!({
         "disk_count": disks_json.len(),
         "disks": disks_json
@@ -135,7 +138,7 @@ pub fn get_disk_info() -> Result<serde_json::Value, AppError> {
 #[command]
 pub fn get_network_info() -> Result<serde_json::Value, AppError> {
     let networks = Networks::new_with_refreshed_list();
-    
+
     let interfaces: Vec<serde_json::Value> = networks
         .list()
         .iter()
@@ -147,7 +150,7 @@ pub fn get_network_info() -> Result<serde_json::Value, AppError> {
             })
         })
         .collect();
-    
+
     Ok(serde_json::json!({
         "interface_count": interfaces.len(),
         "interfaces": interfaces

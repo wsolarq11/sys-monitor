@@ -20,7 +20,7 @@ pub struct FolderItem {
     pub path: String,
     pub name: String,
     pub size: u64,
-    pub item_type: String,  // 'file' or 'folder'
+    pub item_type: String, // 'file' or 'folder'
     pub extension: Option<String>,
     pub parent_path: Option<String>,
 }

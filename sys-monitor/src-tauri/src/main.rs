@@ -9,6 +9,6 @@ fn main() {
     unsafe {
         FreeConsole();
     }
-    
+
     sys_monitor_lib::run();
 }

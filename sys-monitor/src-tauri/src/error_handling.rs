@@ -1,7 +1,7 @@
-use std::fmt;
-use std::error::Error;
-use serde::{Serialize, Deserialize};
 use crate::error::AppError;
+use serde::{Deserialize, Serialize};
+use std::error::Error;
+use std::fmt;
 
 /// 错误处理工具
 pub struct ErrorHandler;
@@ -10,13 +10,13 @@ impl ErrorHandler {
     /// 处理错误并记录到 Sentry
     pub fn handle_error(error: &dyn Error, context: &str) {
         let error_message = format!("{}: {}", context, error);
-        
+
         // 记录到日志
         crate::logger::log_error(&error_message);
-        
+
         // 发送到 Sentry
         sentry::capture_message(&error_message, sentry::Level::Error);
-        
+
         // 设置错误上下文
         sentry::configure_scope(|scope| {
             scope.set_tag("error_type", "backend_error");
@@ -24,24 +24,24 @@ impl ErrorHandler {
             scope.set_extra("error_message", error.to_string().into());
         });
     }
-    
+
     /// 处理 panic 并记录到 Sentry
     pub fn handle_panic(info: &std::panic::PanicHookInfo) {
         let panic_message = format!("Panic occurred: {}", info);
-        
+
         // 记录到日志
         crate::logger::log_error(&panic_message);
-        
+
         // 发送到 Sentry
         sentry::capture_message(&panic_message, sentry::Level::Fatal);
-        
+
         // 设置 panic 上下文
         sentry::configure_scope(|scope| {
             scope.set_tag("error_type", "panic");
             scope.set_extra("panic_info", info.to_string().into());
         });
     }
-    
+
     /// 优雅的错误恢复
     pub fn graceful_recovery(error: &(dyn Error + 'static)) -> Result<(), AppError> {
         // 尝试转换为 AppError
@@ -63,7 +63,7 @@ impl ErrorHandler {
             Err(AppError::unknown(error.to_string()))
         }
     }
-    
+
     /// 释放资源
     fn release_resources() {
         // 清理临时文件
@@ -77,16 +77,19 @@ impl ErrorHandler {
             }
         }
     }
-    
+
     /// 错误统计
     pub fn track_error_metrics(error_type: &str, severity: &str) {
         sentry::configure_scope(|scope| {
             scope.set_tag("error_type", error_type);
             scope.set_tag("severity", severity);
         });
-        
+
         // 记录错误指标
-        sentry::capture_message(&format!("Error metric: {} - {}", error_type, severity), sentry::Level::Info);
+        sentry::capture_message(
+            &format!("Error metric: {} - {}", error_type, severity),
+            sentry::Level::Info,
+        );
     }
 }
 

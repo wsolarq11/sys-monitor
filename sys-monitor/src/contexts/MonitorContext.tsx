@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useRef, useState, useEffect, useCallback, ReactNode } from 'react';
 import { ResourceMonitor, getResourceMonitor, type ResourceMetrics } from '../utils/resourceMonitor';
 import { MLAnomalyDetector, getAnomalyDetector, type AnomalyDetectionResult } from '../utils/mlAnomalyDetector';
 import { ChaosManager, getChaosManager, type ChaosTestResult } from '../utils/chaosManager';
@@ -29,6 +29,7 @@ export function MonitorProvider({ children, syncInterval = 30000 }: MonitorProvi
   const resourceMonitorRef = useRef<ResourceMonitor | null>(null);
   const anomalyDetectorRef = useRef<MLAnomalyDetector | null>(null);
   const chaosManagerRef = useRef<ChaosManager | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   // Zustand store
   const setCurrentMetrics = useMetricsStore(state => state.setCurrentMetrics);
@@ -40,6 +41,7 @@ export function MonitorProvider({ children, syncInterval = 30000 }: MonitorProvi
     resourceMonitorRef.current = getResourceMonitor();
     anomalyDetectorRef.current = getAnomalyDetector();
     chaosManagerRef.current = getChaosManager();
+    setIsReady(true);
 
     // 启动机器学习模型训练
     anomalyDetectorRef.current.trainModel().catch(error => {
@@ -133,6 +135,10 @@ export function MonitorProvider({ children, syncInterval = 30000 }: MonitorProvi
   }, []);
 
   // Context 值
+  if (!isReady) {
+    return null; // 等待初始化完成后再渲染子组件
+  }
+
   const contextValue: MonitorContextType = {
     resourceMonitor: resourceMonitorRef.current!,
     anomalyDetector: anomalyDetectorRef.current!,

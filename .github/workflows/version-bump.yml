@@ -1,0 +1,118 @@
+name: Version Bump & Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: '版本类型'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: 'patch'
+      custom_version:
+        description: '自定义版本号 (可选,留空则自动计算)'
+        required: false
+        type: string
+      prerelease:
+        description: '是否为预发布版本'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  version-bump:
+    name: Bump Version and Create Tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      - name: Get current version
+        id: current_version
+        run: |
+          # 从 Cargo.toml 读取当前版本
+          CURRENT_VERSION=$(grep '^version = ' sys-monitor/src-tauri/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "当前版本: $CURRENT_VERSION"
+
+      - name: Calculate new version
+        id: new_version
+        run: |
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            NEW_VERSION="${{ github.event.inputs.custom_version }}"
+            # 移除可能的 v 前缀
+            NEW_VERSION=${NEW_VERSION#v}
+          else
+            CURRENT="${{ steps.current_version.outputs.current }}"
+            TYPE="${{ github.event.inputs.version_type }}"
+
+            # 解析版本号
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+            case $TYPE in
+              major)
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+                ;;
+              patch)
+                NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+                ;;
+            esac
+          fi
+
+          if [ "${{ github.event.inputs.prerelease }}" = "true" ]; then
+            NEW_VERSION="${NEW_VERSION}-alpha.1"
+          fi
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "新版本: $NEW_VERSION"
+
+      - name: Update Cargo.toml
+        run: |
+          NEW_VER="${{ steps.new_version.outputs.version }}"
+          sed -i "s/^version = \".*\"/version = \"$NEW_VER\"/" sys-monitor/src-tauri/Cargo.toml
+          echo "已更新 Cargo.toml 版本为: $NEW_VER"
+
+      - name: Update package.json (if exists)
+        run: |
+          if [ -f "sys-monitor/package.json" ]; then
+            NEW_VER="${{ steps.new_version.outputs.version }}"
+            cd sys-monitor
+            npm version "$NEW_VER" --no-git-tag-version || true
+            echo "已更新 package.json 版本为: $NEW_VER"
+          fi
+
+      - name: Commit and tag
+        run: |
+          NEW_VER="v${{ steps.new_version.outputs.version }}"
+          git add sys-monitor/src-tauri/Cargo.toml sys-monitor/package.json 2>/dev/null || true
+          git commit -m "chore: bump version to $NEW_VER" || echo "No changes to commit"
+          git tag -a "$NEW_VER" -m "Release $NEW_VER"
+          git push origin main
+          git push origin "$NEW_VER"
+          echo "✅ 已创建标签: $NEW_VER"
+
+      - name: Display version info
+        run: |
+          echo "## 版本更新完成" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 原版本: ${{ steps.current_version.outputs.current }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 新版本: v${{ steps.new_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- 类型: ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 发布工作流已自动触发!" >> $GITHUB_STEP_SUMMARY
