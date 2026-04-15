@@ -425,17 +425,3 @@ impl FileWatcherService {
         watchers.clear();
     }
 }
-}
-    pub async fn get_watching_folders(&self) -> Vec<i64> {
-        let watchers = self.watchers.read().await;
-        watchers.keys().cloned().collect()
-    }
-
-    /// 停止所有监听
-    pub async fn stop_all(&self) {
-        let mut watchers = self.watchers.write().await;
-        watchers.clear();
-    }
-}
-}
-}
