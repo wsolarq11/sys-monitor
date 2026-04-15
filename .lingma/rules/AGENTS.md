@@ -66,6 +66,24 @@ trigger: always_on
 - ✅ CI/CD 每周扫描冗余
 - ✅ 创建任何新目录前先检查是否已存在类似目录
 
+### 2026-04-15: 双docs目录冗余教训
+**问题**: 同时存在 `docs/` (项目根目录) 和 `.lingma/docs/`，造成混淆
+**根源**: 
+- 创建了 `docs/architecture/agent-system/` 等.lingma系统文档
+- 应该在 `.lingma/docs/architecture/` 中
+- 违反了目录职责分离原则
+
+**解决**: 
+1. ✅ 删除 `docs/` (仅包含空占位文件)
+2. ✅ 保留 `.lingma/docs/` (完整的.lingma文档)
+3. ✅ 明确职责：项目根目录docs/用于应用代码，.lingma/docs/用于AI系统
+
+**核心教训**: **"项目根目录docs/存放应用代码文档(sys-monitor/)，.lingma/docs/存放.lingma系统文档，绝不混用"**
+
+**永久保障**:
+- ✅ full_system_scan.py 检测双docs目录
+- ✅ 创建目录时明确归属
+
 ---
 
 ## Rules 优先级
