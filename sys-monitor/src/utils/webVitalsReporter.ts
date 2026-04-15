@@ -99,6 +99,9 @@ function sendToAnalytics(metric: WebVitalsMetric) {
   //     url: window.location.href,
   //   }),
   // }).catch(console.error);
+  
+  // 预留扩展点，避免未使用变量警告
+  void metric;
 }
 
 /**

@@ -3,7 +3,7 @@ import { GitHubBuildMonitor } from './githubBuildMonitor';
 
 // Mock fetch
 const mockFetch = vi.fn();
-(global as any).fetch = mockFetch;
+(globalThis as any).fetch = mockFetch;
 
 describe('GitHubBuildMonitor', () => {
   let monitor: GitHubBuildMonitor;

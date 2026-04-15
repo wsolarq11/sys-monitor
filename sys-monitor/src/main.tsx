@@ -40,9 +40,10 @@ const reportWebVitalsCallback = (metric: any) => {
     }
   });
   
-  // 记录到性能收集器
-  if (window.__METRICS_COLLECTOR__) {
-    window.__METRICS_COLLECTOR__.recordMetric(metric.name, metric.value);
+  // 记录到性能收集器（如果存在）
+  const metricsCollector = (window as any).__METRICS_COLLECTOR__;
+  if (metricsCollector && typeof metricsCollector.recordMetric === 'function') {
+    metricsCollector.recordMetric(metric.name, metric.value);
   }
 };
 
