@@ -39,92 +39,30 @@ trigger: always_on
 
 *AGENTS.md作为核心Rule允许≤5KB
 
-### 2026-04-15: .lingma目录结构冗余教训
-**问题**: .lingma/ 根目录存在多个冗余子目录和文件，违反单一入口原则
-**根源**: 
-- 创建了 .lingma/reports/ (36个报告) 而非使用 .lingma/docs/reports/
-- 创建了 .lingma/scripts/ (6个脚本) 而非使用项目根目录 scripts/
-- 创建了 .lingma/hooks/ (冗余pre-commit) 而非仅使用 .git/hooks/
-- .lingma/ 根目录放置 MISSION_STATEMENT.md
-- .lingma/skills/ 根目录放置3个.md文件而非子目录结构
-- skills子目录包含额外文档(INSTALLATION_GUIDE.md等)
+### 2026-04-15: .lingma目录结构冗余
+**问题**: .lingma/存在.reports/.scripts/.hooks等冗余目录
+**解决**: reports→docs/reports, scripts→项目根scripts, hooks删除, MISSION_STATEMENT→docs/guides
+**教训**: ".lingma/仅保留agents/rules/skills/config，文档移docs/，脚本移scripts/"
+**保障**: full_system_scan.py检测 + Git Hook拦截 + CI/CD周扫描
 
-**解决**: 
-1. ✅ .lingma/reports/ → .lingma/docs/reports/archive/
-2. ✅ .lingma/scripts/ → scripts/
-3. ✅ .lingma/hooks/ → 删除（Git Hook仅在.git/hooks/生效）
-4. ✅ .lingma/MISSION_STATEMENT.md → .lingma/docs/guides/
-5. ✅ .lingma/backups/README.md → .lingma/docs/reports/archive/
-6. ✅ .lingma/skills/*.md → .lingma/docs/skills/
-7. ✅ skills子目录额外文档 → docs/skills/
+### 2026-04-15: 双docs目录
+**问题**: docs/和.lingma/docs/同时存在
+**解决**: 删除docs/(空占位)，保留.lingma/docs/
+**教训**: "项目根docs/存应用文档(sys-monitor/)，.lingma/docs/存AI系统文档，绝不混用"
+**保障**: full_system_scan.py检测双docs
 
-**核心教训**: **".lingma/ 仅保留核心组件(agents/rules/skills/config)，所有文档移至docs/，所有脚本移至scripts/"**
+### 2026-04-15: scripts临时脚本
+**问题**: urgent_fix_*.py等临时脚本未删除，verify-setup.sh重复
+**解决**: 删除3个临时/重复脚本，保留9个核心工具
+**教训**: "scripts/仅保留可复用工具，临时脚本用完即删，避免多版本"
+**保障**: 创建时标记类型 + 任务完成立即清理 + 定期审查
 
-**永久保障**:
-- ✅ full_system_scan.py 自动检测.lingma/目录结构
-- ✅ Git Hook 阻止不规范的文件放置
-- ✅ CI/CD 每周扫描冗余
-- ✅ 创建任何新目录前先检查是否已存在类似目录
-
-### 2026-04-15: 双docs目录冗余教训
-**问题**: 同时存在 `docs/` (项目根目录) 和 `.lingma/docs/`，造成混淆
-**根源**: 
-- 创建了 `docs/architecture/agent-system/` 等.lingma系统文档
-- 应该在 `.lingma/docs/architecture/` 中
-- 违反了目录职责分离原则
-
-**解决**: 
-1. ✅ 删除 `docs/` (仅包含空占位文件)
-2. ✅ 保留 `.lingma/docs/` (完整的.lingma文档)
-3. ✅ 明确职责：项目根目录docs/用于应用代码，.lingma/docs/用于AI系统
-
-**核心教训**: **"项目根目录docs/存放应用代码文档(sys-monitor/)，.lingma/docs/存放.lingma系统文档，绝不混用"**
-
-**永久保障**:
-- ✅ full_system_scan.py 检测双docs目录
-- ✅ 创建目录时明确归属
-
-### 2026-04-15: scripts目录临时脚本冗余教训
-**问题**: scripts/ 目录包含多个一次性临时脚本，造成混乱
-**根源**: 
-- 创建了 urgent_fix_rules.py、final_fix_all.py 等临时脚本
-- 任务完成后未删除
-- verify-setup.sh 和 verify-setup.py 功能重复
-
-**解决**: 
-1. ✅ 删除 urgent_fix_rules.py (临时脚本)
-2. ✅ 删除 final_fix_all.py (临时脚本)
-3. ✅ 删除 verify-setup.sh (与Python版本重复)
-4. ✅ 保留9个核心可复用脚本
-
-**核心教训**: **"scripts/ 仅保留可复用的工具脚本，一次性临时脚本用完即删，避免同一功能的多个版本"**
-
-**永久保障**:
-- ✅ 创建脚本时明确是否为临时脚本
-- ✅ 任务完成后立即清理临时脚本
-- ✅ 定期审查scripts/目录，删除过时脚本
-
-### 2026-04-15: 项目根目录临时文件冗余教训（严重！）
-**问题**: 项目根目录出现4个临时文件：0, 3KB, 5KB, 10KB
-**根源**: 
-- 检查组件大小时创建了这些临时文件
-- 任务完成后**忘记删除**
-- 违反了"临时文件用完即删"原则
-- **这是典型的"马后炮"问题：知道规则但不执行**
-
-**解决**: 
-1. ✅ 立即删除所有4个临时文件
-2. ✅ 检查项目根目录，确保无其他临时文件
-3. ✅ 强化Git Hook，检测根目录临时文件
-
-**核心教训**: **"任何临时文件（包括数字、大小标记等）必须用完即删，绝不得留在项目根目录或任何目录中"**
-
-**永久保障**:
-- ✅ Git Hook 检测根目录临时文件（数字、大小标记等）
-- ✅ full_system_scan.py 扫描所有目录的临时文件
-- ✅ 创建临时文件时必须设置自动删除机制
-- ✅ 每次任务完成后立即清理所有临时文件
-- ✅ **不再依赖记忆，依赖系统自动检测和清理**
+### 2026-04-15: 根目录临时文件(严重!)
+**问题**: 0,3KB,5KB,10KB临时文件残留
+**根源**: 检查组件大小时创建，忘记删除，典型马后炮
+**解决**: 删除4个文件 + Git Hook增强检测
+**教训**: "任何临时文件(数字/大小标记等)必须用完即删"
+**保障**: Git Hook检测数字/大小标记/temp_等 + full_system_scan.py扫描 + 自动删除机制
 
 ---
 
