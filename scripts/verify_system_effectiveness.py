@@ -122,6 +122,11 @@ class SystemVerifier:
             agent_count += 1
             content = agent_file.read_text(encoding='utf-8')
             
+            # 检查文件大小（防止臃肿）
+            file_size_kb = len(content.encode('utf-8')) / 1024
+            if file_size_kb > 5:
+                self.warnings.append(f"⚠️ {agent_file.name} 过大 ({file_size_kb:.1f}KB > 5KB)，建议精简")
+            
             # 检查是否有 frontmatter
             if not content.startswith('---'):
                 self.issues.append(f"❌ {agent_file.name}: 缺少 frontmatter (---)")
