@@ -42,7 +42,7 @@ for subdir in ['agents', 'rules', 'skills']:
         if readme_files:
             print(f'   ❌ .lingma/{subdir}/ 有 README.md（违反规范）')
 
-# 4. 检查根目录是否有临时文件
+# 4. 🔥 硬扫描：检查所有目录的临时文件
 print('\n🏠 检查项目根目录...')
 root_dir = Path('.')
 temp_patterns = ['*.log', '*.tmp', '*.bak']
@@ -50,10 +50,20 @@ temp_files = []
 for pattern in temp_patterns:
     temp_files.extend(root_dir.glob(pattern))
 
+# 🔥 新增：检测数字、大小标记等临时文件
+import re
+temp_name_pattern = re.compile(r'^\d+$|^\d+KB$|^\d+MB$|^\d+GB$|^temp_|^tmp_|^test_|^debug_|^check_|^verify_')
+for item in root_dir.iterdir():
+    if item.is_file() and temp_name_pattern.match(item.name):
+        temp_files.append(item)
+
 if temp_files:
-    print(f'   ❌ 发现 {len(temp_files)} 个临时文件')
-    for f in temp_files:
+    print(f'   ❌ 检测到 {len(temp_files)} 个临时文件:')
+    for f in sorted(temp_files):
         print(f'      - {f.name}')
+    print(f'   💡 临时文件必须用完即删！')
+else:
+    print(f'   ✅ 无临时文件')
 
 print('\n' + '='*70)
 print('✅ 全盘扫描完成')
