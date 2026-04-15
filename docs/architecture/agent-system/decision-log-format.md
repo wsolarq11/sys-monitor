@@ -1,3 +1,0 @@
-# Decision Log Format
-
-详细内容待补充...

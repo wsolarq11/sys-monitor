@@ -1,3 +1,0 @@
-# Spec Workflow Details
-
-详细内容待补充...

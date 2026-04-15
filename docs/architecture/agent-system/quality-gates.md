@@ -1,3 +1,0 @@
-# Quality Gates
-
-详细内容待补充...
