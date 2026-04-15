@@ -48,6 +48,23 @@
 - **权限级别**: Low（仅读取代码、生成报告、不可修改代码）
 - **状态**: ✅ Active
 
+### 4. [documentation-agent.md](documentation-agent.md) 📚 文档生成 Agent
+- **类型**: Specialized Agent（专业代理）
+- **能力**:
+  - 自动分析项目结构和代码
+  - 生成/更新 README.md
+  - 基于 Git 历史生成 CHANGELOG.md
+  - 提取 API 接口生成 API 文档
+  - 维护技术手册和开发者指南
+  - 确保文档与代码一致性
+- **触发方式**: 
+  - 项目初始化时
+  - 版本发布前
+  - API 变更后
+  - 定期文档质量审计
+- **权限级别**: Medium（可读写文档文件、不可修改业务代码）
+- **状态**: ✅ Active
+
 ## 🏗️ 架构设计
 
 ### Agent 层级
@@ -141,9 +158,9 @@ touch .lingma/agents/new-agent-name.md
 | 类型 | 数量 | 状态 |
 |------|------|------|
 | Core Agents | 1 | ✅ Active |
-| Specialized Agents | 2 | ✅ Active |
+| Specialized Agents | 3 | ✅ Active |
 | Task-Specific Agents | 0 | ⏳ On-demand |
-| **总计** | **3** | **✅ Operational** |
+| **总计** | **4** | **✅ Operational** |
 
 ## 🔗 相关资源
 
@@ -160,7 +177,7 @@ touch .lingma/agents/new-agent-name.md
 ### Phase 2: 专业 Agent（已完成 ✅）
 - [x] Test Runner Agent（自动化测试执行）
 - [x] Code Review Agent（代码审查）
-- [ ] Documentation Agent（文档生成）
+- [x] Documentation Agent（文档生成）
 
 ### Phase 3: 协作 Agent（远期）
 - [ ] Multi-Agent Orchestration（多 Agent 协调）
