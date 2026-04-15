@@ -18,6 +18,36 @@
 - **权限级别**: High（可修改代码、运行测试、提交 Git）
 - **状态**: ✅ Active
 
+### 2. [test-runner-agent.md](test-runner-agent.md) 🧪 测试执行 Agent
+- **类型**: Specialized Agent（专业代理）
+- **能力**:
+  - 自动执行单元测试、集成测试、E2E 测试
+  - 分析测试结果并分类失败原因
+  - 提供可执行的修复建议
+  - 生成详细的测试报告
+  - 维护测试基线和回归检测
+- **触发方式**: 
+  - 用户请求运行测试
+  - CI/CD 流水线触发
+  - 代码变更后自动执行
+- **权限级别**: Medium（可运行测试、读取日志、不可修改业务代码）
+- **状态**: ✅ Active
+
+### 3. [code-review-agent.md](code-review-agent.md) 🔍 代码审查 Agent
+- **类型**: Specialized Agent（专业代理）
+- **能力**:
+  - 自动审查 Pull Request / 代码变更
+  - 检测代码质量问题（bug、安全漏洞、性能问题）
+  - 检查编码规范和最佳实践
+  - 提供可操作的改进建议
+  - 生成结构化的审查报告
+- **触发方式**: 
+  - PR 创建时自动触发
+  - 用户手动请求审查
+  - 定期代码质量扫描
+- **权限级别**: Low（仅读取代码、生成报告、不可修改代码）
+- **状态**: ✅ Active
+
 ## 🏗️ 架构设计
 
 ### Agent 层级
@@ -111,9 +141,9 @@ touch .lingma/agents/new-agent-name.md
 | 类型 | 数量 | 状态 |
 |------|------|------|
 | Core Agents | 1 | ✅ Active |
-| Specialized Agents | 0 | ⏳ Planned |
+| Specialized Agents | 2 | ✅ Active |
 | Task-Specific Agents | 0 | ⏳ On-demand |
-| **总计** | **1** | **✅ Operational** |
+| **总计** | **3** | **✅ Operational** |
 
 ## 🔗 相关资源
 
@@ -127,9 +157,9 @@ touch .lingma/agents/new-agent-name.md
 ### Phase 1: 基础 Agent（已完成）
 - [x] Spec-Driven Core Agent
 
-### Phase 2: 专业 Agent（计划中）
-- [ ] Test Runner Agent（自动化测试执行）
-- [ ] Code Review Agent（代码审查）
+### Phase 2: 专业 Agent（已完成 ✅）
+- [x] Test Runner Agent（自动化测试执行）
+- [x] Code Review Agent（代码审查）
 - [ ] Documentation Agent（文档生成）
 
 ### Phase 3: 协作 Agent（远期）
