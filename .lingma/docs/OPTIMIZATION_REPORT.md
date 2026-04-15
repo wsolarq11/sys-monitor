@@ -12,10 +12,6 @@
 - spec-driven-core-agent.md: 9.8KB
 - test-runner-agent.md: 11.6KB
 
-### RULES
-
-- AGENTS.md: 11.2KB
-
 ### SKILLS
 
 - SKILL.md: 15.5KB
