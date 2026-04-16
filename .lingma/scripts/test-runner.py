@@ -238,7 +238,7 @@ class TestRunnerAgent:
             elif fail_match:
                 result["failed"] = int(fail_match.group(1))
             elif error_match:
-                result["errors"].append(f"{error_match.group(1)} errors")
+                result["errors"].append(f"{error_match.group(1)} errors")  # type: ignore
 
         elif framework == "jest":
             # 解析jest输出
