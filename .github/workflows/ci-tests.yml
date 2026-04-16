@@ -88,12 +88,15 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install
+        working-directory: sys-monitor
       
       - name: Run unit tests
         run: pnpm test -- --coverage
+        working-directory: sys-monitor
       
       - name: Run E2E tests (Playwright)
         run: npx playwright test
+        working-directory: sys-monitor
         env:
           CI: true
       

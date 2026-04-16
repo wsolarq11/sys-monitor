@@ -38,7 +38,7 @@ class EndToEndTestSuite:
 
     def __init__(self, repo_root: Path):
         self.repo_root = repo_root
-        self.test_results = []
+        self.test_results: list = []
         self.start_time = None
 
     def run_all_tests(self):

@@ -80,7 +80,7 @@ class TestRunnerAgent:
                     detected.append(
                         {
                             "framework": "pytest",
-                            "config_file": None,
+                            "config_file": [],  # type: ignore
                             "command": "pytest",
                             "coverage_flag": "--cov=. --cov-report=json",
                         }
