@@ -234,7 +234,7 @@ export function ThemeSwitcher() {
  * 示例 8: 设置面板
  */
 export function SettingsPanel() {
-  const settings = useAppSettings();
+  const _settings = useAppSettings();
   const scanSettings = useScanSettings();
   const alertSettings = useAlertSettings();
   
@@ -507,8 +507,8 @@ export function AddWatchedFolder() {
  * 示例 14: 完整的监控仪表板
  */
 export function MonitorDashboard() {
-  const metrics = useCurrentMetrics();
-  const stats = useMetricsStats();
+  const _metrics = useCurrentMetrics();
+  const _stats = useMetricsStats();
   const unreadAlerts = useUnreadCount();
   const uiSettings = useUISettings();
   
