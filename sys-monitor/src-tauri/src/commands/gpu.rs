@@ -18,8 +18,8 @@ pub struct GpuInfo {
     pub vendor: String,
     pub model: String,
     pub usage_percent: f32,
-    pub memory_used: u64,  // MB
-    pub memory_total: u64, // MB
+    pub memory_used: u64,         // MB
+    pub memory_total: u64,        // MB
     pub temperature: Option<u32>, // Celsius
 }
 
@@ -31,7 +31,7 @@ fn detect_gpu_vendor() -> GpuVendor {
         if Command::new("nvidia-smi").arg("--version").output().is_ok() {
             return GpuVendor::Nvidia;
         }
-        
+
         // Check for AMD or Intel via WMI (simplified - would need proper WMI implementation)
         // For now, default to Unknown
         GpuVendor::Unknown
@@ -43,14 +43,14 @@ fn detect_gpu_vendor() -> GpuVendor {
         if Command::new("nvidia-smi").arg("--version").output().is_ok() {
             return GpuVendor::Nvidia;
         }
-        
+
         // Check /sys/class/drm for AMD/Intel
         use std::path::Path;
         if Path::new("/sys/class/drm").exists() {
             // Simplified detection - would need to parse lspci or sysfs
             return GpuVendor::Unknown;
         }
-        
+
         GpuVendor::Unknown
     }
 
@@ -71,7 +71,7 @@ fn get_nvidia_gpu_info() -> Result<Option<GpuInfo>, AppError> {
     let output = Command::new("nvidia-smi")
         .args(&[
             "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name",
-            "--format=csv,noheader,nounits"
+            "--format=csv,noheader,nounits",
         ])
         .output();
 
@@ -114,7 +114,7 @@ fn get_amd_gpu_info() -> Result<Option<GpuInfo>, AppError> {
     // 1. Find the correct DRM device
     // 2. Read from hwmon for temperature
     // 3. Parse utilization from various sources
-    
+
     let drm_path = Path::new("/sys/class/drm");
     if !drm_path.exists() {
         return Ok(None);

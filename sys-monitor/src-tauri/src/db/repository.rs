@@ -25,10 +25,10 @@ impl DatabaseRepository {
     pub fn init(&self) -> Result<()> {
         use crate::db::schema::INIT_SQL;
         self.conn.execute_batch(INIT_SQL)?;
-        
+
         // 应用性能优化迁移
         self.apply_performance_migration()?;
-        
+
         Ok(())
     }
     /// 应用性能优化迁移（添加索引等）
@@ -55,7 +55,7 @@ impl DatabaseRepository {
             
             ANALYZE;
         "#;
-        
+
         self.conn.execute_batch(MIGRATION_SQL)?;
         Ok(())
     }
@@ -68,14 +68,14 @@ impl DatabaseRepository {
              PRAGMA cache_size = {};",
             CACHE_SIZE_KB
         ))?;
-        
+
         // 这些 PRAGMA 可能在某些环境下不支持
         let _ = self.conn.execute_batch(&format!(
             "PRAGMA temp_store = MEMORY;
              PRAGMA mmap_size = {};",
             MMAP_SIZE
         ));
-        
+
         Ok(())
     }
 
@@ -83,7 +83,6 @@ impl DatabaseRepository {
     pub fn get_connection(&self) -> &Connection {
         &self.conn
     }
-
 
     pub fn insert_system_metric(&self, metric: &SystemMetric) -> Result<i64> {
         self.conn.execute(
@@ -402,9 +401,9 @@ impl DatabaseRepository {
         // 使用预编译语句提升性能
         let mut stmt = tx.prepare_cached(
             "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         )?;
-        
+
         for item in items {
             stmt.execute(rusqlite::params![
                 item.scan_id,
@@ -417,7 +416,7 @@ impl DatabaseRepository {
             ])?;
             inserted += 1;
         }
-        
+
         // 显式 drop statement 以释放 borrow
         drop(stmt);
 
@@ -433,19 +432,19 @@ impl DatabaseRepository {
         // 使用预编译语句提升性能
         let mut stmt = tx.prepare_cached(
             "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
-             VALUES (?1, ?2, ?3, ?4)"
+             VALUES (?1, ?2, ?3, ?4)",
         )?;
-        
+
         for stat in stats {
             stmt.execute(rusqlite::params![
-                stat.scan_id, 
-                stat.file_type, 
-                stat.count, 
+                stat.scan_id,
+                stat.file_type,
+                stat.count,
                 stat.total_size
             ])?;
             inserted += 1;
         }
-        
+
         // 显式 drop statement 以释放 borrow
         drop(stmt);
 
@@ -486,9 +485,9 @@ impl DatabaseRepository {
         // 使用预编译语句提升性能
         let mut item_stmt = tx.prepare_cached(
             "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
         )?;
-        
+
         for (i, item) in items.iter().enumerate() {
             item_stmt.execute(rusqlite::params![
                 scan_id,
@@ -499,7 +498,7 @@ impl DatabaseRepository {
                 item.extension,
                 item.parent_path,
             ])?;
-            
+
             // 每 BATCH_SIZE 条记录输出进度
             if (i + 1) % BATCH_SIZE == 0 {
                 // log::debug!("已插入 {} 条文件夹项", i + 1);
@@ -510,18 +509,18 @@ impl DatabaseRepository {
         // 使用预编译语句提升性能
         let mut stat_stmt = tx.prepare_cached(
             "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
-             VALUES (?1, ?2, ?3, ?4)"
+             VALUES (?1, ?2, ?3, ?4)",
         )?;
-        
+
         for stat in stats {
             stat_stmt.execute(rusqlite::params![
-                scan_id, 
-                stat.file_type, 
-                stat.count, 
+                scan_id,
+                stat.file_type,
+                stat.count,
                 stat.total_size
             ])?;
         }
-        
+
         // 显式 drop statements 以释放 borrow
         drop(item_stmt);
         drop(stat_stmt);
@@ -736,71 +735,71 @@ impl DatabaseRepository {
     /// 综合数据清理：清理旧事件、指标并整理数据库
     pub fn cleanup_database(&self, events_days: i64, metrics_days: i64) -> Result<CleanupStats> {
         let mut stats = CleanupStats::default();
-        
+
         // 1. 清理旧的文件夹事件
         let event_cutoff = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64
             - (events_days * 86400);
-        
+
         stats.events_deleted = self.conn.execute(
             "DELETE FROM folder_events WHERE timestamp < ?1",
             rusqlite::params![event_cutoff],
         )?;
-        
+
         // 2. 清理旧的系统指标
         let metric_cutoff = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64
             - (metrics_days * 86400);
-        
+
         // 先删除关联的 CPU cores
         let cpu_cores_deleted = self.conn.execute(
             "DELETE FROM cpu_cores WHERE metric_id IN (SELECT id FROM system_metrics WHERE timestamp < ?1)",
             rusqlite::params![metric_cutoff],
         )?;
         stats.cpu_cores_deleted = cpu_cores_deleted;
-        
+
         // 再删除关联的 disk metrics
         let disk_metrics_deleted = self.conn.execute(
             "DELETE FROM disk_metrics WHERE metric_id IN (SELECT id FROM system_metrics WHERE timestamp < ?1)",
             rusqlite::params![metric_cutoff],
         )?;
         stats.disk_metrics_deleted = disk_metrics_deleted;
-        
+
         // 最后删除系统指标
         let system_metrics_deleted = self.conn.execute(
             "DELETE FROM system_metrics WHERE timestamp < ?1",
             rusqlite::params![metric_cutoff],
         )?;
         stats.system_metrics_deleted = system_metrics_deleted;
-        
+
         // 3. 清理旧的网络指标
         stats.network_metrics_deleted = self.conn.execute(
             "DELETE FROM network_metrics WHERE timestamp < ?1",
             rusqlite::params![metric_cutoff],
         )?;
-        
+
         // 4. 清理旧的告警（保留 30 天）
         let alert_cutoff = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs() as i64
             - (30 * 86400);
-        
+
         stats.alerts_deleted = self.conn.execute(
             "DELETE FROM alerts WHERE timestamp < ?1 AND acknowledged = 1",
             rusqlite::params![alert_cutoff],
         )?;
-        
+
         // 5. VACUUM 整理数据库碎片
         self.conn.execute("VACUUM", [])?;
-        
+
         // 6. 重新分析以更新查询计划器统计
         self.conn.execute("ANALYZE", [])?;
-        
+
         Ok(stats)
     }
 
@@ -818,9 +817,9 @@ impl DatabaseRepository {
                 (SELECT COUNT(*) FROM network_metrics),
                 (SELECT COUNT(*) FROM alerts),
                 (SELECT COUNT(*) FROM watched_folders)
-            "
+            ",
         )?;
-        
+
         let stats = stmt.query_row([], |row| {
             Ok(DatabaseStats {
                 folder_scans: row.get(0)?,
@@ -835,23 +834,25 @@ impl DatabaseRepository {
                 watched_folders: row.get(9)?,
             })
         })?;
-        
+
         Ok(stats)
     }
 
     /// 运行 EXPLAIN QUERY PLAN 分析查询
     pub fn explain_query(&self, query: &str) -> Result<Vec<String>> {
-        let mut stmt = self.conn.prepare(&format!("EXPLAIN QUERY PLAN {}", query))?;
-        
+        let mut stmt = self
+            .conn
+            .prepare(&format!("EXPLAIN QUERY PLAN {}", query))?;
+
         let rows = stmt.query_map([], |row| {
             Ok(row.get::<_, String>(3)?) // detail 列在第 4 列（索引 3）
         })?;
-        
+
         let mut plans = Vec::new();
         for row in rows {
             plans.push(row?);
         }
-        
+
         Ok(plans)
     }
 }
@@ -881,7 +882,6 @@ pub struct DatabaseStats {
     pub alerts: i64,
     pub watched_folders: i64,
 }
-
 
 #[cfg(test)]
 mod tests {

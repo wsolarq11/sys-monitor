@@ -277,8 +277,7 @@ pub async fn remove_watched_folder<R: Runtime>(
         logger::log_warn(&format!("停止文件监听失败: {}", e));
     }
 
-    let repo =
-        DatabaseRepository::new(&db_path).map_err(|e| AppError::database(e.to_string()))?;
+    let repo = DatabaseRepository::new(&db_path).map_err(|e| AppError::database(e.to_string()))?;
 
     repo.delete_watched_folder(folder_id)
         .map_err(|e| AppError::database(e.to_string()))?;

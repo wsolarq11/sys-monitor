@@ -48,7 +48,7 @@ pub struct ProcessInfo {
     pub pid: u32,
     pub name: String,
     pub cpu_usage: f32,
-    pub memory: u64,  // bytes
+    pub memory: u64, // bytes
     pub memory_percent: f32,
 }
 

@@ -16,9 +16,8 @@ static SYSTEM: LazyLock<Mutex<System>> = LazyLock::new(|| {
 });
 
 // Network statistics cache for calculating real-time speeds
-static NETWORK_CACHE: LazyLock<Mutex<NetworkCache>> = LazyLock::new(|| {
-    Mutex::new(NetworkCache::new())
-});
+static NETWORK_CACHE: LazyLock<Mutex<NetworkCache>> =
+    LazyLock::new(|| Mutex::new(NetworkCache::new()));
 
 struct NetworkCache {
     last_stats: HashMap<String, (u64, u64)>, // (bytes_received, bytes_sent)
@@ -211,7 +210,7 @@ pub fn get_network_info() -> Result<serde_json::Value, AppError> {
         .map(|(name, data): (&String, &sysinfo::NetworkData)| {
             let bytes_received = data.total_received();
             let bytes_sent = data.total_transmitted();
-            
+
             // Store for speed calculation
             current_stats.insert(name.clone(), (bytes_received, bytes_sent));
 
@@ -232,10 +231,7 @@ pub fn get_network_info() -> Result<serde_json::Value, AppError> {
         .into_iter()
         .map(|iface| {
             let name = iface["name"].as_str().unwrap_or("").to_string();
-            let (download_speed, upload_speed) = speeds
-                .get(&name)
-                .copied()
-                .unwrap_or((0.0, 0.0));
+            let (download_speed, upload_speed) = speeds.get(&name).copied().unwrap_or((0.0, 0.0));
 
             serde_json::json!({
                 "name": name,
