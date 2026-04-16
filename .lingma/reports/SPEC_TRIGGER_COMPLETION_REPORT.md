@@ -395,11 +395,11 @@ python .lingma/scripts/install-hooks.py --uninstall
 
 ## 📚 相关资源
 
-- [完整使用指南](.lingma/docs/guides/spec-trigger-hard-constraint.md)
-- [Spec模板](.lingma/specs/templates/spec-template.md)
-- [自动化策略](.lingma/rules/automation-policy.md)
-- [架构设计](.lingma/docs/architecture/ARCHITECTURE.md)
-- [Spec-Driven Core Agent](.lingma/agents/spec-driven-core-agent.md)
+- [完整使用指南](docs/guides/spec-trigger-hard-constraint.md)
+- [Spec模板](specs/templates/spec-template.md)
+- [自动化策略](rules/automation-policy.md)
+- [架构设计](docs/architecture/ARCHITECTURE.md)
+- [Spec-Driven Core Agent](agents/spec-driven-core-agent.md)
 
 ---
 

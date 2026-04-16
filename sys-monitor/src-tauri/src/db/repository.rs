@@ -1,6 +1,13 @@
 use crate::models::folder::{FileTypeStat, FolderItem, FolderScan};
 use crate::models::metrics::{CpuCoreMetric, DiskMetric, NetworkMetric, SystemMetric};
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, OptionalExtension, Result};
+
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// SQLite 数据库性能优化配置
+const CACHE_SIZE_KB: i64 = -64000; // 64MB 缓存（负值表示 KB）
+const MMAP_SIZE: i64 = 268435456; // 256MB 内存映射
+const BATCH_SIZE: usize = 1000; // 批量插入大小
 
 pub struct DatabaseRepository {
     conn: Connection,
@@ -11,14 +18,72 @@ impl DatabaseRepository {
         let conn = Connection::open(path)?;
         let repo = Self { conn };
         repo.init()?;
+        repo.optimize_pragmas()?; // 应用性能优化设置
         Ok(repo)
     }
 
     pub fn init(&self) -> Result<()> {
         use crate::db::schema::INIT_SQL;
         self.conn.execute_batch(INIT_SQL)?;
+        
+        // 应用性能优化迁移
+        self.apply_performance_migration()?;
+        
         Ok(())
     }
+    /// 应用性能优化迁移（添加索引等）
+    fn apply_performance_migration(&self) -> Result<()> {
+        const MIGRATION_SQL: &str = r#"
+            CREATE INDEX IF NOT EXISTS idx_folder_scans_path_timestamp 
+                ON folder_scans(path, scan_timestamp DESC);
+            
+            CREATE INDEX IF NOT EXISTS idx_folder_items_path ON folder_items(path);
+            CREATE INDEX IF NOT EXISTS idx_folder_items_parent ON folder_items(parent_path);
+            CREATE INDEX IF NOT EXISTS idx_folder_items_type ON folder_items(type);
+            CREATE INDEX IF NOT EXISTS idx_folder_items_extension ON folder_items(extension);
+            
+            DROP INDEX IF EXISTS idx_folder_events_folder_time;
+            CREATE INDEX IF NOT EXISTS idx_folder_events_folder_time 
+                ON folder_events(watched_folder_id, timestamp DESC);
+            
+            CREATE INDEX IF NOT EXISTS idx_folder_events_file_path ON folder_events(file_path);
+            CREATE INDEX IF NOT EXISTS idx_alerts_metric_type ON alerts(metric_type);
+            CREATE INDEX IF NOT EXISTS idx_alerts_acknowledged ON alerts(acknowledged);
+            CREATE INDEX IF NOT EXISTS idx_watched_folders_created ON watched_folders(created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_system_metrics_created ON system_metrics(created_at);
+            CREATE INDEX IF NOT EXISTS idx_network_metrics_created ON network_metrics(created_at);
+            
+            ANALYZE;
+        "#;
+        
+        self.conn.execute_batch(MIGRATION_SQL)?;
+        Ok(())
+    }
+
+    /// 优化 SQLite PRAGMA 设置以提升性能
+    fn optimize_pragmas(&self) -> Result<()> {
+        self.conn.execute_batch(&format!(
+            "PRAGMA journal_mode = WAL;
+             PRAGMA synchronous = NORMAL;
+             PRAGMA cache_size = {};",
+            CACHE_SIZE_KB
+        ))?;
+        
+        // 这些 PRAGMA 可能在某些环境下不支持
+        let _ = self.conn.execute_batch(&format!(
+            "PRAGMA temp_store = MEMORY;
+             PRAGMA mmap_size = {};",
+            MMAP_SIZE
+        ));
+        
+        Ok(())
+    }
+
+    /// 获取底层连接用于高级操作
+    pub fn get_connection(&self) -> &Connection {
+        &self.conn
+    }
+
 
     pub fn insert_system_metric(&self, metric: &SystemMetric) -> Result<i64> {
         self.conn.execute(
@@ -333,26 +398,28 @@ impl DatabaseRepository {
     pub fn insert_folder_items_batch(&mut self, items: &[FolderItem]) -> Result<usize> {
         let tx = self.conn.transaction()?;
         let mut inserted = 0;
-        let batch_size = 500;
 
-        for chunk in items.chunks(batch_size) {
-            for item in chunk {
-                tx.execute(
-                    "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                    rusqlite::params![
-                        item.scan_id,
-                        item.path,
-                        item.name,
-                        item.size,
-                        item.item_type,
-                        item.extension,
-                        item.parent_path,
-                    ],
-                )?;
-                inserted += 1;
-            }
+        // 使用预编译语句提升性能
+        let mut stmt = tx.prepare_cached(
+            "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+        )?;
+        
+        for item in items {
+            stmt.execute(rusqlite::params![
+                item.scan_id,
+                item.path,
+                item.name,
+                item.size,
+                item.item_type,
+                item.extension,
+                item.parent_path,
+            ])?;
+            inserted += 1;
         }
+        
+        // 显式 drop statement 以释放 borrow
+        drop(stmt);
 
         tx.commit()?;
         Ok(inserted)
@@ -363,14 +430,24 @@ impl DatabaseRepository {
         let tx = self.conn.transaction()?;
         let mut inserted = 0;
 
+        // 使用预编译语句提升性能
+        let mut stmt = tx.prepare_cached(
+            "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
+             VALUES (?1, ?2, ?3, ?4)"
+        )?;
+        
         for stat in stats {
-            tx.execute(
-                "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
-                 VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![stat.scan_id, stat.file_type, stat.count, stat.total_size,],
-            )?;
+            stmt.execute(rusqlite::params![
+                stat.scan_id, 
+                stat.file_type, 
+                stat.count, 
+                stat.total_size
+            ])?;
             inserted += 1;
         }
+        
+        // 显式 drop statement 以释放 borrow
+        drop(stmt);
 
         tx.commit()?;
         Ok(inserted)
@@ -406,30 +483,48 @@ impl DatabaseRepository {
         let scan_id = tx.last_insert_rowid();
 
         // 2. 批量插入 folder items
-        for item in items {
-            tx.execute(
-                "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                rusqlite::params![
-                    scan_id,
-                    item.path,
-                    item.name,
-                    item.size,
-                    item.item_type,
-                    item.extension,
-                    item.parent_path,
-                ],
-            )?;
+        // 使用预编译语句提升性能
+        let mut item_stmt = tx.prepare_cached(
+            "INSERT INTO folder_items (scan_id, path, name, size, type, extension, parent_path)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"
+        )?;
+        
+        for (i, item) in items.iter().enumerate() {
+            item_stmt.execute(rusqlite::params![
+                scan_id,
+                item.path,
+                item.name,
+                item.size,
+                item.item_type,
+                item.extension,
+                item.parent_path,
+            ])?;
+            
+            // 每 BATCH_SIZE 条记录输出进度
+            if (i + 1) % BATCH_SIZE == 0 {
+                // log::debug!("已插入 {} 条文件夹项", i + 1);
+            }
         }
 
         // 3. 批量插入 file type stats
+        // 使用预编译语句提升性能
+        let mut stat_stmt = tx.prepare_cached(
+            "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
+             VALUES (?1, ?2, ?3, ?4)"
+        )?;
+        
         for stat in stats {
-            tx.execute(
-                "INSERT INTO file_type_stats (scan_id, file_type, count, total_size)
-                 VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![scan_id, stat.file_type, stat.count, stat.total_size,],
-            )?;
+            stat_stmt.execute(rusqlite::params![
+                scan_id, 
+                stat.file_type, 
+                stat.count, 
+                stat.total_size
+            ])?;
         }
+        
+        // 显式 drop statements 以释放 borrow
+        drop(item_stmt);
+        drop(stat_stmt);
 
         // 4. 提交事务
         tx.commit()?;
@@ -637,7 +732,156 @@ impl DatabaseRepository {
         )?;
         Ok(affected)
     }
+
+    /// 综合数据清理：清理旧事件、指标并整理数据库
+    pub fn cleanup_database(&self, events_days: i64, metrics_days: i64) -> Result<CleanupStats> {
+        let mut stats = CleanupStats::default();
+        
+        // 1. 清理旧的文件夹事件
+        let event_cutoff = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64
+            - (events_days * 86400);
+        
+        stats.events_deleted = self.conn.execute(
+            "DELETE FROM folder_events WHERE timestamp < ?1",
+            rusqlite::params![event_cutoff],
+        )?;
+        
+        // 2. 清理旧的系统指标
+        let metric_cutoff = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64
+            - (metrics_days * 86400);
+        
+        // 先删除关联的 CPU cores
+        let cpu_cores_deleted = self.conn.execute(
+            "DELETE FROM cpu_cores WHERE metric_id IN (SELECT id FROM system_metrics WHERE timestamp < ?1)",
+            rusqlite::params![metric_cutoff],
+        )?;
+        stats.cpu_cores_deleted = cpu_cores_deleted;
+        
+        // 再删除关联的 disk metrics
+        let disk_metrics_deleted = self.conn.execute(
+            "DELETE FROM disk_metrics WHERE metric_id IN (SELECT id FROM system_metrics WHERE timestamp < ?1)",
+            rusqlite::params![metric_cutoff],
+        )?;
+        stats.disk_metrics_deleted = disk_metrics_deleted;
+        
+        // 最后删除系统指标
+        let system_metrics_deleted = self.conn.execute(
+            "DELETE FROM system_metrics WHERE timestamp < ?1",
+            rusqlite::params![metric_cutoff],
+        )?;
+        stats.system_metrics_deleted = system_metrics_deleted;
+        
+        // 3. 清理旧的网络指标
+        stats.network_metrics_deleted = self.conn.execute(
+            "DELETE FROM network_metrics WHERE timestamp < ?1",
+            rusqlite::params![metric_cutoff],
+        )?;
+        
+        // 4. 清理旧的告警（保留 30 天）
+        let alert_cutoff = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64
+            - (30 * 86400);
+        
+        stats.alerts_deleted = self.conn.execute(
+            "DELETE FROM alerts WHERE timestamp < ?1 AND acknowledged = 1",
+            rusqlite::params![alert_cutoff],
+        )?;
+        
+        // 5. VACUUM 整理数据库碎片
+        self.conn.execute("VACUUM", [])?;
+        
+        // 6. 重新分析以更新查询计划器统计
+        self.conn.execute("ANALYZE", [])?;
+        
+        Ok(stats)
+    }
+
+    /// 获取数据库统计信息
+    pub fn get_database_stats(&self) -> Result<DatabaseStats> {
+        let mut stmt = self.conn.prepare(
+            "SELECT 
+                (SELECT COUNT(*) FROM folder_scans),
+                (SELECT COUNT(*) FROM folder_items),
+                (SELECT COUNT(*) FROM file_type_stats),
+                (SELECT COUNT(*) FROM folder_events),
+                (SELECT COUNT(*) FROM system_metrics),
+                (SELECT COUNT(*) FROM cpu_cores),
+                (SELECT COUNT(*) FROM disk_metrics),
+                (SELECT COUNT(*) FROM network_metrics),
+                (SELECT COUNT(*) FROM alerts),
+                (SELECT COUNT(*) FROM watched_folders)
+            "
+        )?;
+        
+        let stats = stmt.query_row([], |row| {
+            Ok(DatabaseStats {
+                folder_scans: row.get(0)?,
+                folder_items: row.get(1)?,
+                file_type_stats: row.get(2)?,
+                folder_events: row.get(3)?,
+                system_metrics: row.get(4)?,
+                cpu_cores: row.get(5)?,
+                disk_metrics: row.get(6)?,
+                network_metrics: row.get(7)?,
+                alerts: row.get(8)?,
+                watched_folders: row.get(9)?,
+            })
+        })?;
+        
+        Ok(stats)
+    }
+
+    /// 运行 EXPLAIN QUERY PLAN 分析查询
+    pub fn explain_query(&self, query: &str) -> Result<Vec<String>> {
+        let mut stmt = self.conn.prepare(&format!("EXPLAIN QUERY PLAN {}", query))?;
+        
+        let rows = stmt.query_map([], |row| {
+            Ok(row.get::<_, String>(3)?) // detail 列在第 4 列（索引 3）
+        })?;
+        
+        let mut plans = Vec::new();
+        for row in rows {
+            plans.push(row?);
+        }
+        
+        Ok(plans)
+    }
 }
+
+/// 清理统计数据
+#[derive(Debug, Default)]
+pub struct CleanupStats {
+    pub events_deleted: usize,
+    pub system_metrics_deleted: usize,
+    pub cpu_cores_deleted: usize,
+    pub disk_metrics_deleted: usize,
+    pub network_metrics_deleted: usize,
+    pub alerts_deleted: usize,
+}
+
+/// 数据库统计信息
+#[derive(Debug)]
+pub struct DatabaseStats {
+    pub folder_scans: i64,
+    pub folder_items: i64,
+    pub file_type_stats: i64,
+    pub folder_events: i64,
+    pub system_metrics: i64,
+    pub cpu_cores: i64,
+    pub disk_metrics: i64,
+    pub network_metrics: i64,
+    pub alerts: i64,
+    pub watched_folders: i64,
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -703,9 +947,7 @@ mod tests {
             mount_point: "/".to_string(),
             total_bytes: 500_000_000_000,
             available_bytes: 250_000_000_000,
-            used_bytes: 250_000_000_000,
-            usage_percent: 50.0,
-            file_system: Some("ext4".to_string()),
+            disk_type: Some("SSD".to_string()),
         };
         let id = repo.insert_disk_metric(&metric).expect("Failed to insert");
         assert!(id > 0);
@@ -721,9 +963,7 @@ mod tests {
             timestamp: 1234567890,
             interface_name: "eth0".to_string(),
             bytes_sent: 1000000,
-            bytes_recv: 2000000,
-            packets_sent: 1000,
-            packets_recv: 2000,
+            bytes_received: 2000000,
         };
         let id = repo
             .insert_network_metric(&metric)
@@ -735,7 +975,7 @@ mod tests {
 
     #[test]
     fn test_folder_scan_lifecycle() {
-        let mut repo = create_test_repo();
+        let repo = create_test_repo();
         let scan_id = repo
             .insert_folder_scan("/test/path", 1000000, 100, 10, 500)
             .expect("Failed to insert");
@@ -862,7 +1102,7 @@ mod tests {
 
     #[test]
     fn test_insert_and_get_folder_events() {
-        let mut repo = create_test_repo();
+        let repo = create_test_repo();
         let event_id = repo
             .insert_folder_event(1, "Created", "/test/new_file.txt", Some(1024))
             .expect("Failed to insert");

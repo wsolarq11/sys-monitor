@@ -36,3 +36,8 @@
 {"timestamp": "2026-04-16T02:33:16.132072", "event_type": "worker_started", "worker_id": "worker-20260416010916", "max_tasks": 0, "validation_skipped": true}
 {"timestamp": "2026-04-16T02:33:16.133323", "event_type": "worker_stopped", "worker_id": "worker-20260416010916", "tasks_processed": 0}
 {"timestamp": "2026-04-16T02:34:14.555280", "event_type": "spec_validation", "engine": "rule-engine", "violations_count": 1, "rules_checked": 5}
+{"timestamp": "2026-04-16T04:51:21.146256", "event_type": "spec_validation", "engine": "rule-engine", "violations_count": 1, "rules_checked": 5}
+{"timestamp": "2026-04-16T04:51:21.538196", "event_type": "worker_started", "worker_id": "worker-20260416010916", "max_tasks": 0, "validation_skipped": true}
+{"timestamp": "2026-04-16T04:51:21.539632", "event_type": "worker_stopped", "worker_id": "worker-20260416010916", "tasks_processed": 0}
+{"timestamp": "2026-04-16T04:51:31.610737", "event_type": "verification_test", "message": "Audit logging test"}
+{"timestamp": "2026-04-16T04:51:31.895295", "event_type": "workflow_test", "spec_valid": true, "worker_status": "stopped"}

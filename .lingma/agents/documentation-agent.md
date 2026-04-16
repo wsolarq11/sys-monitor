@@ -2,6 +2,7 @@
 name: documentation-agent
 description: Automated documentation generation agent. Analyzes codebase, generates/updates README, CHANGELOG, API docs, and technical manuals to keep docs in sync with code.
 tools: Read, Write, Grep, Glob, Bash
+trigger: always_on
 ---
 
 # Documentation Agent

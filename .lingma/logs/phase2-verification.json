@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-04-15T20:46:50.051853+00:00",
+  "lingma_dir": ".lingma",
+  "spec": {
+    "exists": true,
+    "path": ".lingma\\specs\\current-spec.md",
+    "status": null,
+    "progress": null
+  },
+  "validation": {
+    "passed": 16,
+    "warnings": 1,
+    "errors": 0,
+    "can_proceed": true
+  }
+}

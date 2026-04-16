@@ -2,6 +2,7 @@
 name: spec-driven-core-agent
 description: Core agent for Spec-Driven Development workflow. Manages spec lifecycle, coordinates automation engine, enforces rules, and executes tasks autonomously. Proactively manages development based on specs, only interacting with users when clarification is needed. Use for any spec-driven development tasks.
 tools: Read, Write, Bash, Grep, Glob
+trigger: always_on
 ---
 
 # Spec-Driven Core Agent

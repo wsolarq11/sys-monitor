@@ -1,8 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { FolderAnalysisView, type FolderScan, type ScanResultData } from './FolderAnalysisView';
 import { WatchedFoldersList } from './WatchedFoldersList';
 import { getPathValidationError } from '../../utils/validation';
+import {
+  selectFolder,
+  getDbPath,
+  scanFolder,
+  getFolderScans,
+} from '../../services/folderAnalysisApi';
+import { handleTauriError, clearError } from '../../utils/errorHandler';
 
 /**
  * FolderAnalysisContainer - Container 组件
@@ -22,11 +28,11 @@ export function FolderAnalysisContainer() {
   useEffect(() => {
     const fetchDbPath = async () => {
       try {
-        const path = await invoke<string>('get_db_path');
+        const path = await getDbPath();
         setDbPath(path);
       } catch (error) {
         console.error('Failed to get database path:', error);
-        setDbPath('data.db');
+        setDbPath('data.db'); // 降级值
       }
     };
     fetchDbPath();
@@ -34,21 +40,20 @@ export function FolderAnalysisContainer() {
 
   // 处理选择文件夹
   const handleSelectFolder = useCallback(async () => {
-    console.log('handleSelectFolder called');
     try {
-      console.log('Calling select_folder command...');
-      const path = await invoke<string>('select_folder');
-      console.log('select_folder returned:', path);
-      setSelectedPath(path);
-      console.log('selectedPath updated to:', path);
-      setError(null);
-    } catch (error) {
-      console.error('Failed to select folder:', error);
-      if (String(error).includes('No folder selected')) {
-        console.log('User cancelled folder selection');
-      } else {
-        setError('选择文件夹失败：' + String(error));
+      const path = await selectFolder();
+      if (!path) {
+        // 用户取消操作，静默处理
+        return;
       }
+      setSelectedPath(path);
+      clearError(setError);
+    } catch (error) {
+      handleTauriError(error, {
+        context: '选择文件夹',
+        setError,
+        silentOnCancel: true,
+      });
     }
   }, []);
 
@@ -67,50 +72,35 @@ export function FolderAnalysisContainer() {
       return;
     }
 
-    console.log('=== 开始扫描流程 ===');
-    console.log('扫描路径:', selectedPath);
-    console.log('数据库路径:', dbPath);
-    
+    // 检查 dbPath 是否已加载
+    if (!dbPath) {
+      setError('系统初始化中，请稍后重试');
+      return;
+    }
+
     setIsScanning(true);
     setScanResult(null);
-    setError(null);
+    clearError(setError);
     setScanProgress('正在初始化扫描...');
-    
+
     try {
-      console.log('调用 scan_folder 命令...');
       setScanProgress('正在扫描文件夹...');
-      
-      const result = await invoke<ScanResultData>('scan_folder', { 
-        path: selectedPath, 
-        db_path: dbPath 
-      });
-      
-      console.log('扫描成功完成:', result);
+
+      // 并行执行扫描和获取历史（优化性能）
+      const [result, historyScans] = await Promise.all([
+        scanFolder(selectedPath, dbPath),
+        getFolderScans(selectedPath, dbPath, 10),
+      ]);
+
       setScanResult(result);
-      setScanProgress('扫描完成！');
-      
-      // 刷新扫描历史
-      console.log('刷新扫描历史...');
-      setScanProgress('正在加载扫描历史...');
-      
-      const folderScans: { scans: FolderScan[] } = await invoke<any>('get_folder_scans', { 
-        path: selectedPath, 
-        limit: 10,
-        db_path: dbPath 
-      });
-      
-      console.log('扫描历史加载完成:', folderScans.scans?.length || 0, '条记录');
-      setScans(folderScans.scans || []);
+      setScans(historyScans);
       setScanProgress(null);
-      
-      console.log('=== 扫描流程完成 ===');
-      
     } catch (error) {
-      console.error('=== 扫描失败 ===');
-      console.error('错误详情:', error);
-      const errorMsg = String(error);
-      console.error('错误消息:', errorMsg);
-      setError('扫描失败：' + errorMsg);
+      handleTauriError(error, {
+        context: '扫描文件夹',
+        setError,
+        errorMessagePrefix: '扫描失败',
+      });
       setScanProgress('扫描失败');
     } finally {
       setIsScanning(false);

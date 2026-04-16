@@ -1,0 +1,84 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"],
+      "env": {
+        "ALLOWED_PATHS": "/workspace,/tmp,.lingma/specs,.lingma/logs,.lingma/worker",
+        "READ_ONLY_PATHS": "/workspace/node_modules,/workspace/.git,/workspace/dist,/workspace/build",
+        "MAX_FILE_SIZE_MB": "10",
+        "BLOCKED_EXTENSIONS": ".exe,.dll,.so,.bin,.bat,.cmd,.ps1",
+        "ENABLE_AUDIT_LOG": "true",
+        "AUDIT_LOG_PATH": "/workspace/.lingma/logs/mcp-filesystem.log"
+      },
+      "disabled": false,
+      "description": "文件系统访问 - 限制在workspace和.lingma目录"
+    },
+    
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "env": {
+        "GIT_AUTHOR_NAME": "AI Assistant",
+        "GIT_AUTHOR_EMAIL": "ai-assistant@internal",
+        "ALLOWED_OPERATIONS": "status,log,diff,add,commit,branch,tag,checkout",
+        "BLOCKED_OPERATIONS": "push,force-push,reset--hard,rebase--interactive,filter-branch",
+        "REQUIRE_SIGNOFF": "true",
+        "MAX_COMMIT_MESSAGE_LENGTH": "500",
+        "AUTO_SIGN_COMMITS": "false",
+        "ENABLE_AUDIT_LOG": "true",
+        "AUDIT_LOG_PATH": "/workspace/.lingma/logs/mcp-git.log"
+      },
+      "disabled": false,
+      "description": "Git操作 - 禁止直接推送和危险操作"
+    },
+    
+    "shell": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-shell"],
+      "env": {
+        "ALLOWED_COMMANDS": "ls,cat,grep,find,git,test,npm,python3,cargo,node,yarn,pip,jest,pytest,vitest",
+        "BLOCKED_COMMANDS": "rm,sudo,wget,curl,chmod,chown,mkfs,dd,shutdown,reboot,kill,pkill",
+        "WORKING_DIRECTORY": "/workspace",
+        "TIMEOUT_SECONDS": "30",
+        "MAX_OUTPUT_LINES": "1000",
+        "SANDBOX_MODE": "true",
+        "REQUIRE_CONFIRMATION_FOR": "install,build,deploy,test:coverage",
+        "ENABLE_AUDIT_LOG": "true",
+        "AUDIT_LOG_PATH": "/workspace/.lingma/logs/mcp-shell.log",
+        "BLOCKED_PATTERNS": "rm -rf,wget.*,curl.*|sh,curl.*|bash,chmod 777,chmod +x.*\\.sh",
+        "ENVIRONMENT_FILTER": "PATH,HOME,USER,PWD,SHELL,TERM"
+      },
+      "disabled": false,
+      "description": "Shell命令执行 - 严格限制，需要确认危险操作"
+    }
+  },
+  
+  "security": {
+    "enable_audit_logging": true,
+    "audit_log_retention_days": 90,
+    "max_concurrent_requests": 10,
+    "request_timeout_seconds": 60,
+    "rate_limit_per_minute": 100,
+    "blocked_ip_ranges": [],
+    "require_authentication": false,
+    "allowed_origins": ["*"]
+  },
+  
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "output": "file",
+    "file_path": "/workspace/.lingma/logs/mcp-server.log",
+    "max_file_size_mb": 50,
+    "backup_count": 5
+  },
+  
+  "performance": {
+    "cache_enabled": true,
+    "cache_ttl_seconds": 300,
+    "max_cache_size_mb": 100,
+    "enable_compression": true,
+    "connection_pool_size": 5
+  }
+}

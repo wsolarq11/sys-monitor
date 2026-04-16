@@ -102,5 +102,14 @@
       "user_request": "测试功能实现",
       "priority": "MEDIUM"
     }
+  },
+  {
+    "timestamp": "2026-04-16T04:51:36.925455",
+    "agent": "orchestrator",
+    "action": "TEST_ACTION",
+    "metadata": {
+      "test_key": "test_value",
+      "timestamp": "2026-04-16T04:51:36.925448"
+    }
   }
 ]

@@ -1,0 +1,761 @@
+{
+  "config": {
+    "configFile": "D:\\Users\\Administrator\\Desktop\\PowerShell_Script_Repository\\FolderSizeMonitor\\sys-monitor\\tests\\e2e\\playwright.config.ts",
+    "rootDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "environment": "local",
+      "timestamp": "2026-04-16T12:43:17.523Z",
+      "actualWorkers": 8
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/test-results/output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "environment": "local",
+          "timestamp": "2026-04-16T12:43:17.523Z",
+          "actualWorkers": 8
+        },
+        "id": "setup",
+        "name": "setup",
+        "testDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.setup\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/test-results/output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "environment": "local",
+          "timestamp": "2026-04-16T12:43:17.523Z",
+          "actualWorkers": 8
+        },
+        "id": "smoke",
+        "name": "smoke",
+        "testDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/smoke/**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/test-results/output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "environment": "local",
+          "timestamp": "2026-04-16T12:43:17.523Z",
+          "actualWorkers": 8
+        },
+        "id": "critical",
+        "name": "critical",
+        "testDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/critical/**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/test-results/output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "environment": "local",
+          "timestamp": "2026-04-16T12:43:17.523Z",
+          "actualWorkers": 8
+        },
+        "id": "regression",
+        "name": "regression",
+        "testDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/regression/**/*.spec.ts"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/test-results/output",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "environment": "local",
+          "timestamp": "2026-04-16T12:43:17.523Z",
+          "actualWorkers": 8
+        },
+        "id": "e2e-chromium",
+        "name": "e2e-chromium",
+        "testDir": "D:/Users/Administrator/Desktop/PowerShell_Script_Repository/FolderSizeMonitor/sys-monitor/tests/e2e/tests",
+        "testIgnore": [
+          "**/smoke/**",
+          "**/critical/**",
+          "**/regression/**"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "junit-results.xml"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 8,
+    "webServer": {
+      "command": "pnpm dev",
+      "url": "http://localhost:1420",
+      "reuseExistingServer": true,
+      "timeout": 60000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "folder-analysis-refactored.spec.ts",
+      "file": "folder-analysis-refactored.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "FolderAnalysis 模块功能测试",
+          "file": "folder-analysis-refactored.spec.ts",
+          "line": 10,
+          "column": 6,
+          "specs": [
+            {
+              "title": "✅ 页面加载成功",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2996,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.642Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-2f6048fafa731a3595a3",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 22,
+              "column": 7
+            },
+            {
+              "title": "✅ 手动输入路径",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2241,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.425Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-fe88e18e534fa7ff1d2d",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 30,
+              "column": 7
+            },
+            {
+              "title": "✅ 文件夹选择功能",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 2203,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.410Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-d7dc2baa34db553c46c5",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "✅ 空路径验证",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2623,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.469Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-276bfe74915b849a92ae",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 51,
+              "column": 7
+            },
+            {
+              "title": "✅ 成功的文件夹扫描",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 3304,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.611Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-616eb8897e1eaeab9395",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 63,
+              "column": 7
+            },
+            {
+              "title": "✅ 扫描历史显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 3114,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.560Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-6491d671632c0b7f6eb0",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 77,
+              "column": 7
+            },
+            {
+              "title": "✅ 用户取消文件夹选择",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "passed",
+                      "duration": 2540,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.503Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-29ee9abbba7e924925b6",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 90,
+              "column": 7
+            },
+            {
+              "title": "✅ 扫描错误处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "passed",
+                      "duration": 2633,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:19.780Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-39bcfd08ac4b91dc841f",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 102,
+              "column": 7
+            },
+            {
+              "title": "✅ 特殊字符路径处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 2610,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:22.021Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-8e79cd7aa7a36d572c84",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 125,
+              "column": 7
+            },
+            {
+              "title": "✅ 监控文件夹列表显示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 2104,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:22.039Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-a26ce95970a4af60d680",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 136,
+              "column": 7
+            },
+            {
+              "title": "✅ 切换监控状态",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "passed",
+                      "duration": 2395,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:22.471Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-4273f337e235ee2582fa",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 144,
+              "column": 7
+            },
+            {
+              "title": "✅ 添加监控文件夹",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 2239,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:22.472Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-a1fb41dc2dcba9b68544",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 155,
+              "column": 7
+            },
+            {
+              "title": "✅ 移除监控文件夹",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2152,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:23.091Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-ece81662ce2745ed1e83",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 163,
+              "column": 7
+            },
+            {
+              "title": "✅ 扫描期间禁用按钮",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "passed",
+                      "duration": 1999,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:23.159Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-ce90500b884a32438d91",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 174,
+              "column": 7
+            },
+            {
+              "title": "✅ 清除错误消息",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "passed",
+                      "duration": 2070,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:23.331Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-d3f28357ec67052e8a5d",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 187,
+              "column": 7
+            },
+            {
+              "title": "✅ 超长路径处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 2007,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:23.378Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-0a9f58209bc6d05e5182",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 200,
+              "column": 7
+            },
+            {
+              "title": "✅ 页面刷新后状态重置",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "e2e-chromium",
+                  "projectName": "e2e-chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 1858,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-16T12:43:24.203Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "641c7c108b2ff982cba1-35fd7448c964833b7af7",
+              "file": "folder-analysis-refactored.spec.ts",
+              "line": 212,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-16T12:43:17.529Z",
+    "duration": 8641.5,
+    "expected": 17,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * 警报级别
@@ -64,89 +66,121 @@ interface AlertState {
 
 const ALERT_LIMIT = 100;
 
-export const useAlertStore = create<AlertState>((set, get) => ({
-  // 初始状态
-  alerts: [],
-  unreadCount: 0,
-  
-  // Actions - 警报管理
-  addAlert: (alertData) => set((state) => {
-    const alert: Alert = {
-      ...alertData,
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      resolved: false,
-      acknowledged: false,
-    };
-    
-    const newAlerts = [alert, ...state.alerts].slice(0, ALERT_LIMIT);
-    return {
-      alerts: newAlerts,
-      unreadCount: state.unreadCount + 1,
-    };
-  }),
-  
-  resolveAlert: (id) => set((state) => ({
-    alerts: state.alerts.map(alert =>
-      alert.id === id ? { ...alert, resolved: true } : alert
-    ),
-  })),
-  
-  acknowledgeAlert: (id) => set((state) => {
-    const alert = state.alerts.find(a => a.id === id);
-    const unreadDecrease = alert && !alert.acknowledged ? 1 : 0;
-    
-    return {
-      alerts: state.alerts.map(alert =>
-        alert.id === id ? { ...alert, acknowledged: true } : alert
-      ),
-      unreadCount: Math.max(0, state.unreadCount - unreadDecrease),
-    };
-  }),
-  
-  removeAlert: (id) => set((state) => {
-    const alert = state.alerts.find(a => a.id === id);
-    const unreadDecrease = alert && !alert.acknowledged ? 1 : 0;
-    
-    return {
-      alerts: state.alerts.filter(alert => alert.id !== id),
-      unreadCount: Math.max(0, state.unreadCount - unreadDecrease),
-    };
-  }),
-  
-  clearResolved: () => set((state) => {
-    const resolvedCount = state.alerts.filter(a => a.resolved && !a.acknowledged).length;
-    return {
-      alerts: state.alerts.filter(alert => !alert.resolved),
-      unreadCount: Math.max(0, state.unreadCount - resolvedCount),
-    };
-  }),
-  
-  clearAll: () => set({ alerts: [], unreadCount: 0 }),
-  
-  // Actions - 批量操作
-  acknowledgeAll: () => set((state) => ({
-    alerts: state.alerts.map((alert) => ({ ...alert, acknowledged: true })),
-    unreadCount: 0,
-  })),
-  
-  resolveAll: () => set((state) => ({
-    alerts: state.alerts.map((alert) => ({ ...alert, resolved: true })),
-  })),
-  
-  // Actions - 查询
-  getUnresolvedAlerts: () => {
-    const { alerts } = get();
-    return alerts.filter(alert => !alert.resolved);
-  },
-  
-  getAlertsByLevel: (level) => {
-    const { alerts } = get();
-    return alerts.filter(alert => alert.level === level);
-  },
-  
-  getAlertsByType: (type) => {
-    const { alerts } = get();
-    return alerts.filter(alert => alert.type === type);
-  },
-}));
+export const useAlertStore = create<AlertState>()(
+  devtools(
+    (set, get) => ({
+      // 初始状态
+      alerts: [],
+      unreadCount: 0,
+      
+      // Actions - 警报管理
+      addAlert: (alertData) => set((state) => {
+        const alert: Alert = {
+          ...alertData,
+          id: crypto.randomUUID(),
+          timestamp: Date.now(),
+          resolved: false,
+          acknowledged: false,
+        };
+        
+        const newAlerts = [alert, ...state.alerts].slice(0, ALERT_LIMIT);
+        return {
+          alerts: newAlerts,
+          unreadCount: state.unreadCount + 1,
+        };
+      }),
+      
+      resolveAlert: (id) => set((state) => ({
+        alerts: state.alerts.map(alert =>
+          alert.id === id ? { ...alert, resolved: true } : alert
+        ),
+      })),
+      
+      acknowledgeAlert: (id) => set((state) => {
+        const alert = state.alerts.find(a => a.id === id);
+        const unreadDecrease = alert && !alert.acknowledged ? 1 : 0;
+        
+        return {
+          alerts: state.alerts.map(alert =>
+            alert.id === id ? { ...alert, acknowledged: true } : alert
+          ),
+          unreadCount: Math.max(0, state.unreadCount - unreadDecrease),
+        };
+      }),
+      
+      removeAlert: (id) => set((state) => {
+        const alert = state.alerts.find(a => a.id === id);
+        const unreadDecrease = alert && !alert.acknowledged ? 1 : 0;
+        
+        return {
+          alerts: state.alerts.filter(alert => alert.id !== id),
+          unreadCount: Math.max(0, state.unreadCount - unreadDecrease),
+        };
+      }),
+      
+      clearResolved: () => set((state) => {
+        const resolvedCount = state.alerts.filter(a => a.resolved && !a.acknowledged).length;
+        return {
+          alerts: state.alerts.filter(alert => !alert.resolved),
+          unreadCount: Math.max(0, state.unreadCount - resolvedCount),
+        };
+      }),
+      
+      clearAll: () => set({ alerts: [], unreadCount: 0 }),
+      
+      // Actions - 批量操作
+      acknowledgeAll: () => set((state) => ({
+        alerts: state.alerts.map((alert) => ({ ...alert, acknowledged: true })),
+        unreadCount: 0,
+      })),
+      
+      resolveAll: () => set((state) => ({
+        alerts: state.alerts.map((alert) => ({ ...alert, resolved: true })),
+      })),
+      
+      // Actions - 查询
+      getUnresolvedAlerts: () => {
+        const { alerts } = get();
+        return alerts.filter(alert => !alert.resolved);
+      },
+      
+      getAlertsByLevel: (level) => {
+        const { alerts } = get();
+        return alerts.filter(alert => alert.level === level);
+      },
+      
+      getAlertsByType: (type) => {
+        const { alerts } = get();
+        return alerts.filter(alert => alert.type === type);
+      },
+    }),
+    { name: 'AlertStore' }
+  )
+);
+
+// ==================== 自定义 Hooks（性能优化）====================
+
+/**
+ * 获取所有警报列表
+ */
+export function useAlerts() {
+  return useAlertStore(
+    useShallow((state) => state.alerts)
+  );
+}
+
+/**
+ * 获取未读警报数量
+ */
+export function useUnreadCount() {
+  return useAlertStore((state) => state.unreadCount);
+}
+
+/**
+ * 获取未解决的警报
+ */
+export function useUnresolvedAlerts() {
+  return useAlertStore(
+    useShallow((state) => state.getUnresolvedAlerts())
+  );
+}

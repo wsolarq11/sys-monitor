@@ -26,8 +26,10 @@ use commands::folder::{
     get_folder_scans, list_watched_folders, remove_watched_folder, scan_folder, select_folder,
     toggle_watched_folder_active,
 };
+use commands::gpu::get_gpu_info;
 use commands::system::{
-    get_cpu_info, get_disk_info, get_memory_info, get_network_info, get_system_metrics,
+    get_cpu_info, get_disk_info, get_memory_info, get_network_info, get_process_list,
+    get_system_metrics,
 };
 use error::ErrorMonitor;
 use error_handling::ErrorHandler;
@@ -105,6 +107,8 @@ pub fn run() {
             get_memory_info,
             get_disk_info,
             get_network_info,
+            get_process_list,
+            get_gpu_info,
             get_db_path,
             scan_folder,
             get_folder_scans,

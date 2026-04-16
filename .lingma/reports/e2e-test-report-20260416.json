@@ -1,0 +1,25 @@
+{
+  "test_report": {
+    "title": "自迭代流系统端到端测试报告",
+    "project": "FolderSizeMonitor/.lingma",
+    "summary": {
+      "pass_rate": "89.3%",
+      "failed": 2,
+      "passed": 25,
+      "warnings": 1,
+      "total_tests": 28
+    },
+    "coverage_statistics": {
+      "session_middleware": "100% (4/4)",
+      "e2e_automation": "75% (3/4)",
+      "directory_structure": "100% (3/3)",
+      "spec_workflow": "100% (3/3)",
+      "overall": "89.3% (25/28)",
+      "rules": "100% (4/4)",
+      "orchestration": "80% (4/5)",
+      "verification": "100% (1/1)",
+      "skills": "100% (3/3)"
+    },
+    "timestamp": "2026-04-16T04:53:27.5079151+08:00"
+  }
+}

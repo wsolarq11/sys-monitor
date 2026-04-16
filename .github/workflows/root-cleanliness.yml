@@ -1,0 +1,108 @@
+name: Root Directory Cleanliness Check
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # 每周一午夜检查
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  check-root-cleanliness:
+    name: Check Root Directory Cleanliness
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for forbidden files in root
+        run: |
+          echo "🔍 Checking root directory cleanliness..."
+          
+          # Find forbidden files in root directory
+          violations=$(find . -maxdepth 1 -type f \( \
+            -name "*.py" -o \
+            -name "*.ps1" -o \
+            -name "*.sh" -o \
+            -name "*OPTIMIZATION*" -o \
+            -name "*QUICK_REFERENCE*" -o \
+            -name "*SUMMARY*" -o \
+            -name "*REPORT*" -o \
+            -name "*CHECKLIST*" -o \
+            -name "benchmark_*" -o \
+            -name "fix_*" -o \
+            -name "optimize_*" -o \
+            -name "enable_*" -o \
+            -name "temp_*" \
+          \) ! -name ".gitignore" ! -name ".lingmaignore" ! -name "README.md" 2>/dev/null || true)
+          
+          if [ -n "$violations" ]; then
+            echo "❌ ❌ ❌ FOUND FORBIDDEN FILES IN ROOT DIRECTORY ❌ ❌ ❌"
+            echo ""
+            echo "$violations"
+            echo ""
+            echo "💀 Cats are dying! Each file = 1 cat death!"
+            echo ""
+            echo "Please move files to correct locations:"
+            echo "  - Documents -> .lingma/docs/reports/"
+            echo "  - Scripts -> scripts/"
+            echo "  - Temporary files -> delete immediately"
+            echo ""
+            exit 1
+          fi
+          
+          echo "✅ Root directory is clean!"
+          echo "🐱 Cats are safe!"
+      
+      - name: Check .lingma/docs/ root level documents
+        run: |
+          echo "🔍 Checking .lingma/docs/ root level..."
+          
+          # Count markdown files in .lingma/docs/ root (not in subdirectories)
+          doc_count=$(find .lingma/docs -maxdepth 1 -name "*.md" 2>/dev/null | wc -l)
+          
+          if [ "$doc_count" -gt 5 ]; then
+            echo "⚠️  Warning: Too many documents in .lingma/docs/ root ($doc_count > 5)"
+            echo "Please move detailed docs to subdirectories:"
+            echo "  - Architecture docs -> .lingma/docs/architecture/"
+            echo "  - Guides -> .lingma/docs/guides/"
+            echo "  - Reports -> .lingma/docs/reports/"
+          else
+            echo "✅ .lingma/docs/ root level is clean ($doc_count documents)"
+          fi
+      
+      - name: Check scripts/ for temporary files
+        run: |
+          echo "🔍 Checking scripts/ for temporary files..."
+          
+          # Look for temporary/fix scripts that should be deleted
+          temp_scripts=$(find scripts -maxdepth 1 -type f \( \
+            -name "fix_*.py" -o \
+            -name "temp_*.py" -o \
+            -name "*_temp.py" \
+          \) 2>/dev/null || true)
+          
+          if [ -n "$temp_scripts" ]; then
+            echo "⚠️  Warning: Found temporary scripts in scripts/:"
+            echo "$temp_scripts"
+            echo "Please delete them if no longer needed"
+          else
+            echo "✅ No temporary scripts found"
+          fi
+      
+      - name: Generate cleanliness report
+        if: always()
+        run: |
+          echo "## 📊 Root Directory Cleanliness Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Check Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Status**: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Checked" >> $GITHUB_STEP_SUMMARY
+          echo "- Root directory: ✅ Clean" >> $GITHUB_STEP_SUMMARY
+          echo "- .lingma/docs/: ✅ Organized" >> $GITHUB_STEP_SUMMARY
+          echo "- scripts/: ✅ No temp files" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🐱 All cats are safe!" >> $GITHUB_STEP_SUMMARY

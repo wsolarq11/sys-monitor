@@ -1,41 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { BaseChart, type DataPoint } from '../common/BaseChart';
+import { BaseChart } from '../common/BaseChart';
+import { RingBuffer, type DataPoint } from '../../utils/chartUtils';
+
+// 创建环形缓冲区，最多保存 100 个数据点
+const cpuBuffer = new RingBuffer<DataPoint>(100);
 
 export const CPUGraph: React.FC = () => {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchMetrics = useCallback(async () => {
+    try {
+      const metrics = await invoke<any>('get_system_metrics');
+      const newDataPoint: DataPoint = {
+        time: new Date().toISOString(),
+        cpu: metrics.cpu_usage,
+      };
+
+      // 使用环形缓冲区添加新数据
+      cpuBuffer.push(newDataPoint);
+      
+      // 更新状态
+      setData(cpuBuffer.toArray());
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch CPU metrics');
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const metrics = await invoke<any>('get_system_metrics');
-        const newDataPoint: DataPoint = {
-          time: new Date().toISOString(),
-          cpu: metrics.cpu_usage,
-        };
-
-        setData((prev) => {
-          const updated = [...prev, newDataPoint];
-          // Keep last 60 data points (1 minute at 1 second intervals)
-          return updated.slice(-60);
-        });
-
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch CPU metrics');
-        setLoading(false);
-      }
-    };
-
     // Initial fetch
     fetchMetrics();
 
     // Poll every second
     const interval = setInterval(fetchMetrics, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMetrics]);
 
   if (loading) {
     return (
@@ -62,6 +65,7 @@ export const CPUGraph: React.FC = () => {
       yAxisDomain={[0, 100]}
       yAxisLabel="Usage %"
       height={250}
+      maxDataPoints={100}
     />
   );
 };

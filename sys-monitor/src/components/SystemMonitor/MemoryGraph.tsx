@@ -1,46 +1,49 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { BaseChart, type DataPoint } from '../common/BaseChart';
+import { BaseChart } from '../common/BaseChart';
+import { RingBuffer, type DataPoint } from '../../utils/chartUtils';
+
+// 创建环形缓冲区，最多保存 100 个数据点
+const memoryBuffer = new RingBuffer<DataPoint>(100);
 
 export const MemoryGraph: React.FC = () => {
   const [data, setData] = useState<DataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchMetrics = useCallback(async () => {
+    try {
+      const metrics = await invoke<any>('get_system_metrics');
+      const memoryPercent =
+        metrics.memory_total > 0
+          ? (metrics.memory_usage / metrics.memory_total) * 100
+          : 0;
+
+      const newDataPoint: DataPoint = {
+        time: new Date().toISOString(),
+        memory: memoryPercent,
+      };
+
+      // 使用环形缓冲区添加新数据
+      memoryBuffer.push(newDataPoint);
+      
+      // 更新状态
+      setData(memoryBuffer.toArray());
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to fetch memory metrics');
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const metrics = await invoke<any>('get_system_metrics');
-        const memoryPercent =
-          metrics.memory_total > 0
-            ? (metrics.memory_usage / metrics.memory_total) * 100
-            : 0;
-
-        const newDataPoint: DataPoint = {
-          time: new Date().toISOString(),
-          memory: memoryPercent,
-        };
-
-        setData((prev) => {
-          const updated = [...prev, newDataPoint];
-          // Keep last 60 data points
-          return updated.slice(-60);
-        });
-
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch memory metrics');
-        setLoading(false);
-      }
-    };
-
     // Initial fetch
     fetchMetrics();
 
     // Poll every second
     const interval = setInterval(fetchMetrics, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMetrics]);
 
   if (loading) {
     return (
@@ -67,6 +70,7 @@ export const MemoryGraph: React.FC = () => {
       yAxisDomain={[0, 100]}
       yAxisLabel="Usage %"
       height={250}
+      maxDataPoints={100}
     />
   );
 };

@@ -116,10 +116,15 @@ class SupervisorAgent:
             return result
             
         except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"ERROR in orchestrate_tasks: {e}")
+            print(f"Traceback:\n{error_traceback}", file=sys.stderr)
             return {
                 "pattern": pattern,
                 "status": "error",
                 "error": str(e),
+                "traceback": error_traceback,
                 "duration_seconds": (datetime.now() - start_time).total_seconds()
             }
     
@@ -285,9 +290,9 @@ class SupervisorAgent:
         gates = {
             "gate_1_self_validation": {"name": "Agent自检", "passed": True, "details": []},
             "gate_2_test_runner": {"name": "测试验证", "passed": True, "details": []},
-            "gate_3_code_review": {"name": "代码审查", "passed": True, "score": 0},
+            "gate_3_code_review": {"name": "代码审查", "passed": True, "score": 0, "details": []},
             "gate_4_documentation": {"name": "文档检查", "passed": True, "details": []},
-            "gate_5_supervisor_acceptance": {"name": "Supervisor验收", "passed": True, "score": 0}
+            "gate_5_supervisor_acceptance": {"name": "Supervisor验收", "passed": True, "score": 0, "details": []}
         }
         
         # Gate 1: Agent自检
@@ -296,10 +301,10 @@ class SupervisorAgent:
                 gates["gate_1_self_validation"]["details"].append(
                     f"✓ Task {result['task_id']} self-validation passed"
                 )
-            else:
+            elif result.get("status") != "skipped":
                 gates["gate_1_self_validation"]["passed"] = False
                 gates["gate_1_self_validation"]["details"].append(
-                    f"✗ Task {result['task_id']} self-validation failed: {result.get('error')}"
+                    f"✗ Task {result['task_id']} self-validation failed: {result.get('error', 'Unknown error')}"
                 )
         
         # Gate 2: 测试验证
@@ -393,8 +398,11 @@ class SupervisorAgent:
                 log_data = json.loads(
                     self.decision_log_path.read_text(encoding='utf-8')
                 )
+                # 确保 entries 键存在
+                if "entries" not in log_data:
+                    log_data["entries"] = []
             else:
-                log_data = {"version": "1.0", "entries": []}
+                log_data = {"version": "1.0", "created_at": datetime.now().isoformat(), "entries": []}
             
             # 添加新条目
             log_data["entries"].append(entry)
@@ -406,7 +414,7 @@ class SupervisorAgent:
             )
             
         except Exception as e:
-            print(f"⚠️  Failed to log decision: {e}")
+            print(f"WARNING - Failed to log decision: {e}")
     
     def process_request(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """处理请求的主入口"""

@@ -1,0 +1,207 @@
+name: CI Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  RUST_VERSION: 'stable'
+
+jobs:
+  test-python:
+    name: Python Tests & Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio bandit mypy black
+      
+      - name: Code style check (Black)
+        run: black .lingma/scripts/ --check
+      
+      - name: Type checking (mypy)
+        run: mypy .lingma/scripts/ --ignore-missing-imports
+      
+      - name: Run unit tests with coverage
+        run: |
+          pytest .lingma/scripts/ \
+            --cov=.lingma/scripts \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov \
+            --junitxml=junit-results.xml \
+            -v \
+            --tb=short
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: true
+          minimum_coverage: 80
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Security scan (Bandit)
+        run: bandit -r .lingma/scripts/ -f json -o bandit-report.json || true
+      
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-test-results
+          path: |
+            junit-results.xml
+            htmlcov/
+            bandit-report.json
+          retention-days: 7
+
+  test-typescript:
+    name: TypeScript Tests & E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Run unit tests
+        run: pnpm test -- --coverage
+      
+      - name: Run E2E tests (Playwright)
+        run: npx playwright test
+        env:
+          CI: true
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: typescript-test-results
+          path: |
+            sys-monitor/coverage/
+            sys-monitor/playwright-report/
+            tests/e2e/test-results/
+          retention-days: 7
+
+  test-rust:
+    name: Rust Tests & Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Rust ${{ env.RUST_VERSION }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            sys-monitor/src-tauri/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('sys-monitor/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      
+      - name: Run tests
+        run: cargo test --all-targets --verbose
+        working-directory: sys-monitor/src-tauri
+      
+      - name: Run clippy (linting)
+        run: cargo clippy -- -D warnings
+        working-directory: sys-monitor/src-tauri
+      
+      - name: Check formatting
+        run: cargo fmt --all --check
+        working-directory: sys-monitor/src-tauri
+
+  quality-gates:
+    name: Quality Gates Check
+    needs: [test-python, test-typescript, test-rust]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Check all tests passed
+        if: >
+          needs.test-python.result != 'success' ||
+          needs.test-typescript.result != 'success' ||
+          needs.test-rust.result != 'success'
+        run: |
+          echo "❌ Quality Gate Failed: Not all tests passed"
+          echo "Python: ${{ needs.test-python.result }}"
+          echo "TypeScript: ${{ needs.test-typescript.result }}"
+          echo "Rust: ${{ needs.test-rust.result }}"
+          exit 1
+      
+      - name: ✅ All Quality Gates Passed
+        run: echo "✅ All tests passed and quality gates met!"
+
+  notify-on-failure:
+    name: Notify on Failure
+    needs: [test-python, test-typescript, test-rust, quality-gates]
+    if: failure()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Create GitHub Issue for CI Failure
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const failedJobs = [];
+            
+            if ('${{ needs.test-python.result }}' === 'failure') {
+              failedJobs.push('Python Tests');
+            }
+            if ('${{ needs.test-typescript.result }}' === 'failure') {
+              failedJobs.push('TypeScript Tests');
+            }
+            if ('${{ needs.test-rust.result }}' === 'failure') {
+              failedJobs.push('Rust Tests');
+            }
+            if ('${{ needs.quality-gates.result }}' === 'failure') {
+              failedJobs.push('Quality Gates');
+            }
+            
+            const title = `🚨 CI Failed: ${context.workflow} - ${new Date().toISOString().split('T')[0]}`;
+            const body = `## Failed Jobs\n\n${failedJobs.map(job => `- ❌ ${job}`).join('\n')}\n\n**Workflow**: ${context.workflow}\n**Run ID**: ${context.runId}\n**Commit**: ${context.sha}\n\n[View Logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['ci-failed', 'needs-investigation', 'automated']
+            }).then(issue => {
+              console.log(`Created issue #${issue.data.number}`);
+            });

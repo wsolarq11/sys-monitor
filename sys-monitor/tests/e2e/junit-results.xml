@@ -1,0 +1,38 @@
+<testsuites id="" name="" tests="17" failures="0" skipped="0" errors="0" time="8.6415">
+<testsuite name="folder-analysis-refactored.spec.ts" timestamp="2026-04-16T12:43:17.698Z" hostname="e2e-chromium" tests="17" failures="0" skipped="0" time="41.088" errors="0">
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 页面加载成功" classname="folder-analysis-refactored.spec.ts" time="2.996">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 手动输入路径" classname="folder-analysis-refactored.spec.ts" time="2.241">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 文件夹选择功能" classname="folder-analysis-refactored.spec.ts" time="2.203">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 空路径验证" classname="folder-analysis-refactored.spec.ts" time="2.623">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 成功的文件夹扫描" classname="folder-analysis-refactored.spec.ts" time="3.304">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 扫描历史显示" classname="folder-analysis-refactored.spec.ts" time="3.114">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 用户取消文件夹选择" classname="folder-analysis-refactored.spec.ts" time="2.54">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 扫描错误处理" classname="folder-analysis-refactored.spec.ts" time="2.633">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 特殊字符路径处理" classname="folder-analysis-refactored.spec.ts" time="2.61">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 监控文件夹列表显示" classname="folder-analysis-refactored.spec.ts" time="2.104">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 切换监控状态" classname="folder-analysis-refactored.spec.ts" time="2.395">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 添加监控文件夹" classname="folder-analysis-refactored.spec.ts" time="2.239">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 移除监控文件夹" classname="folder-analysis-refactored.spec.ts" time="2.152">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 扫描期间禁用按钮" classname="folder-analysis-refactored.spec.ts" time="1.999">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 清除错误消息" classname="folder-analysis-refactored.spec.ts" time="2.07">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 超长路径处理" classname="folder-analysis-refactored.spec.ts" time="2.007">
+</testcase>
+<testcase name="FolderAnalysis 模块功能测试 › ✅ 页面刷新后状态重置" classname="folder-analysis-refactored.spec.ts" time="1.858">
+</testcase>
+</testsuite>
+</testsuites>

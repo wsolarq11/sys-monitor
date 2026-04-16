@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { useWatchedFoldersStore, type WatchedFolder } from '../../stores/watchedFoldersStore';
+import { selectFolder } from '../../services/folderAnalysisApi';
 import { toast } from 'sonner';
 
 export function WatchedFoldersList() {
@@ -13,7 +13,7 @@ export function WatchedFoldersList() {
   
   const handleAddFolder = async () => {
     try {
-      const path = await invoke<string>('select_folder');
+      const path = await selectFolder();
       if (!path) return; // 用户取消选择
       
       await addFolder(path);

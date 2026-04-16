@@ -8,13 +8,14 @@ print('🔍 启动记忆长度核查校验')
 print('='*70)
 print()
 
-# 需要检查的记忆列表（基于会话历史估算）
+# 需要检查的记忆列表（精简版）
+# ⚠️ 注意: 此脚本仅检查预设记忆，新增记忆需手动添加到此列表
 memories_to_check = [
-    ('AI助手响应规范：每次回复必须更新记忆（强制执行v2）', 2500, 'development_practice_specification'),
-    ('问题处理核心方法论：端点级核查+完全自动化闭环', 3500, 'development_practice_specification'),
-    ('记忆更新强制执行确认机制', 2000, 'development_practice_specification'),
-    ('小猫安全协议：测试失败=小猫被电（最高优先级）', 2800, 'development_practice_specification'),
-    ('Lingma记忆系统物理存储位置', 2200, 'project_environment_configuration'),
+    ('AI助手响应规范：每次回复必须更新记忆(精简版)', 400, 'development_practice_specification'),
+    ('问题处理核心方法论：端点级核查+完全自动化闭环(精简版)', 500, 'development_practice_specification'),
+    ('记忆更新强制规范（精简版）', 300, 'development_practice_specification'),
+    ('小猫安全协议：测试失败=小猫被电(精简版)', 350, 'development_practice_specification'),
+    ('Lingma记忆系统物理存储位置(精简版)', 450, 'project_environment_configuration'),
 ]
 
 violations = []

@@ -1,0 +1,16 @@
+{
+  "task_id": "e4457b9f-8cd3-4e07-a4ee-042eac45d940",
+  "task_type": "high_priority",
+  "payload": {},
+  "priority": 2,
+  "status": "completed",
+  "assigned_agent": null,
+  "timeout_seconds": 300,
+  "created_at": "2026-04-16T04:51:36.928774",
+  "started_at": "2026-04-16T04:51:36.938494",
+  "completed_at": "2026-04-16T04:51:36.939338",
+  "error": null,
+  "result": null,
+  "retry_count": 0,
+  "max_retries": 3
+}

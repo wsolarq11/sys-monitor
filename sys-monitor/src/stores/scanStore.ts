@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * 扫描进度信息
@@ -77,71 +79,139 @@ interface ScanState {
 
 const SCAN_HISTORY_LIMIT = 50;
 
-export const useScanStore = create<ScanState>((set) => ({
-  // 初始状态
-  selectedPath: null,
-  isScanning: false,
-  scanProgress: null,
-  currentScan: null,
-  scanHistory: [],
-  error: null,
-  dbPath: null,
-  
-  // Actions - 路径管理
-  setSelectedPath: (path) => set({ selectedPath: path }),
-  setDbPath: (path) => set({ dbPath: path }),
-  
-  // Actions - 扫描控制
-  startScan: () => set({
-    isScanning: true,
-    scanProgress: { current: 0, total: 0, percentage: 0 },
-    error: null,
-  }),
-  
-  completeScan: (result, duration) => set((state) => {
-    const historyItem: ScanHistoryItem = {
-      id: crypto.randomUUID(),
-      path: result.path,
-      timestamp: Date.now(),
-      duration,
-      result,
-    };
-    
-    return {
-      isScanning: false,
-      scanProgress: { current: result.fileCount, total: result.fileCount, percentage: 100 },
-      currentScan: result,
-      scanHistory: [historyItem, ...state.scanHistory].slice(0, SCAN_HISTORY_LIMIT),
-    };
-  }),
-  
-  cancelScan: () => set({
-    isScanning: false,
-    scanProgress: null,
-  }),
-  
-  updateProgress: (progress) => set({ scanProgress: progress }),
-  
-  // Actions - 错误处理
-  setError: (error) => set({ error, isScanning: false }),
-  clearError: () => set({ error: null }),
-  
-  // Actions - 历史管理
-  addToHistory: (item) => set((state) => ({
-    scanHistory: [item, ...state.scanHistory].slice(0, SCAN_HISTORY_LIMIT),
-  })),
-  
-  clearHistory: () => set({ scanHistory: [] }),
-  removeHistoryItem: (id) => set((state) => ({
-    scanHistory: state.scanHistory.filter(item => item.id !== id),
-  })),
-  
-  // Actions - 重置
-  reset: () => set({
-    selectedPath: null,
-    isScanning: false,
-    scanProgress: null,
-    currentScan: null,
-    error: null,
-  }),
-}));
+export const useScanStore = create<ScanState>()(
+  devtools(
+    persist(
+      (set) => ({
+        // 初始状态
+        selectedPath: null,
+        isScanning: false,
+        scanProgress: null,
+        currentScan: null,
+        scanHistory: [],
+        error: null,
+        dbPath: null,
+        
+        // Actions - 路径管理
+        setSelectedPath: (path) => set({ selectedPath: path }),
+        setDbPath: (path) => set({ dbPath: path }),
+        
+        // Actions - 扫描控制
+        startScan: () => set({
+          isScanning: true,
+          scanProgress: { current: 0, total: 0, percentage: 0 },
+          error: null,
+        }),
+        
+        completeScan: (result, duration) => set((state) => {
+          const historyItem: ScanHistoryItem = {
+            id: crypto.randomUUID(),
+            path: result.path,
+            timestamp: Date.now(),
+            duration,
+            result,
+          };
+          
+          return {
+            isScanning: false,
+            scanProgress: { current: result.fileCount, total: result.fileCount, percentage: 100 },
+            currentScan: result,
+            scanHistory: [historyItem, ...state.scanHistory].slice(0, SCAN_HISTORY_LIMIT),
+          };
+        }),
+        
+        cancelScan: () => set({
+          isScanning: false,
+          scanProgress: null,
+        }),
+        
+        updateProgress: (progress) => set({ scanProgress: progress }),
+        
+        // Actions - 错误处理
+        setError: (error) => set({ error, isScanning: false }),
+        clearError: () => set({ error: null }),
+        
+        // Actions - 历史管理
+        addToHistory: (item) => set((state) => ({
+          scanHistory: [item, ...state.scanHistory].slice(0, SCAN_HISTORY_LIMIT),
+        })),
+        
+        clearHistory: () => set({ scanHistory: [] }),
+        removeHistoryItem: (id) => set((state) => ({
+          scanHistory: state.scanHistory.filter(item => item.id !== id),
+        })),
+        
+        // Actions - 重置
+        reset: () => set({
+          selectedPath: null,
+          isScanning: false,
+          scanProgress: null,
+          currentScan: null,
+          error: null,
+        }),
+      }),
+      {
+        name: 'scan-storage',
+        // 只持久化扫描历史，不持久化临时状态
+        partialize: (state) => ({ 
+          scanHistory: state.scanHistory.slice(0, 10),
+          dbPath: state.dbPath,
+        }),
+        version: 1,
+      }
+    ),
+    { name: 'ScanStore' }
+  )
+);
+
+// ==================== 自定义 Hooks（性能优化）====================
+
+/**
+ * 获取当前选择的扫描路径
+ */
+export function useSelectedPath() {
+  return useScanStore((state) => state.selectedPath);
+}
+
+/**
+ * 获取扫描状态
+ */
+export function useIsScanning() {
+  return useScanStore((state) => state.isScanning);
+}
+
+/**
+ * 获取扫描进度
+ */
+export function useScanProgress() {
+  return useScanStore(
+    useShallow((state) => state.scanProgress)
+  );
+}
+
+/**
+ * 获取当前扫描结果
+ */
+export function useCurrentScan() {
+  return useScanStore(
+    useShallow((state) => state.currentScan)
+  );
+}
+
+/**
+ * 获取扫描历史
+ */
+export function useScanHistory() {
+  return useScanStore(
+    useShallow((state) => state.scanHistory)
+  );
+}
+
+/**
+ * 获取扫描错误
+ */
+export function useScanError() {
+  return useScanStore(
+    useShallow((state) => state.error)
+  );
+}

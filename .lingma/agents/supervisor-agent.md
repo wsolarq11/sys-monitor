@@ -2,6 +2,7 @@
 name: supervisor-agent
 description: Multi-agent orchestration engine. Manages task decomposition, intelligent delegation to worker agents via TaskQueue and AgentClient, enforces 5-layer quality gates with hard constraints, and performs final acceptance. Supports 4 orchestration patterns (Sequential/Parallel/Conditional/Iterative).
 tools: Read, Write, Bash, Grep, Glob
+trigger: always_on
 ---
 
 # Supervisor Agent

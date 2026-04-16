@@ -1,0 +1,123 @@
+{
+  "method": "orchestrate_tasks",
+  "params": {
+    "tasks": [
+      {
+        "task_id": "task-doc-001",
+        "task_type": "documentation",
+        "agent": "documentation-agent",
+        "priority": "critical",
+        "payload": {
+          "title": "完善5个Agent的详细指南文档",
+          "agents": [
+            "spec-driven-core-agent",
+            "test-runner-agent", 
+            "code-review-agent",
+            "documentation-agent",
+            "devops-agent"
+          ],
+          "output_dir": ".lingma/docs/architecture/agent-system/",
+          "requirements": [
+            "每个Agent独立的详细指南文档",
+            "包含API参考、使用示例、故障排查",
+            "建立完整的知识库结构",
+            "遵循单一入口原则,详细内容放docs/"
+          ]
+        }
+      },
+      {
+        "task_id": "task-quality-001",
+        "task_type": "quality-gates",
+        "agent": "supervisor-agent",
+        "priority": "critical",
+        "payload": {
+          "title": "细化5层质量门禁标准",
+          "gates": [
+            {
+              "gate": 1,
+              "name": "自动化测试标准",
+              "details": "代码规范(Pylint/Black) + 类型检查(mypy) + 单元测试覆盖(≥80%)"
+            },
+            {
+              "gate": 2,
+              "name": "Test Runner验证",
+              "details": "集成测试 + E2E测试 + 性能基准测试"
+            },
+            {
+              "gate": 3,
+              "name": "Code Review评分细则",
+              "details": "代码复杂度(<10) + 重复率(<5%) + 安全漏洞扫描 + 性能基准"
+            },
+            {
+              "gate": 4,
+              "name": "文档完整性检查",
+              "details": "API文档 + ADR + CHANGELOG + 用户指南同步"
+            },
+            {
+              "gate": 5,
+              "name": "Supervisor最终验收算法",
+              "details": "综合评分(加权平均) + 回归测试 + 人工审批阈值"
+            }
+          ],
+          "output_file": ".lingma/docs/architecture/agent-system/quality-gates.md"
+        }
+      },
+      {
+        "task_id": "task-async-001",
+        "task_type": "implementation",
+        "agent": "spec-driven-core-agent",
+        "priority": "high",
+        "payload": {
+          "title": "Asyncio异步化改造",
+          "components": [
+            "TaskQueue → async class with asyncio.Queue",
+            "AgentClient.call_agent() → async def with asyncio.create_subprocess_exec",
+            "Supervisor.orchestrate_tasks() → asyncio.gather() / TaskGroup",
+            "Optional: HTTP protocol upgrade with aiohttp"
+          ],
+          "target_files": [
+            ".lingma/worker/task_queue.py",
+            ".lingma/worker/agent_client.py",
+            ".lingma/scripts/supervisor-agent.py"
+          ]
+        }
+      },
+      {
+        "task_id": "task-otel-001",
+        "task_type": "implementation",
+        "agent": "spec-driven-core-agent",
+        "priority": "high",
+        "payload": {
+          "title": "OpenTelemetry链路追踪集成",
+          "dimensions": [
+            "Agent内部链路追踪(trace_id注入 + Span创建)",
+            "Exporter配置(Jaeger/Zipkin后端集成)",
+            "结构化事件日志(task_enqueued, gate_passed等)",
+            "资源监控指标(CPU/Memory/IO + Prometheus集成)"
+          ],
+          "dependencies": ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp"]
+        }
+      },
+      {
+        "task_id": "task-cicd-001",
+        "task_type": "devops",
+        "agent": "devops-agent",
+        "priority": "high",
+        "payload": {
+          "title": "CI/CD测试流水线配置",
+          "components": [
+            "GitHub Actions workflow: pytest → playwright → cargo test",
+            "测试覆盖率门禁(pytest-cov + Codecov, ≥80%)",
+            "失败通知(GitHub Issue自动创建 + 日志附件)",
+            "性能优化(依赖缓存 + job matrix + 超时控制 + 重试)"
+          ],
+          "output_file": ".github/workflows/ci-tests.yml"
+        }
+      }
+    ],
+    "pattern": "parallel",
+    "quality_gates_enabled": true
+  },
+  "id": "orchestration-001",
+  "trace_id": "trace-multi-agent-refactor-20260416"
+}

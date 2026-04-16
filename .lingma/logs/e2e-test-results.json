@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-16T02:33:19.159448",
+  "timestamp": "2026-04-16T04:51:24.551128",
   "project_root": "D:\\Users\\Administrator\\Desktop\\PowerShell_Script_Repository\\FolderSizeMonitor",
   "total_tests": 4,
   "passed": 3,
@@ -9,7 +9,7 @@
       "name": "Spec Watcher文件监听",
       "passed": true,
       "errors": [],
-      "start_time": "2026-04-16T02:33:13.226281",
+      "start_time": "2026-04-16T04:51:18.569025",
       "end_time": null,
       "duration": null
     },
@@ -17,7 +17,7 @@
       "name": "Rule Engine规则解析",
       "passed": true,
       "errors": [],
-      "start_time": "2026-04-16T02:33:15.539398",
+      "start_time": "2026-04-16T04:51:20.913724",
       "end_time": null,
       "duration": null
     },
@@ -27,7 +27,7 @@
       "errors": [
         "Worker启动失败: "
       ],
-      "start_time": "2026-04-16T02:33:15.892389",
+      "start_time": "2026-04-16T04:51:21.280490",
       "end_time": null,
       "duration": null
     },
@@ -35,7 +35,7 @@
       "name": "Git Hooks增强",
       "passed": true,
       "errors": [],
-      "start_time": "2026-04-16T02:33:19.158499",
+      "start_time": "2026-04-16T04:51:24.550270",
       "end_time": null,
       "duration": null
     }

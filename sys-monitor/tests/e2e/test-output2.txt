@@ -1,0 +1,126 @@
+
+Running 17 tests using 8 workers
+
+[1A[2K[1/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:30:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵嬪姩杈撳叆璺緞
+[1A[2K[2/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:42:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鏂囦欢澶归€夋嫨鍔熻兘
+[1A[2K[3/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:51:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?绌鸿矾寰勯獙璇?[1A[2K[4/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:92:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鐢ㄦ埛鍙栨秷鏂囦欢澶归€夋嫨
+[1A[2K[5/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:78:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵弿鍘嗗彶鏄剧ず
+[1A[2K[6/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:22:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?椤甸潰鍔犺浇鎴愬姛
+[1A[2K[7/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:63:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎴愬姛鐨勬枃浠跺す鎵弿
+[1A[2K[8/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:104:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵弿閿欒澶勭悊
+[1A[2K[9/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:119:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鐗规畩瀛楃璺緞澶勭悊
+[1A[2K[10/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:130:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?[1A[2K[11/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:135:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鍒囨崲鐩戞帶鐘舵€?[1A[2K[12/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:146:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?娣诲姞鐩戞帶鏂囦欢澶?[1A[2K[13/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:154:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?绉婚櫎鐩戞帶鏂囦欢澶?[1A[2K[14/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:165:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵弿鏈熼棿绂佺敤鎸夐挳
+[1A[2K[15/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:178:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?娓呴櫎閿欒娑堟伅
+[1A[2K  1) [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:130:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=鏂囨。鏂囦欢澶?).or(locator('text=杩愯涓?))
+    Expected: visible
+    Error: strict mode violation: locator('text=鏂囨。鏂囦欢澶?).or(locator('text=杩愯涓?)) resolved to 2 elements:
+        1) <div title="鏂囨。鏂囦欢澶? class="font-medium text-gray-900 truncate">鏂囨。鏂囦欢澶?/div> aka getByText('鏂囨。鏂囦欢澶?)
+        2) <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">杩愯涓?/span> aka getByText('杩愯涓?)
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('text=鏂囨。鏂囦欢澶?).or(locator('text=杩愯涓?))[22m
+
+
+      130 |   test('鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?, async ({ page }) => {
+      131 |     // 楠岃瘉鐩戞帶鏂囦欢澶瑰垪琛ㄥ姞杞?鑷冲皯鏈変竴涓枃浠跺す)
+    > 132 |     await expect(page.locator('text=鏂囨。鏂囦欢澶?).or(page.locator('text=杩愯涓?))).toBeVisible({ timeout: 5000 });
+          |                                                                           ^
+      133 |   });
+      134 |
+      135 |   test('鉁?鍒囨崲鐩戞帶鐘舵€?, async ({ page }) => {
+        at D:\Users\Administrator\Desktop\PowerShell_Script_Repository\FolderSizeMonitor\sys-monitor\tests\e2e\tests\folder-analysis-refactored.spec.ts:132:75
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?e2e-chromium\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?e2e-chromium\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?e2e-chromium\error-context.md
+
+
+[1A[2K[16/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:203:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?椤甸潰鍒锋柊鍚庣姸鎬侀噸缃?[1A[2K[17/17] [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:191:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?瓒呴暱璺緞澶勭悊
+[1A[2K  2) [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:78:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵弿鍘嗗彶鏄剧ず 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=鎵弿瀹屾垚')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('text=鎵弿瀹屾垚')[22m
+
+
+      83 |     
+      84 |     // 绛夊緟鎵弿瀹屾垚
+    > 85 |     await expect(page.locator('text=鎵弿瀹屾垚')).toBeVisible({ timeout: 10000 });
+         |                                             ^
+      86 |     
+      87 |     // 楠岃瘉鎵弿鍘嗗彶鍖哄煙瀛樺湪(鍗充娇娌℃湁鍘嗗彶璁板綍涔熶笉搴旇鎶ラ敊)
+      88 |     // Mock浼氳繑鍥?鏉¤褰?浣哢I鍙兘浠ヤ笉鍚屾柟寮忔覆鏌?        at D:\Users\Administrator\Desktop\PowerShell_Script_Repository\FolderSizeMonitor\sys-monitor\tests\e2e\tests\folder-analysis-refactored.spec.ts:85:45
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎵弿鍘嗗彶鏄剧ず-e2e-chromium\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎵弿鍘嗗彶鏄剧ず-e2e-chromium\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎵弿鍘嗗彶鏄剧ず-e2e-chromium\error-context.md
+
+
+[1A[2K  3) [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:63:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎴愬姛鐨勬枃浠跺す鎵弿 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('text=鎵弿瀹屾垚')
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('text=鎵弿瀹屾垚')[22m
+
+
+      70 |     
+      71 |     // 绛夊緟鎵弿瀹屾垚骞舵樉绀虹粨鏋?Mock寰堝揩,鐩存帴妫€鏌ョ粨鏋?
+    > 72 |     await expect(page.locator('text=鎵弿瀹屾垚')).toBeVisible({ timeout: 10000 });
+         |                                             ^
+      73 |     
+      74 |     // 楠岃瘉鎵弿缁撴灉鏄剧ず(鑷冲皯鏄剧ず鎬诲ぇ灏?
+      75 |     await expect(page.locator('text=鎬诲ぇ灏?)).toBeVisible();
+        at D:\Users\Administrator\Desktop\PowerShell_Script_Repository\FolderSizeMonitor\sys-monitor\tests\e2e\tests\folder-analysis-refactored.spec.ts:72:45
+
+    attachment #1: screenshot (image/png) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎴愬姛鐨勬枃浠跺す鎵弿-e2e-chromium\test-failed-1.png
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    attachment #2: video (video/webm) 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎴愬姛鐨勬枃浠跺す鎵弿-e2e-chromium\video.webm
+    鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+
+    Error Context: test-results\output\folder-analysis-refactored-FolderAnalysis-妯″潡鍔熻兘娴嬭瘯-鉁?鎴愬姛鐨勬枃浠跺す鎵弿-e2e-chromium\error-context.md
+
+
+[1A[2K  3 failed
+    [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:63:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎴愬姛鐨勬枃浠跺す鎵弿 
+    [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:78:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鎵弿鍘嗗彶鏄剧ず 
+    [e2e-chromium] 鈥?tests\folder-analysis-refactored.spec.ts:130:7 鈥?FolderAnalysis 妯″潡鍔熻兘娴嬭瘯 鈥?鉁?鐩戞帶鏂囦欢澶瑰垪琛ㄦ樉绀?
+  14 passed (16.8s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

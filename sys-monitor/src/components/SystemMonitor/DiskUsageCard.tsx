@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {
   BarChart,
@@ -11,6 +11,7 @@ import {
   Legend,
   Cell,
 } from 'recharts';
+import { formatBytes } from '../../utils/chartUtils';
 
 interface DiskData {
   mount_point: string;
@@ -20,14 +21,6 @@ interface DiskData {
   usage_percent: number;
   disk_type: string;
 }
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -51,6 +44,17 @@ export const DiskUsageCard: React.FC = () => {
     fetchDiskInfo();
   }, []);
 
+  // 使用 useMemo 缓存图表数据
+  const chartData = useMemo(() => {
+    return disks.map((disk) => ({
+      name: disk.mount_point,
+      used: Math.round(disk.usage_percent),
+      free: Math.round(100 - disk.usage_percent),
+      total: formatBytes(disk.total_bytes),
+      type: disk.disk_type,
+    }));
+  }, [disks]);
+
   if (loading) {
     return (
       <div className="w-full h-64 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -66,14 +70,6 @@ export const DiskUsageCard: React.FC = () => {
       </div>
     );
   }
-
-  const chartData = disks.map((disk) => ({
-    name: disk.mount_point,
-    used: Math.round(disk.usage_percent),
-    free: Math.round(100 - disk.usage_percent),
-    total: formatBytes(disk.total_bytes),
-    type: disk.disk_type,
-  }));
 
   return (
     <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
@@ -110,7 +106,7 @@ export const DiskUsageCard: React.FC = () => {
                 }}
               />
               <Legend />
-              <Bar dataKey="used" name="Used" stackId="a" fill="#3b82f6">
+              <Bar dataKey="used" name="Used" stackId="a" fill="#3b82f6" isAnimationActive={false}>
                 {chartData.map((_, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -118,7 +114,7 @@ export const DiskUsageCard: React.FC = () => {
                   />
                 ))}
               </Bar>
-              <Bar dataKey="free" name="Free" stackId="a" fill="#9ca3af" />
+              <Bar dataKey="free" name="Free" stackId="a" fill="#9ca3af" isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
 

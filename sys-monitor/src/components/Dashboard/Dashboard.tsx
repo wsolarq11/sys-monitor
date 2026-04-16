@@ -3,6 +3,9 @@ import { MemoryMonitor } from '../SystemMonitor/MemoryMonitor';
 import { CPUGraph } from '../SystemMonitor/CPUGraph';
 import { MemoryGraph } from '../SystemMonitor/MemoryGraph';
 import { DiskUsageCard } from '../SystemMonitor/DiskUsageCard';
+import { ProcessMonitor } from '../SystemMonitor/ProcessMonitor';
+import { NetworkMonitor } from '../SystemMonitor/NetworkMonitor';
+import { GpuMonitor } from '../SystemMonitor/GpuMonitor';
 import BuildStatusCard from '../BuildStatus/BuildStatusCard';
 
 export function Dashboard() {
@@ -25,8 +28,23 @@ export function Dashboard() {
         <MemoryGraph />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 mb-6">
         <DiskUsageCard />
+      </div>
+
+      {/* GPU 监控（条件渲染） */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <GpuMonitor />
+      </div>
+
+      {/* 进程监控 */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <ProcessMonitor />
+      </div>
+
+      {/* 网络监控 */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <NetworkMonitor />
       </div>
 
       {/* 远程构建状态监控 */}

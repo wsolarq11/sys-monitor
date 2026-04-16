@@ -42,6 +42,16 @@ pub struct NetworkMetric {
     pub bytes_received: u64,
 }
 
+/// Process information for monitoring
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessInfo {
+    pub pid: u32,
+    pub name: String,
+    pub cpu_usage: f32,
+    pub memory: u64,  // bytes
+    pub memory_percent: f32,
+}
+
 /// Alert system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
