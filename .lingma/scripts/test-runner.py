@@ -213,9 +213,9 @@ class TestRunnerAgent:
             if skipped_match:
                 result["skipped"] = int(skipped_match.group(1))
             if error_match:
-                result["errors"].append(f"{error_match.group(1)} errors occurred")
+                result["errors"].append(f"{error_match.group(1)} errors occurred")  # type: ignore
 
-            result["total_tests"] = (
+            result["total_tests"] = (  # type: ignore
                 result["passed"] + result["failed"] + result["skipped"]
             )
 
