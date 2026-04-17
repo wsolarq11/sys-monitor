@@ -41,7 +41,7 @@ class CodeReviewerAgent:
         Returns:
             静态分析结果
         """
-        results = {"pylint": None, "flake8": None, "security_scan": None}
+        results: Dict[str, Any] = {"pylint": None, "flake8": None, "security_scan": None}
 
         target = file_path or str(self.repo_root)
 
@@ -181,15 +181,15 @@ class CodeReviewerAgent:
         Returns:
             质量指标
         """
-        metrics = {
+        metrics: Dict[str, Any] = {
             "files_analyzed": 0,
             "total_lines": 0,
             "code_lines": 0,
             "comment_lines": 0,
             "blank_lines": 0,
-            "complexity_score": 0,
-            "duplication_rate": 0,
-            "maintainability_index": 0,
+            "complexity_score": 0.0,
+            "duplication_rate": 0.0,
+            "maintainability_index": 0.0,
         }
 
         # 获取要分析的文件

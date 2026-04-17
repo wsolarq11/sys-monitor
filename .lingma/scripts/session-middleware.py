@@ -50,10 +50,6 @@ class ValidationReport:
         """添加根目录违规文件（严重错误）"""
         self.errors.append(f"🚫 根目录违规文件: {filename} (小猫死亡 🐱⚡)")
 
-    def add_root_violation(self, filename: str):
-        """添加根目录违规文件（严重错误）"""
-        self.errors.append(f"🚫 根目录违规文件: {filename} (小猫死亡 🐱⚡)")
-
     def summary(self) -> str:
         lines = []
         lines.append("\n" + "=" * 70)

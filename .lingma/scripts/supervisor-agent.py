@@ -304,7 +304,7 @@ class SupervisorAgent:
         Returns:
             质量门禁结果
         """
-        gates = {
+        gates: Dict[str, Any] = {
             "gate_1_self_validation": {
                 "name": "Agent自检",
                 "passed": True,
@@ -407,7 +407,7 @@ class SupervisorAgent:
         failed = orchestration_result.get("failed_tasks", 0)
         total = orchestration_result.get("total_tasks", 0)
 
-        decision = {
+        decision: Dict[str, Any] = {
             "verdict": "ACCEPTED" if all_gates_passed else "REJECTED",
             "reason": "",
             "recommendations": [],
