@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-AI Agent Theory of Mind & Social Intelligence System - AI Agent 心智理论与社会智能系统
+AI Agent Theory of Mind & Mental Modeling System - AI Agent 心智理论与心智建模系统
 
-心智建模、情感识别、同理心响应、多智能体社交互动
-实现生产级 AI Agent 的社会认知能力
+心智建模、贝叶斯推理、行为预测、社会智能、多智能体协调
+实现生产级 AI Agent 的心智理论能力
 
 参考社区最佳实践:
-- Theory of Mind (ToM) - Bayesian inference, recursive reasoning
-- Emotion recognition - multimodal (facial, vocal, textual)
-- Empathy modeling - cognitive empathy, affective empathy
-- Social interaction - multi-agent coordination, social norms
-- Mental state attribution - beliefs, desires, intentions
+- Theory of Mind (ToM) - understand others' beliefs, desires, intentions
+- Mental Modeling - infer and track mental states of other agents
+- Bayesian Inference - probabilistic reasoning about mental states
+- Behavior Prediction - predict actions based on mental models
+- Social Intelligence - effective multi-agent coordination
+- BDI Model (Belief-Desire-Intention) - cognitive architecture
 """
 
 import json
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 class MentalStateType(Enum):
-    """心理状态类型"""
+    """心智状态类型"""
     BELIEF = "belief"  # 信念
     DESIRE = "desire"  # 欲望
     INTENTION = "intention"  # 意图
@@ -39,900 +40,756 @@ class MentalStateType(Enum):
     KNOWLEDGE = "knowledge"  # 知识
 
 
-class EmotionType(Enum):
-    """情绪类型（Ekman基本情绪）"""
-    HAPPINESS = "happiness"  # 快乐
-    SADNESS = "sadness"  # 悲伤
-    ANGER = "anger"  # 愤怒
-    FEAR = "fear"  # 恐惧
-    SURPRISE = "surprise"  # 惊讶
-    DISGUST = "disgust"  # 厌恶
-    NEUTRAL = "neutral"  # 中性
-
-
-class EmpathyLevel(Enum):
-    """同理心层级"""
-    COGNITIVE = "cognitive"  # 认知同理心（理解他人观点）
-    AFFECTIVE = "affective"  # 情感同理心（感受他人情绪）
-    COMPASSIONATE = "compassionate"  # 共情关怀（采取行动帮助）
+class OrderLevel(Enum):
+    """心智理论阶数"""
+    FIRST_ORDER = "first_order"  # 一阶：我认为他相信什么
+    SECOND_ORDER = "second_order"  # 二阶：我认为他认为我相信什么
+    THIRD_ORDER = "third_order"  # 三阶及以上
 
 
 @dataclass
-class MentalState:
-    """心理状态"""
-    state_id: str
-    agent_id: str
-    state_type: MentalStateType
-    content: str
-    confidence: float = 1.0
+class BeliefState:
+    """信念状态"""
+    belief_id: str
+    content: str  # 信念内容
+    confidence: float = 0.5  # 置信度 0-1
     timestamp: str = ""
-    evidence: List[str] = field(default_factory=list)
     
     def __post_init__(self):
-        if not self.state_id:
-            self.state_id = str(uuid.uuid4())
+        if not self.belief_id:
+            self.belief_id = str(uuid.uuid4())
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
+
+
+@dataclass
+class DesireState:
+    """欲望状态"""
+    desire_id: str
+    description: str  # 欲望描述
+    priority: float = 0.5  # 优先级 0-1
+    urgency: float = 0.5  # 紧急程度 0-1
     
-    def __str__(self):
-        return f"{self.agent_id}: {self.state_type.value}={self.content} [{self.confidence:.2f}]"
+    def __post_init__(self):
+        if not self.desire_id:
+            self.desire_id = str(uuid.uuid4())
+
+
+@dataclass
+class IntentionState:
+    """意图状态"""
+    intention_id: str
+    goal: str  # 目标
+    plan: List[str] = field(default_factory=list)  # 计划步骤
+    current_step: int = 0  # 当前步骤
+    progress: float = 0.0  # 进度 0-1
+    
+    def __post_init__(self):
+        if not self.intention_id:
+            self.intention_id = str(uuid.uuid4())
 
 
 @dataclass
 class EmotionState:
     """情绪状态"""
-    emotion_id: str
-    agent_id: str
-    primary_emotion: EmotionType
-    intensity: float = 0.5  # 强度 [0, 1]
-    valence: float = 0.0  # 效价 [-1, 1] (negative to positive)
-    arousal: float = 0.5  # 唤醒度 [0, 1]
-    triggers: List[str] = field(default_factory=list)
-    timestamp: str = ""
+    emotion_type: str  # 情绪类型（happy/sad/angry/fear等）
+    intensity: float = 0.5  # 强度 0-1
+    valence: float = 0.0  # 效价 -1到1（负面到正面）
     
-    def __post_init__(self):
-        if not self.emotion_id:
-            self.emotion_id = str(uuid.uuid4())
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
-    
-    def __str__(self):
-        return f"{self.agent_id}: {self.primary_emotion.value} (intensity={self.intensity:.2f})"
+    def to_dict(self) -> Dict[str, float]:
+        return {
+            "type": self.emotion_type,
+            "intensity": self.intensity,
+            "valence": self.valence
+        }
 
 
 @dataclass
-class ToMModel:
-    """心智理论模型
+class MentalModel:
+    """心智模型
     
-    对特定Agent的心理状态建模
+    对另一个Agent的心智状态的完整建模
     """
-    model_id: str
-    target_agent_id: str
-    beliefs: List[MentalState] = field(default_factory=list)
-    desires: List[MentalState] = field(default_factory=list)
-    intentions: List[MentalState] = field(default_factory=list)
-    emotions: List[EmotionState] = field(default_factory=list)
-    knowledge_state: Dict[str, Any] = field(default_factory=dict)
-    last_updated: str = ""
+    agent_name: str
+    model_id: str = ""
+    
+    # 一阶信念：我认为他相信什么
+    inferred_beliefs: Dict[str, BeliefState] = field(default_factory=dict)
+    
+    # 一阶欲望：我认为他想要什么
+    inferred_desires: Dict[str, DesireState] = field(default_factory=dict)
+    
+    # 一阶意图：我认为他打算做什么
+    inferred_intentions: Dict[str, IntentionState] = field(default_factory=dict)
+    
+    # 情绪状态推断
+    inferred_emotions: Dict[str, EmotionState] = field(default_factory=dict)
+    
+    # 二阶信念：我认为他认为我相信什么
+    second_order_beliefs: Dict[str, float] = field(default_factory=dict)
+    
+    # 观察历史
+    observation_history: List[str] = field(default_factory=list)
+    
+    # 模型置信度
+    confidence: float = 0.5
     
     def __post_init__(self):
         if not self.model_id:
             self.model_id = str(uuid.uuid4())
-        if not self.last_updated:
-            self.last_updated = datetime.now(timezone.utc).isoformat()
     
-    def add_mental_state(self, state: MentalState):
-        """添加心理状态"""
-        if state.state_type == MentalStateType.BELIEF:
-            self.beliefs.append(state)
-        elif state.state_type == MentalStateType.DESIRE:
-            self.desires.append(state)
-        elif state.state_type == MentalStateType.INTENTION:
-            self.intentions.append(state)
-        
-        self.last_updated = datetime.now(timezone.utc).isoformat()
-    
-    def update_emotion(self, emotion: EmotionState):
-        """更新情绪状态"""
-        self.emotions.append(emotion)
-        self.last_updated = datetime.now(timezone.utc).isoformat()
-    
-    def get_current_emotion(self) -> Optional[EmotionState]:
-        """获取当前主导情绪"""
-        if not self.emotions:
-            return None
-        
-        # 返回最近的情绪
-        return self.emotions[-1]
-    
-    def predict_behavior(self) -> Dict[str, Any]:
-        """基于心理状态预测行为"""
-        predictions = {
-            "likely_actions": [],
-            "confidence": 0.0,
-            "reasoning": []
-        }
-        
-        # 基于意图预测
-        if self.intentions:
-            latest_intention = self.intentions[-1]
-            predictions["likely_actions"].append(latest_intention.content)
-            predictions["confidence"] = latest_intention.confidence
-            predictions["reasoning"].append(f"Intention: {latest_intention.content}")
-        
-        # 基于欲望调整
-        if self.desires:
-            for desire in self.desires[-2:]:  # 最近2个欲望
-                predictions["reasoning"].append(f"Desire: {desire.content}")
-        
-        return predictions
+    def update_confidence(self):
+        """基于观察数量更新置信度"""
+        num_observations = len(self.observation_history)
+        self.confidence = min(0.95, 0.5 + num_observations * 0.02)
 
 
 @dataclass
-class EmpathyResponse:
-    """同理心响应"""
-    response_id: str
-    empathy_level: EmpathyLevel
-    recognized_emotion: EmotionState
-    empathetic_message: str
-    suggested_action: str = ""
-    confidence: float = 0.0
+class BehaviorPrediction:
+    """行为预测结果"""
+    prediction_id: str
+    predicted_action: str  # 预测的行为
+    reasoning: str  # 推理过程
+    alternative_actions: List[str] = field(default_factory=list)  # 其他可能的行为
+    confidence: float = 0.0  # 预测置信度
     timestamp: str = ""
     
     def __post_init__(self):
-        if not self.response_id:
-            self.response_id = str(uuid.uuid4())
+        if not self.prediction_id:
+            self.prediction_id = str(uuid.uuid4())
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 @dataclass
-class SocialInteraction:
-    """社交互动记录"""
-    interaction_id: str
-    participants: List[str]
-    interaction_type: str  # conversation/collaboration/conflict/negotiation
-    messages: List[Dict[str, Any]] = field(default_factory=list)
-    emotional_dynamics: List[Dict[str, Any]] = field(default_factory=list)
-    outcome: str = ""
-    timestamp: str = ""
+class FalseBeliefTest:
+    """错误信念测试（Sally-Anne测试）"""
+    test_id: str
+    true_state: str  # 真实状态
+    observed_by_agent: str  # Agent观察到的
+    inferred_belief: str  # 推断的信念
+    matches_reality: bool  # 是否与真实一致
+    explanation: str  # 解释
     
     def __post_init__(self):
-        if not self.interaction_id:
-            self.interaction_id = str(uuid.uuid4())
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
+        if not self.test_id:
+            self.test_id = str(uuid.uuid4())
 
 
-class TheoryOfMindEngine:
-    """心智理论引擎
+class MentalModelManager:
+    """心智模型管理器
     
-    构建和维护对其他Agent的心理状态模型
+    管理和维护多个Agent的心智模型
     """
     
     def __init__(self):
-        self.tom_models: Dict[str, ToMModel] = {}
-        self.inference_history: List[Dict] = []
+        self.models: Dict[str, MentalModel] = {}
+        self.interaction_history: List[Dict] = []
     
-    def create_tom_model(self, agent_id: str, initial_context: Dict = None) -> ToMModel:
-        """
-        为指定Agent创建心智模型
+    def create_model(self, agent_name: str) -> MentalModel:
+        """创建心智模型"""
+        if agent_name in self.models:
+            return self.models[agent_name]
         
-        Args:
-            agent_id: Agent ID
-            initial_context: 初始上下文信息
-            
-        Returns:
-            心智模型
-        """
-        model = ToMModel(
-            model_id=str(uuid.uuid4()),
-            target_agent_id=agent_id
-        )
+        model = MentalModel(agent_name=agent_name)
+        self.models[agent_name] = model
         
-        # 如果有初始上下文，添加初始信念
-        if initial_context:
-            if "beliefs" in initial_context:
-                for belief_text in initial_context["beliefs"]:
-                    belief = MentalState(
-                        state_id="",
-                        agent_id=agent_id,
-                        state_type=MentalStateType.BELIEF,
-                        content=belief_text,
-                        confidence=initial_context.get("confidence", 0.8)
-                    )
-                    model.add_mental_state(belief)
-            
-            if "emotions" in initial_context:
-                for emo_data in initial_context["emotions"]:
-                    emotion = EmotionState(
-                        emotion_id="",
-                        agent_id=agent_id,
-                        primary_emotion=EmotionType(emo_data.get("type", "neutral")),
-                        intensity=emo_data.get("intensity", 0.5),
-                        valence=emo_data.get("valence", 0.0),
-                        arousal=emo_data.get("arousal", 0.5)
-                    )
-                    model.update_emotion(emotion)
-        
-        self.tom_models[agent_id] = model
-        
-        logger.info(f"ToM model created for agent: {agent_id}")
+        logger.info(f"Mental model created for: {agent_name}")
         
         return model
     
-    def infer_mental_state(
+    def get_model(self, agent_name: str) -> Optional[MentalModel]:
+        """获取心智模型"""
+        return self.models.get(agent_name)
+    
+    def update_observation(
         self,
-        agent_id: str,
-        observation: Dict[str, Any],
-        inference_type: str = "bayesian"
-    ) -> List[MentalState]:
+        agent_name: str,
+        observation: str,
+        context: str = ""
+    ):
         """
-        从观察中推断心理状态
+        更新观察记录
         
         Args:
-            agent_id: Agent ID
-            observation: 观察数据（言语、行为等）
-            inference_type: 推理类型（bayesian/recursive）
+            agent_name: Agent名称
+            observation: 观察内容
+            context: 上下文
+        """
+        if agent_name not in self.models:
+            self.create_model(agent_name)
+        
+        model = self.models[agent_name]
+        model.observation_history.append(observation)
+        model.update_confidence()
+        
+        # 记录交互历史
+        self.interaction_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "agent": agent_name,
+            "observation": observation,
+            "context": context
+        })
+        
+        logger.debug(f"Observation updated for {agent_name}: {observation[:50]}...")
+    
+    def add_belief(
+        self,
+        agent_name: str,
+        belief_content: str,
+        confidence: float = 0.5
+    ):
+        """添加信念"""
+        if agent_name not in self.models:
+            self.create_model(agent_name)
+        
+        model = self.models[agent_name]
+        belief = BeliefState(
+            belief_id="",
+            content=belief_content,
+            confidence=confidence
+        )
+        
+        model.inferred_beliefs[belief.belief_id] = belief
+        
+        logger.info(f"Belief added for {agent_name}: {belief_content[:50]}...")
+    
+    def add_desire(
+        self,
+        agent_name: str,
+        desire_description: str,
+        priority: float = 0.5,
+        urgency: float = 0.5
+    ):
+        """添加欲望"""
+        if agent_name not in self.models:
+            self.create_model(agent_name)
+        
+        model = self.models[agent_name]
+        desire = DesireState(
+            desire_id="",
+            description=desire_description,
+            priority=priority,
+            urgency=urgency
+        )
+        
+        model.inferred_desires[desire.desire_id] = desire
+        
+        logger.info(f"Desire added for {agent_name}: {desire_description[:50]}...")
+    
+    def add_intention(
+        self,
+        agent_name: str,
+        goal: str,
+        plan: List[str] = None
+    ):
+        """添加意图"""
+        if agent_name not in self.models:
+            self.create_model(agent_name)
+        
+        model = self.models[agent_name]
+        intention = IntentionState(
+            intention_id="",
+            goal=goal,
+            plan=plan or []
+        )
+        
+        model.inferred_intentions[intention.intention_id] = intention
+        
+        logger.info(f"Intention added for {agent_name}: {goal[:50]}...")
+    
+    def add_emotion(
+        self,
+        agent_name: str,
+        emotion_type: str,
+        intensity: float = 0.5,
+        valence: float = 0.0
+    ):
+        """添加情绪"""
+        if agent_name not in self.models:
+            self.create_model(agent_name)
+        
+        model = self.models[agent_name]
+        emotion = EmotionState(
+            emotion_type=emotion_type,
+            intensity=intensity,
+            valence=valence
+        )
+        
+        model.inferred_emotions[emotion_type] = emotion
+        
+        logger.info(f"Emotion added for {agent_name}: {emotion_type} (intensity={intensity:.2f})")
+    
+    def get_model_statistics(self) -> Dict[str, Any]:
+        """获取模型统计"""
+        if not self.models:
+            return {"total_models": 0}
+        
+        total_beliefs = sum(len(m.inferred_beliefs) for m in self.models.values())
+        total_desires = sum(len(m.inferred_desires) for m in self.models.values())
+        total_intentions = sum(len(m.inferred_intentions) for m in self.models.values())
+        total_emotions = sum(len(m.inferred_emotions) for m in self.models.values())
+        
+        avg_confidence = statistics.mean([m.confidence for m in self.models.values()])
+        
+        return {
+            "total_models": len(self.models),
+            "total_beliefs": total_beliefs,
+            "total_desires": total_desires,
+            "total_intentions": total_intentions,
+            "total_emotions": total_emotions,
+            "avg_model_confidence": round(avg_confidence, 4),
+            "total_interactions": len(self.interaction_history)
+        }
+
+
+class BayesianInferenceEngine:
+    """贝叶斯推理引擎
+    
+    使用贝叶斯推理进行心智状态推断
+    """
+    
+    def __init__(self):
+        self.inference_history: List[Dict] = []
+    
+    def infer_mental_state(
+        self,
+        observations: List[str],
+        prior_beliefs: Dict[str, float] = None
+    ) -> Dict[str, float]:
+        """
+        基于观察推断心智状态
+        
+        Args:
+            observations: 观察列表
+            prior_beliefs: 先验信念
             
         Returns:
-            推断出的心理状态列表
+            后验信念分布
         """
-        if agent_id not in self.tom_models:
-            raise ValueError(f"No ToM model for agent: {agent_id}")
+        if prior_beliefs is None:
+            # 均匀先验
+            prior_beliefs = {
+                "has_urgent_task": 0.5,
+                "is_stressed": 0.3,
+                "wants_to_help": 0.7,
+                "is_confused": 0.2
+            }
         
-        inferred_states = []
+        # 基于观察更新信念（简化贝叶斯更新）
+        posterior_beliefs = prior_beliefs.copy()
         
-        # Step 1: 从言语推断信念
-        if "utterance" in observation:
-            belief = self._infer_belief_from_utterance(
-                agent_id, observation["utterance"]
-            )
-            if belief:
-                inferred_states.append(belief)
+        for obs in observations:
+            obs_lower = obs.lower()
+            
+            # 更新信念（模拟似然函数）
+            if "rushed" in obs_lower or "hurried" in obs_lower:
+                posterior_beliefs["has_urgent_task"] = min(1.0, posterior_beliefs["has_urgent_task"] * 1.3)
+                posterior_beliefs["is_stressed"] = min(1.0, posterior_beliefs["is_stressed"] * 1.2)
+            
+            if "worried" in obs_lower or "anxious" in obs_lower:
+                posterior_beliefs["is_stressed"] = min(1.0, posterior_beliefs["is_stressed"] * 1.4)
+            
+            if "offered help" in obs_lower or "assisted" in obs_lower:
+                posterior_beliefs["wants_to_help"] = min(1.0, posterior_beliefs["wants_to_help"] * 1.2)
+            
+            if "confused" in obs_lower or "uncertain" in obs_lower:
+                posterior_beliefs["is_confused"] = min(1.0, posterior_beliefs["is_confused"] * 1.5)
         
-        # Step 2: 从行为推断意图
-        if "action" in observation:
-            intention = self._infer_intention_from_action(
-                agent_id, observation["action"]
-            )
-            if intention:
-                inferred_states.append(intention)
-        
-        # Step 3: 从表达推断情绪
-        if "expression" in observation:
-            emotion = self._recognize_emotion(
-                agent_id, observation["expression"]
-            )
-            if emotion:
-                self.tom_models[agent_id].update_emotion(emotion)
-        
-        # 添加到模型
-        for state in inferred_states:
-            self.tom_models[agent_id].add_mental_state(state)
+        # 归一化
+        total = sum(posterior_beliefs.values())
+        if total > 0:
+            posterior_beliefs = {k: v / total for k, v in posterior_beliefs.items()}
         
         # 记录推理历史
         self.inference_history.append({
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "agent_id": agent_id,
-            "observation_keys": list(observation.keys()),
-            "inferred_count": len(inferred_states),
-            "inference_type": inference_type
+            "num_observations": len(observations),
+            "prior_beliefs_count": len(prior_beliefs),
+            "posterior_beliefs_count": len(posterior_beliefs)
         })
         
-        logger.info(f"Inferred {len(inferred_states)} mental states for {agent_id}")
+        logger.info(f"Bayesian inference completed: {len(observations)} observations processed")
         
-        return inferred_states
+        return posterior_beliefs
     
-    def predict_agent_behavior(
+    def predict_behavior_bayesian(
         self,
-        agent_id: str,
-        context: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        mental_state: Dict[str, float],
+        situation: str
+    ) -> BehaviorPrediction:
         """
-        预测Agent行为
+        基于贝叶斯心智状态预测行为
         
         Args:
-            agent_id: Agent ID
-            context: 情境信息
+            mental_state: 心智状态分布
+            situation: 情境描述
             
         Returns:
             行为预测
         """
-        if agent_id not in self.tom_models:
-            return {"error": "No ToM model available"}
+        # 基于心智状态和情境生成预测
+        predictions = []
         
-        model = self.tom_models[agent_id]
-        prediction = model.predict_behavior()
+        if mental_state.get("has_urgent_task", 0) > 0.6:
+            predictions.append(("Rush to complete task", 0.8))
         
-        # 根据情境调整预测
-        if context:
-            prediction = self._adjust_prediction_for_context(
-                prediction, context
-            )
+        if mental_state.get("is_stressed", 0) > 0.5:
+            predictions.append(("Show signs of stress", 0.7))
         
-        logger.info(f"Behavior predicted for {agent_id}: {prediction['likely_actions']}")
+        if mental_state.get("wants_to_help", 0) > 0.6:
+            predictions.append(("Offer assistance to others", 0.75))
+        
+        if mental_state.get("is_confused", 0) > 0.4:
+            predictions.append(("Ask clarifying questions", 0.65))
+        
+        if not predictions:
+            predictions.append(("Continue normal activities", 0.5))
+        
+        # 选择最高概率的预测
+        predictions.sort(key=lambda x: x[1], reverse=True)
+        best_prediction = predictions[0]
+        
+        prediction = BehaviorPrediction(
+            prediction_id="",
+            predicted_action=best_prediction[0],
+            reasoning=f"Based on mental state analysis in situation: {situation}",
+            alternative_actions=[p[0] for p in predictions[1:]],
+            confidence=best_prediction[1]
+        )
+        
+        logger.info(f"Behavior predicted: {prediction.predicted_action[:50]}... (confidence={prediction.confidence:.2f})")
         
         return prediction
     
-    def _infer_belief_from_utterance(
-        self,
-        agent_id: str,
-        utterance: str
-    ) -> Optional[MentalState]:
-        """从话语推断信念"""
-        # 简化实现：提取陈述句作为信念
-        if "?" not in utterance and "!" not in utterance:
-            return MentalState(
-                state_id="",
-                agent_id=agent_id,
-                state_type=MentalStateType.BELIEF,
-                content=utterance,
-                confidence=0.75,
-                evidence=[f"Utterance: {utterance[:50]}..."]
-            )
-        return None
-    
-    def _infer_intention_from_action(
-        self,
-        agent_id: str,
-        action: str
-    ) -> Optional[MentalState]:
-        """从行为推断意图"""
-        return MentalState(
-            state_id="",
-            agent_id=agent_id,
-            state_type=MentalStateType.INTENTION,
-            content=f"Intends to {action}",
-            confidence=0.8,
-            evidence=[f"Action observed: {action}"]
-        )
-    
-    def _recognize_emotion(
-        self,
-        agent_id: str,
-        expression: Dict[str, Any]
-    ) -> Optional[EmotionState]:
-        """识别情绪"""
-        # 从面部表情、语调等识别情绪
-        emotion_type = expression.get("emotion_type", "neutral")
-        intensity = expression.get("intensity", 0.5)
-        
-        try:
-            emotion_enum = EmotionType(emotion_type)
-        except ValueError:
-            emotion_enum = EmotionType.NEUTRAL
-        
-        return EmotionState(
-            emotion_id="",
-            agent_id=agent_id,
-            primary_emotion=emotion_enum,
-            intensity=intensity,
-            valence=self._emotion_to_valence(emotion_enum),
-            arousal=intensity,
-            triggers=expression.get("triggers", [])
-        )
-    
-    def _emotion_to_valence(self, emotion: EmotionType) -> float:
-        """将情绪转换为效价值"""
-        valence_map = {
-            EmotionType.HAPPINESS: 0.8,
-            EmotionType.SADNESS: -0.7,
-            EmotionType.ANGER: -0.6,
-            EmotionType.FEAR: -0.5,
-            EmotionType.SURPRISE: 0.2,
-            EmotionType.DISGUST: -0.8,
-            EmotionType.NEUTRAL: 0.0
-        }
-        return valence_map.get(emotion, 0.0)
-    
-    def _adjust_prediction_for_context(
-        self,
-        prediction: Dict,
-        context: Dict
-    ) -> Dict:
-        """根据情境调整预测"""
-        # 简化实现
-        if context.get("urgency", False):
-            prediction["confidence"] *= 0.9
-            prediction["reasoning"].append("Adjusted for urgent context")
-        
-        return prediction
-    
-    def get_tom_statistics(self) -> Dict:
-        """获取ToM统计信息"""
+    def get_inference_statistics(self) -> Dict[str, Any]:
+        """获取推理统计"""
         return {
-            "total_models": len(self.tom_models),
-            "agents_tracked": list(self.tom_models.keys()),
-            "avg_beliefs_per_agent": statistics.mean([
-                len(m.beliefs) for m in self.tom_models.values()
-            ]) if self.tom_models else 0,
-            "avg_emotions_per_agent": statistics.mean([
-                len(m.emotions) for m in self.tom_models.values()
-            ]) if self.tom_models else 0
+            "total_inferences": len(self.inference_history),
+            "avg_observations_per_inference": round(
+                statistics.mean([h["num_observations"] for h in self.inference_history]), 2
+            ) if self.inference_history else 0
         }
 
 
-class EmpathyEngine:
-    """同理心引擎
+class FalseBeliefTester:
+    """错误信念测试器
     
-    识别情绪并生成同理心响应
+    执行经典的Sally-Anne测试等错误信念任务
     """
     
     def __init__(self):
-        self.empathy_responses: List[EmpathyResponse] = []
+        self.tests: List[FalseBeliefTest] = []
     
-    def generate_empathy_response(
+    def run_sally_anne_test(
         self,
-        user_emotion: EmotionState,
-        context: Dict[str, Any] = None,
-        empathy_level: EmpathyLevel = EmpathyLevel.COGNITIVE
-    ) -> EmpathyResponse:
+        agent_name: str,
+        true_state: str,
+        what_agent_saw: str
+    ) -> FalseBeliefTest:
         """
-        生成同理心响应
+        运行Sally-Anne错误信念测试
         
         Args:
-            user_emotion: 用户情绪状态
-            context: 对话上下文
-            empathy_level: 同理心层级
+            agent_name: Agent名称
+            true_state: 真实状态
+            what_agent_saw: Agent观察到的
             
         Returns:
-            同理心响应
+            测试结果
         """
-        # Step 1: 认知同理心 - 理解情绪
-        cognitive_understanding = self._cognitive_empathy(user_emotion)
-        
-        # Step 2: 情感同理心 - 感受情绪
-        affective_resonance = self._affective_empathy(user_emotion)
-        
-        # Step 3: 生成响应消息
-        message = self._generate_empathetic_message(
-            user_emotion, cognitive_understanding, affective_resonance, empathy_level
-        )
-        
-        # Step 4: 建议行动
-        suggested_action = self._suggest_supportive_action(
-            user_emotion, empathy_level
-        )
-        
-        response = EmpathyResponse(
-            response_id="",
-            empathy_level=empathy_level,
-            recognized_emotion=user_emotion,
-            empathetic_message=message,
-            suggested_action=suggested_action,
-            confidence=random.uniform(0.75, 0.95)
-        )
-        
-        self.empathy_responses.append(response)
-        
-        logger.info(f"Empathy response generated: {empathy_level.value}")
-        
-        return response
-    
-    def detect_emotional_shift(
-        self,
-        previous_emotion: EmotionState,
-        current_emotion: EmotionState
-    ) -> Dict[str, Any]:
-        """
-        检测情绪转变
-        
-        Args:
-            previous_emotion: 之前情绪
-            current_emotion: 当前情绪
-            
-        Returns:
-            情绪转变分析
-        """
-        shift_analysis = {
-            "emotion_changed": previous_emotion.primary_emotion != current_emotion.primary_emotion,
-            "intensity_change": current_emotion.intensity - previous_emotion.intensity,
-            "valence_change": current_emotion.valence - previous_emotion.valence,
-            "shift_type": self._classify_emotional_shift(previous_emotion, current_emotion)
-        }
-        
-        logger.info(f"Emotional shift detected: {shift_analysis['shift_type']}")
-        
-        return shift_analysis
-    
-    def _cognitive_empathy(self, emotion: EmotionState) -> str:
-        """认知同理心 - 理解情绪原因"""
-        understanding_map = {
-            EmotionType.HAPPINESS: "I understand you're feeling happy",
-            EmotionType.SADNESS: "I can see you're experiencing sadness",
-            EmotionType.ANGER: "I recognize that you're feeling angry",
-            EmotionType.FEAR: "I sense that you're afraid",
-            EmotionType.SURPRISE: "I notice you seem surprised",
-            EmotionType.DISGUST: "I perceive your disgust",
-            EmotionType.NEUTRAL: "I observe a neutral emotional state"
-        }
-        return understanding_map.get(emotion.primary_emotion, "")
-    
-    def _affective_empathy(self, emotion: EmotionState) -> str:
-        """情感同理心 - 共鸣情绪"""
-        resonance_map = {
-            EmotionType.HAPPINESS: "That's wonderful! I'm glad to hear it",
-            EmotionType.SADNESS: "I'm sorry you're going through this difficult time",
-            EmotionType.ANGER: "I can imagine how frustrating that must be",
-            EmotionType.FEAR: "It's understandable to feel concerned about this",
-            EmotionType.SURPRISE: "That must have been unexpected",
-            EmotionType.DISGUST: "I can see why that would be upsetting",
-            EmotionType.NEUTRAL: "I'm here with you"
-        }
-        return resonance_map.get(emotion.primary_emotion, "")
-    
-    def _generate_empathetic_message(
-        self,
-        emotion: EmotionState,
-        cognitive: str,
-        affective: str,
-        level: EmpathyLevel
-    ) -> str:
-        """生成同理心消息"""
-        if level == EmpathyLevel.COGNITIVE:
-            return cognitive
-        elif level == EmpathyLevel.AFFECTIVE:
-            return f"{cognitive}. {affective}"
-        else:  # COMPASSIONATE
-            return f"{cognitive}. {affective}. How can I help?"
-    
-    def _suggest_supportive_action(
-        self,
-        emotion: EmotionState,
-        level: EmpathyLevel
-    ) -> str:
-        """建议支持性行动"""
-        if level != EmpathyLevel.COMPASSIONATE:
-            return ""
-        
-        action_map = {
-            EmotionType.HAPPINESS: "Celebrate together!",
-            EmotionType.SADNESS: "Would you like to talk about what's bothering you?",
-            EmotionType.ANGER: "Let's find a constructive way to address this",
-            EmotionType.FEAR: "I'm here to support you. What do you need?",
-            EmotionType.SURPRISE: "Would you like me to explain what happened?",
-            EmotionType.DISGUST: "Let's focus on something more positive",
-            EmotionType.NEUTRAL: "Is there anything specific you'd like to discuss?"
-        }
-        return action_map.get(emotion.primary_emotion, "")
-    
-    def _classify_emotional_shift(
-        self,
-        prev: EmotionState,
-        curr: EmotionState
-    ) -> str:
-        """分类情绪转变类型"""
-        if prev.primary_emotion == curr.primary_emotion:
-            if curr.intensity > prev.intensity + 0.2:
-                return "intensification"
-            elif curr.intensity < prev.intensity - 0.2:
-                return "de-escalation"
-            else:
-                return "stable"
+        # 推断Agent的信念
+        if what_agent_saw == true_state:
+            inferred_belief = true_state
+            matches_reality = True
+            explanation = "Agent's belief matches reality"
         else:
-            return "emotion_switch"
-
-
-class SocialInteractionManager:
-    """社交互动管理器
+            inferred_belief = what_agent_saw
+            matches_reality = False
+            explanation = f"Agent holds false belief: believes '{what_agent_saw}' but reality is '{true_state}'"
+        
+        test = FalseBeliefTest(
+            test_id="",
+            true_state=true_state,
+            observed_by_agent=what_agent_saw,
+            inferred_belief=inferred_belief,
+            matches_reality=matches_reality,
+            explanation=explanation
+        )
+        
+        self.tests.append(test)
+        
+        logger.info(f"Sally-Anne test for {agent_name}: matches_reality={matches_reality}")
+        
+        return test
     
-    管理多Agent社交互动
+    def get_test_statistics(self) -> Dict[str, Any]:
+        """获取测试统计"""
+        if not self.tests:
+            return {"total_tests": 0}
+        
+        correct_beliefs = sum(1 for t in self.tests if t.matches_reality)
+        false_beliefs = sum(1 for t in self.tests if not t.matches_reality)
+        
+        return {
+            "total_tests": len(self.tests),
+            "correct_beliefs": correct_beliefs,
+            "false_beliefs": false_beliefs,
+            "accuracy": round(correct_beliefs / len(self.tests), 4) if self.tests else 0
+        }
+
+
+class TheoryOfMindSystem:
+    """心智理论系统
+    
+    整合心智建模、贝叶斯推理、行为预测
     """
     
     def __init__(self):
-        self.interactions: List[SocialInteraction] = []
-        self.social_norms: List[Dict] = []
+        self.model_manager = MentalModelManager()
+        self.bayesian_engine = BayesianInferenceEngine()
+        self.false_belief_tester = FalseBeliefTester()
     
-    def start_interaction(
+    def observe_and_update_model(
         self,
-        participants: List[str],
-        interaction_type: str
-    ) -> SocialInteraction:
-        """开始社交互动"""
-        interaction = SocialInteraction(
-            interaction_id="",
-            participants=participants,
-            interaction_type=interaction_type
+        observer: str,
+        observed_agent: str,
+        observation: str,
+        context: str = ""
+    ) -> Dict[str, Any]:
+        """
+        观察并更新心智模型
+        
+        Args:
+            observer: 观察者
+            observed_agent: 被观察的Agent
+            observation: 观察内容
+            context: 上下文
+            
+        Returns:
+            更新结果
+        """
+        # 更新观察记录
+        self.model_manager.update_observation(observed_agent, observation, context)
+        
+        # 基于观察推断心智状态
+        observations_list = [observation]
+        inferred_state = self.bayesian_engine.infer_mental_state(observations_list)
+        
+        # 添加推断的信念
+        for belief_name, confidence in inferred_state.items():
+            if confidence > 0.5:
+                self.model_manager.add_belief(
+                    observed_agent,
+                    f"{belief_name.replace('_', ' ').title()}",
+                    confidence
+                )
+        
+        result = {
+            "observer": observer,
+            "observed_agent": observed_agent,
+            "observation": observation,
+            "inferred_mental_state": inferred_state,
+            "model_confidence": self.model_manager.get_model(observed_agent).confidence
+        }
+        
+        logger.info(f"Model updated for {observed_agent} by {observer}")
+        
+        return result
+    
+    def predict_agent_behavior(
+        self,
+        agent_name: str,
+        situation: str
+    ) -> BehaviorPrediction:
+        """
+        预测Agent行为
+        
+        Args:
+            agent_name: Agent名称
+            situation: 情境
+            
+        Returns:
+            行为预测
+        """
+        model = self.model_manager.get_model(agent_name)
+        
+        if not model:
+            return BehaviorPrediction(
+                prediction_id="",
+                predicted_action="Unknown (no model available)",
+                reasoning="No mental model exists for this agent",
+                confidence=0.0
+            )
+        
+        # 构建心智状态
+        mental_state = {
+            "has_urgent_task": max([b.confidence for b in model.inferred_beliefs.values()], default=0.5),
+            "is_stressed": model.inferred_emotions.get("stressed", EmotionState("stressed", 0.3)).intensity,
+            "wants_to_help": 0.7,  # 默认值
+            "is_confused": model.inferred_emotions.get("confused", EmotionState("confused", 0.2)).intensity
+        }
+        
+        # 贝叶斯行为预测
+        prediction = self.bayesian_engine.predict_behavior_bayesian(mental_state, situation)
+        
+        return prediction
+    
+    def run_false_belief_test(
+        self,
+        agent_name: str,
+        true_state: str,
+        observed_state: str
+    ) -> FalseBeliefTest:
+        """
+        运行错误信念测试
+        
+        Args:
+            agent_name: Agent名称
+            true_state: 真实状态
+            observed_state: 观察到的状态
+            
+        Returns:
+            测试结果
+        """
+        return self.false_belief_tester.run_sally_anne_test(
+            agent_name, true_state, observed_state
         )
-        
-        self.interactions.append(interaction)
-        
-        logger.info(f"Social interaction started: {interaction_type} with {len(participants)} participants")
-        
-        return interaction
     
-    def add_message(
-        self,
-        interaction_id: str,
-        sender: str,
-        content: str,
-        emotion: Optional[EmotionState] = None
-    ):
-        """添加消息到互动"""
-        interaction = self._find_interaction(interaction_id)
-        if not interaction:
-            return
-        
-        message = {
-            "sender": sender,
-            "content": content,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "emotion": asdict(emotion) if emotion else None
-        }
-        
-        interaction.messages.append(message)
-        
-        logger.debug(f"Message added to interaction {interaction_id}")
-    
-    def analyze_interaction_dynamics(
-        self,
-        interaction_id: str
-    ) -> Dict[str, Any]:
-        """分析互动动态"""
-        interaction = self._find_interaction(interaction_id)
-        if not interaction:
-            return {}
-        
-        analysis = {
-            "total_messages": len(interaction.messages),
-            "participant_activity": self._calculate_participant_activity(interaction),
-            "emotional_trajectory": self._track_emotional_trajectory(interaction),
-            "dominant_emotion": self._identify_dominant_emotion(interaction),
-            "interaction_quality": self._assess_interaction_quality(interaction)
-        }
-        
-        logger.info(f"Interaction dynamics analyzed: {analysis['total_messages']} messages")
-        
-        return analysis
-    
-    def check_social_norm_compliance(
-        self,
-        message: Dict,
-        norms: List[Dict] = None
-    ) -> Dict[str, Any]:
-        """检查社交规范合规性"""
-        if norms is None:
-            norms = self.social_norms
-        
-        violations = []
-        compliance_score = 1.0
-        
-        for norm in norms:
-            if not self._check_single_norm(message, norm):
-                violations.append(norm.get("description", "Unknown norm"))
-                compliance_score -= 0.2
-        
-        compliance_score = max(0.0, compliance_score)
-        
+    def get_system_overview(self) -> Dict[str, Any]:
+        """获取系统概览"""
         return {
-            "compliant": len(violations) == 0,
-            "compliance_score": round(compliance_score, 2),
-            "violations": violations
+            "mental_models": self.model_manager.get_model_statistics(),
+            "bayesian_inference": self.bayesian_engine.get_inference_statistics(),
+            "false_belief_tests": self.false_belief_tester.get_test_statistics()
         }
-    
-    def _find_interaction(self, interaction_id: str) -> Optional[SocialInteraction]:
-        """查找互动"""
-        for interaction in self.interactions:
-            if interaction.interaction_id == interaction_id:
-                return interaction
-        return None
-    
-    def _calculate_participant_activity(self, interaction: SocialInteraction) -> Dict:
-        """计算参与者活跃度"""
-        activity = defaultdict(int)
-        for msg in interaction.messages:
-            activity[msg["sender"]] += 1
-        
-        return dict(activity)
-    
-    def _track_emotional_trajectory(self, interaction: SocialInteraction) -> List:
-        """追踪情绪轨迹"""
-        trajectory = []
-        for msg in interaction.messages:
-            if msg.get("emotion"):
-                trajectory.append({
-                    "sender": msg["sender"],
-                    "emotion": msg["emotion"]["primary_emotion"],
-                    "intensity": msg["emotion"]["intensity"]
-                })
-        
-        return trajectory
-    
-    def _identify_dominant_emotion(self, interaction: SocialInteraction) -> str:
-        """识别主导情绪"""
-        emotion_counts = defaultdict(int)
-        for msg in interaction.messages:
-            if msg.get("emotion"):
-                emotion_counts[msg["emotion"]["primary_emotion"]] += 1
-        
-        if not emotion_counts:
-            return "neutral"
-        
-        return max(emotion_counts, key=emotion_counts.get)
-    
-    def _assess_interaction_quality(self, interaction: SocialInteraction) -> float:
-        """评估互动质量"""
-        if not interaction.messages:
-            return 0.0
-        
-        # 简化评估：基于消息数量和情绪多样性
-        message_score = min(1.0, len(interaction.messages) / 10)
-        
-        emotions = set()
-        for msg in interaction.messages:
-            if msg.get("emotion"):
-                emotions.add(msg["emotion"]["primary_emotion"])
-        
-        diversity_score = min(1.0, len(emotions) / 5)
-        
-        quality = (message_score * 0.6 + diversity_score * 0.4)
-        
-        return round(quality, 2)
-    
-    def _check_single_norm(self, message: Dict, norm: Dict) -> bool:
-        """检查单个规范"""
-        # 简化实现
-        return random.random() > 0.05  # 95%合规率
 
 
-def create_social_intelligence_system() -> Tuple[TheoryOfMindEngine, EmpathyEngine, SocialInteractionManager]:
-    """工厂函数：创建社会智能系统"""
-    tom_engine = TheoryOfMindEngine()
-    empathy_engine = EmpathyEngine()
-    social_manager = SocialInteractionManager()
-    
-    return tom_engine, empathy_engine, social_manager
+def create_theory_of_mind_system() -> TheoryOfMindSystem:
+    """工厂函数：创建心智理论系统"""
+    system = TheoryOfMindSystem()
+    return system
 
 
 if __name__ == "__main__":
     # 简单测试
     print("="*60)
-    print("AI Agent Theory of Mind & Social Intelligence 测试")
+    print("AI Agent Theory of Mind & Mental Modeling 测试")
     print("="*60)
     
-    tom_engine, empathy_engine, social_manager = create_social_intelligence_system()
+    system = create_theory_of_mind_system()
     
-    # 创建心智模型
-    print("\n🧠 创建心智模型...")
-    model = tom_engine.create_tom_model(
-        "user_001",
-        initial_context={
-            "beliefs": ["The weather is nice today", "I enjoy outdoor activities"],
-            "emotions": [{"type": "happiness", "intensity": 0.8, "valence": 0.8, "arousal": 0.7}],
-            "confidence": 0.85
-        }
-    )
-    print(f"   模型ID: {model.model_id}")
-    print(f"   目标Agent: {model.target_agent_id}")
-    print(f"   信念数: {len(model.beliefs)}")
-    print(f"   情绪数: {len(model.emotions)}")
+    # 测试心智模型管理
+    print("\n🧠 测试心智模型管理...")
     
-    # 推断心理状态
-    print("\n🔍 推断心理状态...")
-    observation = {
-        "utterance": "I think it will rain tomorrow",
-        "action": "checking weather forecast",
-        "expression": {
-            "emotion_type": "concern",
-            "intensity": 0.6,
-            "triggers": ["weather uncertainty"]
-        }
-    }
+    # Alice观察Bob
+    observations = [
+        "Bob看了看手表，皱了皱眉",
+        "Bob快步走向会议室",
+        "Bob在门口停下来深呼吸"
+    ]
     
-    inferred_states = tom_engine.infer_mental_state("user_001", observation)
-    print(f"   推断出 {len(inferred_states)} 个心理状态")
+    for obs in observations:
+        result = system.observe_and_update_model(
+            observer="Alice",
+            observed_agent="Bob",
+            observation=obs,
+            context="现在是下午2:55，3点有重要会议"
+        )
+        print(f"   观察: {obs[:30]}...")
+        print(f"     推断心智状态: {list(result['inferred_mental_state'].keys())}")
+        print(f"     模型置信度: {result['model_confidence']:.2f}")
     
-    for state in inferred_states:
-        print(f"     - {state}")
+    # 添加明确的信念、欲望、意图
+    print("\n💭 添加明确的心智状态...")
+    system.model_manager.add_belief("Bob", "Meeting is important", 0.9)
+    system.model_manager.add_desire("Bob", "Arrive on time", priority=0.9, urgency=0.8)
+    system.model_manager.add_intention("Bob", "Attend meeting", plan=["Walk to room", "Enter room", "Sit down"])
+    system.model_manager.add_emotion("Bob", "anxious", intensity=0.7, valence=-0.5)
     
-    # 预测行为
-    print("\n🔮 预测Agent行为...")
-    prediction = tom_engine.predict_agent_behavior("user_001", context={"urgency": True})
-    print(f"   可能行为: {prediction['likely_actions']}")
-    print(f"   置信度: {prediction['confidence']:.2f}")
-    print(f"   推理链长度: {len(prediction['reasoning'])}")
+    # 查看Bob的心智模型
+    bob_model = system.model_manager.get_model("Bob")
+    print(f"\n   Bob的心智模型:")
+    print(f"     信念数: {len(bob_model.inferred_beliefs)}")
+    print(f"     欲望数: {len(bob_model.inferred_desires)}")
+    print(f"     意图数: {len(bob_model.inferred_intentions)}")
+    print(f"     情绪数: {len(bob_model.inferred_emotions)}")
+    print(f"     观察历史: {len(bob_model.observation_history)}条")
+    print(f"     模型置信度: {bob_model.confidence:.2f}")
     
-    # 生成同理心响应
-    print("\n💝 生成同理心响应...")
-    user_emotion = EmotionState(
-        emotion_id="",
-        agent_id="user_001",
-        primary_emotion=EmotionType.SADNESS,
-        intensity=0.7,
-        valence=-0.6,
-        arousal=0.5
+    # 测试行为预测
+    print("\n🔮 测试行为预测...")
+    prediction = system.predict_agent_behavior(
+        agent_name="Bob",
+        situation="会议室门锁着"
     )
     
-    empathy_response = empathy_engine.generate_empathy_response(
-        user_emotion,
-        empathy_level=EmpathyLevel.COMPASSIONATE
+    print(f"   预测行为: {prediction.predicted_action}")
+    print(f"   推理: {prediction.reasoning[:50]}...")
+    print(f"   置信度: {prediction.confidence:.2f}")
+    if prediction.alternative_actions:
+        print(f"   替代行为: {', '.join(prediction.alternative_actions[:2])}")
+    
+    # 测试错误信念（Sally-Anne测试）
+    print("\n🧪 测试错误信念（Sally-Anne测试）...")
+    
+    # 场景1：Bob看到球在篮子里，但球被移到了盒子里
+    test1 = system.run_false_belief_test(
+        agent_name="Bob",
+        true_state="Ball is in the box",
+        observed_state="Ball is in the basket"
     )
     
-    print(f"   同理心层级: {empathy_response.empathy_level.value}")
-    print(f"   识别情绪: {empathy_response.recognized_emotion.primary_emotion.value}")
-    print(f"   响应消息: {empathy_response.empathetic_message}")
-    print(f"   建议行动: {empathy_response.suggested_action}")
-    print(f"   置信度: {empathy_response.confidence:.2f}")
+    print(f"   测试1:")
+    print(f"     真实状态: {test1.true_state}")
+    print(f"     Bob观察到: {test1.observed_by_agent}")
+    print(f"     Bob相信: {test1.inferred_belief}")
+    print(f"     与现实一致: {test1.matches_reality}")
+    print(f"     解释: {test1.explanation[:60]}...")
     
-    # 检测情绪转变
-    print("\n📊 检测情绪转变...")
-    previous_emotion = EmotionState(
-        emotion_id="",
-        agent_id="user_001",
-        primary_emotion=EmotionType.HAPPINESS,
-        intensity=0.8
+    # 场景2：Charlie看到球被移到盒子里
+    test2 = system.run_false_belief_test(
+        agent_name="Charlie",
+        true_state="Ball is in the box",
+        observed_state="Ball is in the box"
     )
     
-    current_emotion = EmotionState(
-        emotion_id="",
-        agent_id="user_001",
-        primary_emotion=EmotionType.SADNESS,
-        intensity=0.6
+    print(f"\n   测试2:")
+    print(f"     真实状态: {test2.true_state}")
+    print(f"     Charlie观察到: {test2.observed_by_agent}")
+    print(f"     Charlie相信: {test2.inferred_belief}")
+    print(f"     与现实一致: {test2.matches_reality}")
+    print(f"     解释: {test2.explanation[:60]}...")
+    
+    # 测试贝叶斯推理
+    print("\n📊 测试贝叶斯推理...")
+    mental_state = system.bayesian_engine.infer_mental_state(
+        observations=["Bob rushed to the door", "Bob looked worried"],
+        prior_beliefs={"has_urgent_task": 0.5, "is_stressed": 0.3}
     )
     
-    shift = empathy_engine.detect_emotional_shift(previous_emotion, current_emotion)
-    print(f"   情绪改变: {shift['emotion_changed']}")
-    print(f"   强度变化: {shift['intensity_change']:+.2f}")
-    print(f"   效价变化: {shift['valence_change']:+.2f}")
-    print(f"   转变类型: {shift['shift_type']}")
+    print(f"   推断的心智状态:")
+    for state, prob in mental_state.items():
+        print(f"     {state}: {prob:.2f}")
     
-    # 社交互动管理
-    print("\n💬 管理社交互动...")
-    interaction = social_manager.start_interaction(
-        participants=["user_001", "assistant_001"],
-        interaction_type="conversation"
-    )
-    
-    # 添加消息
-    social_manager.add_message(
-        interaction.interaction_id,
-        "user_001",
-        "I'm feeling a bit down today",
-        user_emotion
-    )
-    
-    assistant_emotion = EmotionState(
-        emotion_id="",
-        agent_id="assistant_001",
-        primary_emotion=EmotionType.NEUTRAL,
-        intensity=0.5
-    )
-    
-    social_manager.add_message(
-        interaction.interaction_id,
-        "assistant_001",
-        "I'm here to listen. Would you like to talk about it?",
-        assistant_emotion
-    )
-    
-    # 分析互动动态
-    print("\n📈 分析互动动态...")
-    dynamics = social_manager.analyze_interaction_dynamics(interaction.interaction_id)
-    print(f"   总消息数: {dynamics['total_messages']}")
-    print(f"   参与者活跃度: {dynamics['participant_activity']}")
-    print(f"   主导情绪: {dynamics['dominant_emotion']}")
-    print(f"   互动质量: {dynamics['interaction_quality']:.2f}")
-    
-    # 检查社交规范合规性
-    print("\n✅ 检查社交规范合规性...")
-    test_message = {
-        "sender": "user_001",
-        "content": "Thank you for listening",
-        "emotion": asdict(assistant_emotion)
-    }
-    
-    compliance = social_manager.check_social_norm_compliance(test_message)
-    print(f"   合规: {compliance['compliant']}")
-    print(f"   合规分数: {compliance['compliance_score']:.2f}")
-    print(f"   违规数: {len(compliance['violations'])}")
-    
-    # ToM统计
-    print("\n📊 ToM统计信息...")
-    stats = tom_engine.get_tom_statistics()
-    print(f"   模型总数: {stats['total_models']}")
-    print(f"   追踪Agent: {stats['agents_tracked']}")
-    print(f"   平均每Agent信念数: {stats['avg_beliefs_per_agent']:.1f}")
-    print(f"   平均每Agent情绪数: {stats['avg_emotions_per_agent']:.1f}")
+    # 系统概览
+    overview = system.get_system_overview()
+    print(f"\n📈 系统概览:")
+    print(f"   心智模型:")
+    mm = overview['mental_models']
+    print(f"     总模型数: {mm['total_models']}")
+    print(f"     总信念数: {mm['total_beliefs']}")
+    print(f"     总欲望数: {mm['total_desires']}")
+    print(f"     总意图数: {mm['total_intentions']}")
+    print(f"     平均置信度: {mm['avg_model_confidence']:.2f}")
+    print(f"   贝叶斯推理:")
+    bi = overview['bayesian_inference']
+    print(f"     总推理数: {bi['total_inferences']}")
+    print(f"   错误信念测试:")
+    fb = overview['false_belief_tests']
+    print(f"     总测试数: {fb['total_tests']}")
+    print(f"     正确信念: {fb['correct_beliefs']}")
+    print(f"     错误信念: {fb['false_beliefs']}")
+    print(f"     准确率: {fb['accuracy']*100:.1f}%")
     
     print("\n✅ 测试完成！")
