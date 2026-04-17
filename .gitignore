@@ -105,3 +105,6 @@ poetry.lock
 # - .lingma/specs/current-spec.md
 # - .lingma/specs/templates/
 # - .lingma/SYSTEM_ARCHITECTURE.md
+
+# Lingma trace data (auto-generated)
+traces/
