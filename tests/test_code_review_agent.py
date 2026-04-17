@@ -10,23 +10,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import timedelta
 
 
-class MockRedis:
-    """Mock Redis client for testing"""
-    
-    def __init__(self):
-        self.data = {}
-        self.published_messages = []
-        
-    async def get(self, key):
-        return self.data.get(key)
-    
-    async def setex(self, key, ttl, value):
-        self.data[key] = value
-        
-    async def publish(self, channel, message):
-        self.published_messages.append({"channel": channel, "message": message})
-
-
 class MockCodeChanges:
     """Mock code changes object for testing"""
     
@@ -36,18 +19,21 @@ class MockCodeChanges:
 
 
 @pytest_asyncio.fixture
-async def mock_redis():
-    """Fixture for mocked Redis client"""
-    return MockRedis()
-
-
-@pytest_asyncio.fixture
 async def code_review_agent(mock_redis):
     """Fixture for Code Review Agent with mocked dependencies"""
-    from .lingma.agents.code_review_agent import CodeReviewAgent
+    import sys
+    from pathlib import Path
+    
+    # Add .lingma/agents/python to path
+    agents_path = Path(__file__).parent.parent / ".lingma" / "agents" / "python"
+    if str(agents_path) not in sys.path:
+        sys.path.insert(0, str(agents_path))
+    
+    from code_review_agent import CodeReviewAgent
     
     agent = CodeReviewAgent.__new__(CodeReviewAgent)
-    agent.redis = mock_redis
+    agent.redis_client = mock_redis
+    agent.agent_name = "code_review"
     return agent
 
 

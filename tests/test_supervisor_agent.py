@@ -11,37 +11,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import timedelta
 
 
-class MockRedis:
-    """Mock Redis client for testing"""
-    
-    def __init__(self):
-        self.data = {}
-        self.published_messages = []
-        
-    async def get(self, key):
-        return self.data.get(key)
-    
-    async def setex(self, key, ttl, value):
-        self.data[key] = value
-        
-    async def publish(self, channel, message):
-        self.published_messages.append({"channel": channel, "message": message})
-        
-    def pubsub(self):
-        return MockPubSub()
-
-
-class MockPubSub:
-    """Mock Redis PubSub for testing"""
-    
-    async def subscribe(self, *channels):
-        pass
-    
-    async def listen(self):
-        return
-        yield
-
-
 class MockTask:
     """Mock task object for testing"""
     
@@ -58,12 +27,6 @@ class MockAgent:
         
     async def execute(self, task):
         return self.result
-
-
-@pytest_asyncio.fixture
-async def mock_redis():
-    """Fixture for mocked Redis client"""
-    return MockRedis()
 
 
 @pytest.mark.asyncio

@@ -10,23 +10,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import timedelta
 
 
-class MockRedis:
-    """Mock Redis client for testing"""
-    
-    def __init__(self):
-        self.data = {}
-        self.published_messages = []
-        
-    async def get(self, key):
-        return self.data.get(key)
-    
-    async def setex(self, key, ttl, value):
-        self.data[key] = value
-        
-    async def publish(self, channel, message):
-        self.published_messages.append({"channel": channel, "message": message})
-
-
 class MockProjectInfo:
     """Mock project info object for testing"""
     
@@ -36,18 +19,21 @@ class MockProjectInfo:
 
 
 @pytest_asyncio.fixture
-async def mock_redis():
-    """Fixture for mocked Redis client"""
-    return MockRedis()
-
-
-@pytest_asyncio.fixture
 async def documentation_agent(mock_redis):
     """Fixture for Documentation Agent with mocked dependencies"""
-    from .lingma.agents.documentation_agent import DocumentationAgent
+    import sys
+    from pathlib import Path
+    
+    # Add .lingma/agents/python to path
+    agents_path = Path(__file__).parent.parent / ".lingma" / "agents" / "python"
+    if str(agents_path) not in sys.path:
+        sys.path.insert(0, str(agents_path))
+    
+    from documentation_agent import DocumentationAgent
     
     agent = DocumentationAgent.__new__(DocumentationAgent)
-    agent.redis = mock_redis
+    agent.redis_client = mock_redis
+    agent.agent_name = "documentation"
     return agent
 
 
@@ -158,14 +144,13 @@ async def test_readme_generation(documentation_agent):
     """Test README generation workflow"""
     project = MockProjectInfo()
     
-    # Mock file operations
-    with patch.object(documentation_agent, 'read_template_async', AsyncMock(return_value="Template")), \
-         patch.object(documentation_agent, 'fill_template_async', AsyncMock(return_value="# README")), \
-         patch.object(documentation_agent, 'write_file_async', AsyncMock()):
-        
-        result = await documentation_agent.generate_readme(project)
-        
-        assert result == "# README"
+    # Test actual implementation (not mocked)
+    result = await documentation_agent.generate_readme(project)
+    
+    # Verify result is a string and contains README content
+    assert isinstance(result, str)
+    assert len(result) > 0
+    assert "README" in result
 
 
 @pytest.mark.asyncio

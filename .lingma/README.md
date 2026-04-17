@@ -12,7 +12,7 @@
 - [系统架构](docs/architecture/ARCHITECTURE.md) - 四层架构详解
 
 ### 核心组件
-- [Agents](agents/) - 4个智能体（决策层）
+- [Agents](agents/) - 5个智能体（决策层+执行层）
 - [Skills](skills/) - 4个技能（能力层）
 - [Rules](rules/) - 4个规则（约束层）
 - [MCP](mcp-templates/) - 2个模板（工具层）
@@ -25,3 +25,6 @@
 - [系统健康检查](reports/SYSTEM_HEALTH_CHECK.md)
 - [文档自检测系统](docs/DOC_SELF_HEALING_SYSTEM.md)
 - [报告清理策略](docs/REPORT_CLEANUP_STRATEGY.md)
+
+### 变更历史
+- [CHANGELOG](CHANGELOG.md) - Agent系统演进历史
