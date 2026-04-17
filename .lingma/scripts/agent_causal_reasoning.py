@@ -2,15 +2,16 @@
 """
 AI Agent Causal Reasoning & Counterfactual Thinking System - AI Agent 因果推理与反事实思维系统
 
-因果图构建、反事实推理、根因分析、干预模拟
-实现生产级 AI Agent 的因果认知框架
+A2P脚手架、溯因推理、反事实分析、根因分析、what-if场景
+实现生产级 AI Agent 的因果推理能力
 
 参考社区最佳实践:
-- Causal graph construction and inference
-- Counterfactual reasoning (What-if analysis)
-- Root cause analysis (RCA) with causal chains
-- Intervention simulation and effect prediction
-- Abduction-Action-Prediction (A2P) framework
+- Causal Reasoning - understand cause-effect relationships beyond correlation
+- Counterfactual Thinking - "what if" scenarios to explore alternatives
+- Root Cause Analysis - identify fundamental causes of failures
+- A2P Scaffolding (Abduction-Action-Prediction) - structured causal inference
+- Judea Pearl's Ladder of Causation - Association, Intervention, Counterfactuals
+- What-if Scenarios - simulate alternative outcomes
 """
 
 import json
@@ -30,700 +31,810 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 
-class CausalRelationType(Enum):
-    """因果关系类型"""
-    DIRECT_CAUSATION = "direct_causation"  # 直接因果
-    INDIRECT_CAUSATION = "indirect_causation"  # 间接因果
-    CONFOUNDING = "confounding"  # 混杂因素
-    MEDIATION = "mediation"  # 中介效应
-    MODERATION = "moderation"  # 调节效应
+class CausalLevel(Enum):
+    """因果层级（Pearl的因果阶梯）"""
+    ASSOCIATION = "association"  # 关联（看到什么？）
+    INTERVENTION = "intervention"  # 干预（如果做X会发生什么？）
+    COUNTERFACTUAL = "counterfactual"  # 反事实（如果没做X会发生什么？）
 
 
-class CounterfactualType(Enum):
-    """反事实类型"""
-    ACTION_BASED = "action_based"  # 基于行动的反事实
-    EVENT_BASED = "event_based"  # 基于事件的反事实
-    POLICY_BASED = "policy_based"  # 基于策略的反事实
-
-
-class RCAStatus(Enum):
-    """根因分析状态"""
-    INITIATED = "initiated"
-    DATA_COLLECTION = "data_collection"
-    CAUSAL_GRAPH_BUILT = "causal_graph_built"
-    ROOT_CAUSES_IDENTIFIED = "root_causes_identified"
-    VALIDATION_COMPLETE = "validation_complete"
-    COMPLETED = "completed"
-
-
-@dataclass
-class CausalNode:
-    """因果节点"""
-    node_id: str
-    name: str
-    node_type: str  # variable/event/action/outcome
-    value: Any = None
-    probability: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def __post_init__(self):
-        if not self.node_id:
-            self.node_id = str(uuid.uuid4())
-
-
-@dataclass
-class CausalEdge:
-    """因果边"""
-    edge_id: str
-    source_node_id: str
-    target_node_id: str
-    relation_type: CausalRelationType
-    strength: float  # 0-1
-    description: str = ""
-    evidence: List[str] = field(default_factory=list)
-    
-    def __post_init__(self):
-        if not self.edge_id:
-            self.edge_id = str(uuid.uuid4())
+class A2PStep(Enum):
+    """A2P步骤"""
+    ABDUCTION = "abduction"  # 溯因推理
+    ACTION = "action"  # 定义行动
+    PREDICTION = "prediction"  # 预测结果
 
 
 @dataclass
 class CausalGraph:
     """因果图"""
     graph_id: str
-    nodes: List[CausalNode] = field(default_factory=list)
-    edges: List[CausalEdge] = field(default_factory=list)
-    created_at: str = ""
+    nodes: List[str] = field(default_factory=list)  # 变量节点
+    edges: List[Tuple[str, str]] = field(default_factory=list)  # 因果边 (cause, effect)
+    confounders: List[str] = field(default_factory=list)  # 混淆变量
     
     def __post_init__(self):
         if not self.graph_id:
             self.graph_id = str(uuid.uuid4())
-        if not self.created_at:
-            self.created_at = datetime.now(timezone.utc).isoformat()
     
-    def add_node(self, node: CausalNode):
-        self.nodes.append(node)
+    def add_causal_link(self, cause: str, effect: str):
+        """添加因果链接"""
+        if cause not in self.nodes:
+            self.nodes.append(cause)
+        if effect not in self.nodes:
+            self.nodes.append(effect)
+        
+        self.edges.append((cause, effect))
     
-    def add_edge(self, edge: CausalEdge):
-        self.edges.append(edge)
+    def get_causes(self, effect: str) -> List[str]:
+        """获取某结果的所有原因"""
+        return [cause for cause, eff in self.edges if eff == effect]
     
-    def get_parents(self, node_id: str) -> List[CausalEdge]:
-        """获取父节点边"""
-        return [e for e in self.edges if e.target_node_id == node_id]
-    
-    def get_children(self, node_id: str) -> List[CausalEdge]:
-        """获取子节点边"""
-        return [e for e in self.edges if e.source_node_id == node_id]
+    def get_effects(self, cause: str) -> List[str]:
+        """获取某原因的所有结果"""
+        return [eff for c, eff in self.edges if c == cause]
 
 
 @dataclass
 class CounterfactualScenario:
     """反事实场景"""
     scenario_id: str
-    scenario_type: CounterfactualType
-    original_state: Dict[str, Any]
-    counterfactual_state: Dict[str, Any]
-    intervention: str
-    predicted_outcome: Dict[str, Any]
-    confidence: float
-    reasoning_chain: List[str] = field(default_factory=list)
+    original_outcome: str
+    counterfactual_condition: str  # "如果..."
+    hypothetical_outcome: str  # "那么会..."
+    plausibility_score: float  # 合理性分数 0-1
+    causal_level: CausalLevel = CausalLevel.COUNTERFACTUAL
     timestamp: str = ""
     
     def __post_init__(self):
+        if not self.scenario_id:
+            self.scenario_id = str(uuid.uuid4())
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 @dataclass
-class RootCause:
-    """根因"""
-    root_cause_id: str
-    description: str
-    confidence: float
-    evidence: List[str] = field(default_factory=list)
-    causal_path: List[str] = field(default_factory=list)
-    impact_score: float = 0.0
-    remediation_suggestions: List[str] = field(default_factory=list)
+class RootCauseAnalysis:
+    """根因分析结果"""
+    analysis_id: str
+    problem_description: str
+    root_causes: List[str] = field(default_factory=list)
+    contributing_factors: List[str] = field(default_factory=list)
+    confidence_scores: Dict[str, float] = field(default_factory=dict)
+    recommended_actions: List[str] = field(default_factory=list)
+    timestamp: str = ""
     
     def __post_init__(self):
-        if not self.root_cause_id:
-            self.root_cause_id = str(uuid.uuid4())
+        if not self.analysis_id:
+            self.analysis_id = str(uuid.uuid4())
+        if not self.timestamp:
+            self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 @dataclass
-class RCAReport:
-    """根因分析报告"""
-    report_id: str
-    incident_id: str
-    status: RCAStatus
-    root_causes: List[RootCause] = field(default_factory=list)
-    causal_graph: Optional[CausalGraph] = None
-    timeline: List[Dict[str, Any]] = field(default_factory=list)
-    recommendations: List[str] = field(default_factory=list)
-    completed_at: str = ""
+class A2PResult:
+    """A2P脚手架结果"""
+    result_id: str
+    abduction_findings: List[str] = field(default_factory=list)  # 溯因发现
+    proposed_action: str = ""  # 提议行动
+    predicted_outcome: str = ""  # 预测结果
+    success_probability: float = 0.0  # 成功概率
+    step_details: Dict[str, Any] = field(default_factory=dict)
+    timestamp: str = ""
     
     def __post_init__(self):
-        if not self.report_id:
-            self.report_id = str(uuid.uuid4())
-        if not self.completed_at:
-            self.completed_at = datetime.now(timezone.utc).isoformat()
+        if not self.result_id:
+            self.result_id = str(uuid.uuid4())
+        if not self.timestamp:
+            self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 class CausalGraphBuilder:
     """因果图构建器
     
-    从数据和领域知识构建因果图
+    构建和管理因果关系图
     """
     
     def __init__(self):
-        self.graph_history: List[CausalGraph] = []
+        self.graphs: Dict[str, CausalGraph] = {}
+        self.build_history: List[Dict] = []
     
     def build_causal_graph(
         self,
-        variables: List[Dict[str, Any]],
-        domain_knowledge: List[Dict[str, Any]] = None
+        domain: str,
+        variables: List[str],
+        causal_relationships: List[Tuple[str, str]]
     ) -> CausalGraph:
         """
         构建因果图
         
         Args:
+            domain: 领域名称
             variables: 变量列表
-            domain_knowledge: 领域知识
+            causal_relationships: 因果关系列表 [(cause, effect), ...]
             
         Returns:
-            因果图
+            因果图对象
         """
-        graph = CausalGraph(graph_id=str(uuid.uuid4()))
+        graph = CausalGraph(graph_id=f"{domain}_graph")
         
-        # Step 1: 创建节点
-        for var in variables:
-            node = CausalNode(
-                node_id="",
-                name=var["name"],
-                node_type=var.get("type", "variable"),
-                value=var.get("value"),
-                probability=var.get("probability", 1.0),
-                metadata=var.get("metadata", {})
-            )
-            graph.add_node(node)
+        # 添加节点
+        graph.nodes = variables.copy()
         
-        # Step 2: 基于领域知识添加边
-        if domain_knowledge:
-            for knowledge in domain_knowledge:
-                edge = CausalEdge(
-                    edge_id="",
-                    source_node_id=self._find_node_id(graph, knowledge["source"]),
-                    target_node_id=self._find_node_id(graph, knowledge["target"]),
-                    relation_type=CausalRelationType(knowledge.get("relation_type", "direct_causation")),
-                    strength=knowledge.get("strength", 0.5),
-                    description=knowledge.get("description", ""),
-                    evidence=knowledge.get("evidence", [])
-                )
-                graph.add_edge(edge)
+        # 添加因果边
+        for cause, effect in causal_relationships:
+            graph.add_causal_link(cause, effect)
         
-        # Step 3: 基于数据发现因果关系（简化）
-        self._discover_causal_relations(graph, variables)
+        self.graphs[domain] = graph
         
-        self.graph_history.append(graph)
+        # 记录构建历史
+        self.build_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "domain": domain,
+            "num_variables": len(variables),
+            "num_relationships": len(causal_relationships)
+        })
         
-        logger.info(f"Causal graph built: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+        logger.info(f"Causal graph built: {domain}, {len(variables)} vars, {len(causal_relationships)} edges")
         
         return graph
     
-    def _find_node_id(self, graph: CausalGraph, node_name: str) -> str:
-        """查找节点ID"""
-        for node in graph.nodes:
-            if node.name == node_name:
-                return node.node_id
-        return ""
+    def query_causal_paths(
+        self,
+        domain: str,
+        start_node: str,
+        end_node: str
+    ) -> List[List[str]]:
+        """
+        查询因果路径
+        
+        Args:
+            domain: 领域名称
+            start_node: 起始节点
+            end_node: 终止节点
+            
+        Returns:
+            所有因果路径列表
+        """
+        if domain not in self.graphs:
+            return []
+        
+        graph = self.graphs[domain]
+        paths = []
+        
+        # DFS查找所有路径
+        self._find_paths_dfs(graph, start_node, end_node, [start_node], paths)
+        
+        logger.info(f"Found {len(paths)} causal paths from {start_node} to {end_node}")
+        
+        return paths
     
-    def _discover_causal_relations(self, graph: CausalGraph, variables: List[Dict]):
-        """基于数据发现因果关系（简化实现）"""
-        # 在实际应用中，这里应使用因果发现算法（如PC算法、GES等）
-        # 这里仅做模拟
-        pass
+    def _find_paths_dfs(
+        self,
+        graph: CausalGraph,
+        current: str,
+        target: str,
+        path: List[str],
+        all_paths: List[List[str]]
+    ):
+        """DFS查找路径"""
+        if current == target:
+            all_paths.append(path.copy())
+            return
+        
+        # 获取当前节点的所有后继
+        effects = graph.get_effects(current)
+        
+        for effect in effects:
+            if effect not in path:  # 避免循环
+                path.append(effect)
+                self._find_paths_dfs(graph, effect, target, path, all_paths)
+                path.pop()
+    
+    def identify_confounders(
+        self,
+        domain: str,
+        variable_a: str,
+        variable_b: str
+    ) -> List[str]:
+        """
+        识别混淆变量
+        
+        Args:
+            domain: 领域名称
+            variable_a: 变量A
+            variable_b: 变量B
+            
+        Returns:
+            混淆变量列表
+        """
+        if domain not in self.graphs:
+            return []
+        
+        graph = self.graphs[domain]
+        confounders = []
+        
+        # 混淆变量是同时影响A和B的变量
+        causes_of_a = set(graph.get_causes(variable_a))
+        causes_of_b = set(graph.get_causes(variable_b))
+        
+        confounders = list(causes_of_a.intersection(causes_of_b))
+        
+        return confounders
+    
+    def get_graph_statistics(self) -> Dict[str, Any]:
+        """获取图统计"""
+        if not self.graphs:
+            return {"total_graphs": 0}
+        
+        total_nodes = sum(len(g.nodes) for g in self.graphs.values())
+        total_edges = sum(len(g.edges) for g in self.graphs.values())
+        
+        return {
+            "total_graphs": len(self.graphs),
+            "total_nodes": total_nodes,
+            "total_edges": total_edges,
+            "avg_nodes_per_graph": round(total_nodes / len(self.graphs), 2),
+            "avg_edges_per_graph": round(total_edges / len(self.graphs), 2)
+        }
 
 
 class CounterfactualEngine:
     """反事实引擎
     
-    执行反事实推理和What-if分析
+    生成和评估反事实场景
     """
     
     def __init__(self):
-        self.scenario_history: List[CounterfactualScenario] = []
+        self.scenarios: List[CounterfactualScenario] = []
+        self.generation_history: List[Dict] = []
     
     def generate_counterfactual(
         self,
-        causal_graph: CausalGraph,
-        intervention: str,
-        intervention_details: Dict[str, Any]
+        original_outcome: str,
+        changed_factor: str,
+        change_direction: str
     ) -> CounterfactualScenario:
         """
         生成反事实场景
         
         Args:
-            causal_graph: 因果图
-            intervention: 干预描述
-            intervention_details: 干预详情
+            original_outcome: 原始结果
+            changed_factor: 改变的因素
+            change_direction: 改变方向（increase/decrease/eliminate）
             
         Returns:
             反事实场景
         """
-        # Step 1: 确定原始状态
-        original_state = self._extract_current_state(causal_graph)
+        # 构建反事实条件
+        condition = f"If {changed_factor} had been {change_direction}"
         
-        # Step 2: 应用干预
-        counterfactual_state = self._apply_intervention(
-            original_state, intervention, intervention_details
+        # 模拟假设结果（简化）
+        hypothetical = self._simulate_hypothetical_outcome(
+            original_outcome, changed_factor, change_direction
         )
         
-        # Step 3: 预测结果
-        predicted_outcome = self._predict_outcome(
-            causal_graph, counterfactual_state
-        )
+        # 计算合理性分数
+        plausibility = self._assess_plausibility(changed_factor, change_direction)
         
-        # Step 4: 构建推理链
-        reasoning_chain = self._build_reasoning_chain(
-            causal_graph, intervention, predicted_outcome
-        )
-        
-        # 创建场景
         scenario = CounterfactualScenario(
-            scenario_id=str(uuid.uuid4()),
-            scenario_type=CounterfactualType.ACTION_BASED,
-            original_state=original_state,
-            counterfactual_state=counterfactual_state,
-            intervention=intervention,
-            predicted_outcome=predicted_outcome,
-            confidence=random.uniform(0.7, 0.95),
-            reasoning_chain=reasoning_chain
+            scenario_id="",
+            original_outcome=original_outcome,
+            counterfactual_condition=condition,
+            hypothetical_outcome=hypothetical,
+            plausibility_score=plausibility
         )
         
-        self.scenario_history.append(scenario)
+        self.scenarios.append(scenario)
         
-        logger.info(f"Counterfactual scenario generated: {intervention}")
+        # 记录生成历史
+        self.generation_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "factor_changed": changed_factor,
+            "change_direction": change_direction,
+            "plausibility": plausibility
+        })
+        
+        logger.info(f"Counterfactual generated: plausibility={plausibility:.2f}")
         
         return scenario
     
-    def compare_scenarios(
+    def generate_what_if_scenarios(
         self,
-        scenarios: List[CounterfactualScenario]
-    ) -> Dict[str, Any]:
+        situation: str,
+        num_scenarios: int = 5
+    ) -> List[CounterfactualScenario]:
         """
-        比较多个反事实场景
+        生成多个what-if场景
         
         Args:
-            scenarios: 场景列表
+            situation: 情境描述
+            num_scenarios: 场景数量
             
         Returns:
-            比较结果
+            反事实场景列表
         """
-        if not scenarios:
-            return {}
+        scenarios = []
         
-        comparison = {
-            "scenarios_compared": len(scenarios),
-            "best_scenario": None,
-            "outcome_differences": {},
-            "recommendation": ""
+        # 定义可能的改变因素
+        factors = [
+            ("response_time", "reduced by 50%"),
+            ("error_rate", "eliminated"),
+            ("user_input", "more detailed"),
+            ("system_load", "decreased"),
+            ("network_latency", "minimized")
+        ]
+        
+        for i in range(min(num_scenarios, len(factors))):
+            factor, direction = factors[i]
+            
+            scenario = self.generate_counterfactual(
+                original_outcome=situation,
+                changed_factor=factor,
+                change_direction=direction
+            )
+            
+            scenarios.append(scenario)
+        
+        logger.info(f"Generated {len(scenarios)} what-if scenarios")
+        
+        return scenarios
+    
+    def _simulate_hypothetical_outcome(
+        self,
+        original: str,
+        factor: str,
+        direction: str
+    ) -> str:
+        """模拟假设结果"""
+        outcome_templates = {
+            "response_time": "System would respond faster, improving user experience",
+            "error_rate": "Failures would be eliminated, increasing reliability",
+            "user_input": "Better input would lead to more accurate results",
+            "system_load": "Lower load would improve overall performance",
+            "network_latency": "Reduced latency would enable real-time interactions"
         }
         
-        # 找出最佳场景（基于预期收益）
-        best_scenario = max(
-            scenarios,
-            key=lambda s: s.predicted_outcome.get("expected_benefit", 0)
+        return outcome_templates.get(factor, f"Outcome would be different due to {factor} change")
+    
+    def _assess_plausibility(self, factor: str, direction: str) -> float:
+        """评估合理性"""
+        # 基于因素和方向的先验合理性
+        base_plausibility = {
+            "response_time": 0.8,
+            "error_rate": 0.7,
+            "user_input": 0.9,
+            "system_load": 0.75,
+            "network_latency": 0.65
+        }
+        
+        plausibility = base_plausibility.get(factor, 0.5)
+        
+        # 添加随机变化
+        plausibility += random.uniform(-0.1, 0.1)
+        
+        return max(0.0, min(1.0, plausibility))
+    
+    def get_scenario_statistics(self) -> Dict[str, Any]:
+        """获取场景统计"""
+        if not self.scenarios:
+            return {"total_scenarios": 0}
+        
+        avg_plausibility = statistics.mean([s.plausibility_score for s in self.scenarios])
+        
+        return {
+            "total_scenarios": len(self.scenarios),
+            "avg_plausibility_score": round(avg_plausibility, 4),
+            "generation_runs": len(self.generation_history)
+        }
+
+
+class A2PScaffolding:
+    """A2P脚手架（Abduction-Action-Prediction）
+    
+    结构化的因果推理框架
+    """
+    
+    def __init__(self):
+        self.a2p_results: List[A2PResult] = []
+        self.execution_history: List[Dict] = []
+    
+    def execute_a2p_analysis(
+        self,
+        failure_description: str,
+        context: Dict[str, Any]
+    ) -> A2PResult:
+        """
+        执行A2P分析
+        
+        Args:
+            failure_description: 失败描述
+            context: 上下文信息
+            
+        Returns:
+            A2P结果
+        """
+        logger.info(f"Starting A2P analysis for: {failure_description[:50]}...")
+        
+        # Step 1: Abduction（溯因推理）- 推断根本原因
+        abduction_findings = self._perform_abduction(failure_description, context)
+        
+        # Step 2: Action（定义行动）- 提出最小纠正行动
+        proposed_action = self._define_corrective_action(abduction_findings)
+        
+        # Step 3: Prediction（预测）- 模拟行动效果
+        predicted_outcome, success_prob = self._predict_outcome(proposed_action, context)
+        
+        # 整合结果
+        result = A2PResult(
+            result_id="",
+            abduction_findings=abduction_findings,
+            proposed_action=proposed_action,
+            predicted_outcome=predicted_outcome,
+            success_probability=success_prob,
+            step_details={
+                "abduction_confidence": random.uniform(0.7, 0.95),
+                "action_feasibility": random.uniform(0.6, 0.9),
+                "prediction_accuracy": random.uniform(0.65, 0.85)
+            }
         )
         
-        comparison["best_scenario"] = {
-            "scenario_id": best_scenario.scenario_id[:8],
-            "intervention": best_scenario.intervention,
-            "confidence": best_scenario.confidence
+        self.a2p_results.append(result)
+        
+        # 记录执行历史
+        self.execution_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "failure_type": failure_description[:30],
+            "num_root_causes": len(abduction_findings),
+            "success_probability": success_prob
+        })
+        
+        logger.info(f"A2P analysis completed: success_prob={success_prob:.2f}")
+        
+        return result
+    
+    def _perform_abduction(
+        self,
+        failure: str,
+        context: Dict[str, Any]
+    ) -> List[str]:
+        """
+        溯因推理 - 推断隐藏的根本原因
+        
+        Returns:
+            根本原因列表
+        """
+        # 基于失败类型推断原因
+        root_causes = []
+        
+        if "timeout" in failure.lower() or "slow" in failure.lower():
+            root_causes.append("Network congestion or server overload")
+            root_causes.append("Inefficient algorithm or database query")
+        
+        if "error" in failure.lower() or "fail" in failure.lower():
+            root_causes.append("Invalid input or configuration")
+            root_causes.append("Missing dependency or resource")
+        
+        if "memory" in failure.lower():
+            root_causes.append("Memory leak or insufficient allocation")
+        
+        if not root_causes:
+            root_causes.append("Unknown system state or race condition")
+            root_causes.append("External service failure")
+        
+        logger.info(f"Abduction: identified {len(root_causes)} root causes")
+        
+        return root_causes
+    
+    def _define_corrective_action(
+        self,
+        root_causes: List[str]
+    ) -> str:
+        """
+        定义最小纠正行动
+        
+        Args:
+            root_causes: 根本原因列表
+            
+        Returns:
+            纠正行动描述
+        """
+        if not root_causes:
+            return "Investigate further to identify root cause"
+        
+        # 基于首要原因定义行动
+        primary_cause = root_causes[0].lower()
+        
+        actions = {
+            "network": "Implement connection pooling and retry logic with exponential backoff",
+            "algorithm": "Optimize algorithm complexity and add caching layer",
+            "invalid": "Add input validation and error handling",
+            "missing": "Implement health checks and fallback mechanisms",
+            "memory": "Profile memory usage and implement garbage collection tuning",
+            "unknown": "Add comprehensive logging and monitoring"
         }
         
-        # 计算差异
-        for outcome_key in best_scenario.predicted_outcome.keys():
-            values = [s.predicted_outcome.get(outcome_key, 0) for s in scenarios]
-            comparison["outcome_differences"][outcome_key] = {
-                "min": min(values),
-                "max": max(values),
-                "mean": statistics.mean(values),
-                "std": statistics.stdev(values) if len(values) > 1 else 0
-            }
+        for keyword, action in actions.items():
+            if keyword in primary_cause:
+                return action
         
-        comparison["recommendation"] = f"Recommend intervention: {best_scenario.intervention}"
-        
-        logger.info(f"Compared {len(scenarios)} scenarios, best: {best_scenario.intervention}")
-        
-        return comparison
-    
-    def _extract_current_state(self, graph: CausalGraph) -> Dict[str, Any]:
-        """提取当前状态"""
-        return {node.name: node.value for node in graph.nodes if node.value is not None}
-    
-    def _apply_intervention(
-        self,
-        state: Dict[str, Any],
-        intervention: str,
-        details: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """应用干预"""
-        new_state = state.copy()
-        
-        # 根据干预类型修改状态
-        for var, value in details.items():
-            if var in new_state:
-                new_state[var] = value
-        
-        return new_state
+        return "Review system architecture and implement defensive coding practices"
     
     def _predict_outcome(
         self,
-        graph: CausalGraph,
-        state: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """预测结果"""
-        # 简化的预测逻辑
-        return {
-            "expected_benefit": random.uniform(0.5, 0.9),
-            "risk_level": random.choice(["low", "medium", "high"]),
-            "time_to_effect": round(random.uniform(1.0, 24.0), 2),
-            "confidence_interval": [0.6, 0.85]
-        }
+        action: str,
+        context: Dict[str, Any]
+    ) -> Tuple[str, float]:
+        """
+        预测行动结果
+        
+        Args:
+            action: 纠正行动
+            context: 上下文
+            
+        Returns:
+            (预测结果, 成功概率)
+        """
+        # 基于行动类型预测结果
+        if "retry" in action.lower() or "pooling" in action.lower():
+            outcome = "System reliability would improve by 30-40%, reducing timeout errors"
+            success_prob = random.uniform(0.7, 0.85)
+        
+        elif "optimize" in action.lower() or "caching" in action.lower():
+            outcome = "Performance would improve significantly, response time reduced by 50%"
+            success_prob = random.uniform(0.75, 0.9)
+        
+        elif "validation" in action.lower():
+            outcome = "Error rate would decrease by 60-70%, improving user experience"
+            success_prob = random.uniform(0.8, 0.95)
+        
+        else:
+            outcome = "System stability would improve with better observability"
+            success_prob = random.uniform(0.6, 0.8)
+        
+        return outcome, success_prob
     
-    def _build_reasoning_chain(
-        self,
-        graph: CausalGraph,
-        intervention: str,
-        outcome: Dict[str, Any]
-    ) -> List[str]:
-        """构建推理链"""
-        return [
-            f"Intervention: {intervention}",
-            f"Expected benefit: {outcome['expected_benefit']:.2f}",
-            f"Risk level: {outcome['risk_level']}",
-            "Causal path validated through graph traversal"
-        ]
+    def get_a2p_statistics(self) -> Dict[str, Any]:
+        """获取A2P统计"""
+        if not self.a2p_results:
+            return {"total_analyses": 0}
+        
+        avg_success_prob = statistics.mean([r.success_probability for r in self.a2p_results])
+        avg_num_causes = statistics.mean([len(r.abduction_findings) for r in self.a2p_results])
+        
+        return {
+            "total_analyses": len(self.a2p_results),
+            "avg_success_probability": round(avg_success_prob, 4),
+            "avg_root_causes_per_analysis": round(avg_num_causes, 2),
+            "execution_runs": len(self.execution_history)
+        }
 
 
 class RootCauseAnalyzer:
     """根因分析器
     
-    执行根因分析（RCA）
+    深入分析问题根本原因
     """
     
     def __init__(self):
-        self.analysis_history: List[RCAReport] = []
+        self.analyses: List[RootCauseAnalysis] = []
     
-    def analyze_root_cause(
+    def analyze_root_causes(
         self,
-        incident_data: Dict[str, Any],
-        system_context: Dict[str, Any] = None
-    ) -> RCAReport:
+        problem: str,
+        symptoms: List[str],
+        context: Dict[str, Any]
+    ) -> RootCauseAnalysis:
         """
-        分析根因
+        分析根本原因
         
         Args:
-            incident_data: 事故数据
-            system_context: 系统上下文
+            problem: 问题描述
+            symptoms: 症状列表
+            context: 上下文
             
         Returns:
-            RCA报告
+            根因分析结果
         """
-        report = RCAReport(
-            report_id=str(uuid.uuid4()),
-            incident_id=incident_data.get("incident_id", str(uuid.uuid4())[:8]),
-            status=RCAStatus.INITIATED
-        )
+        # 识别根本原因
+        root_causes = self._identify_root_causes(problem, symptoms)
         
-        # Step 1: 数据收集
-        report.status = RCAStatus.DATA_COLLECTION
-        collected_data = self._collect_evidence(incident_data, system_context)
+        # 识别促成因素
+        contributing = self._identify_contributing_factors(symptoms, context)
         
-        # Step 2: 构建因果图
-        report.status = RCAStatus.CAUSAL_GRAPH_BUILT
-        causal_graph = self._build_rca_causal_graph(collected_data)
-        report.causal_graph = causal_graph
-        
-        # Step 3: 识别根因
-        report.status = RCAStatus.ROOT_CAUSES_IDENTIFIED
-        root_causes = self._identify_root_causes(causal_graph, incident_data)
-        report.root_causes = root_causes
-        
-        # Step 4: 验证
-        report.status = RCAStatus.VALIDATION_COMPLETE
-        self._validate_root_causes(root_causes, collected_data)
-        
-        # Step 5: 生成建议
-        report.recommendations = self._generate_recommendations(root_causes)
-        
-        # Step 6: 完成
-        report.status = RCAStatus.COMPLETED
-        report.completed_at = datetime.now(timezone.utc).isoformat()
-        
-        self.analysis_history.append(report)
-        
-        logger.info(f"RCA completed: {len(root_causes)} root causes identified")
-        
-        return report
-    
-    def _collect_evidence(
-        self,
-        incident_data: Dict,
-        context: Dict = None
-    ) -> Dict:
-        """收集证据"""
-        evidence = {
-            "symptoms": incident_data.get("symptoms", []),
-            "timeline": incident_data.get("timeline", []),
-            "metrics": incident_data.get("metrics", {}),
-            "logs": incident_data.get("logs", []),
-            "context": context or {}
+        # 计算置信度
+        confidence_scores = {
+            cause: random.uniform(0.6, 0.95)
+            for cause in root_causes
         }
         
-        return evidence
-    
-    def _build_rca_causal_graph(self, evidence: Dict) -> CausalGraph:
-        """构建RCA因果图"""
-        graph = CausalGraph(graph_id=str(uuid.uuid4()))
+        # 生成建议行动
+        recommendations = self._generate_recommendations(root_causes)
         
-        # 从症状创建节点
-        for symptom in evidence.get("symptoms", []):
-            node = CausalNode(
-                node_id="",
-                name=f"Symptom: {symptom}",
-                node_type="symptom",
-                value=True
-            )
-            graph.add_node(node)
+        analysis = RootCauseAnalysis(
+            analysis_id="",
+            problem_description=problem,
+            root_causes=root_causes,
+            contributing_factors=contributing,
+            confidence_scores=confidence_scores,
+            recommended_actions=recommendations
+        )
         
-        # 从指标创建节点
-        for metric_name, metric_value in evidence.get("metrics", {}).items():
-            node = CausalNode(
-                node_id="",
-                name=f"Metric: {metric_name}",
-                node_type="metric",
-                value=metric_value
-            )
-            graph.add_node(node)
+        self.analyses.append(analysis)
         
-        # 添加因果关系（简化）
-        if len(graph.nodes) >= 2:
-            edge = CausalEdge(
-                edge_id="",
-                source_node_id=graph.nodes[0].node_id,
-                target_node_id=graph.nodes[-1].node_id,
-                relation_type=CausalRelationType.DIRECT_CAUSATION,
-                strength=0.8,
-                description="Potential causal relationship"
-            )
-            graph.add_edge(edge)
+        logger.info(f"Root cause analysis completed: {len(root_causes)} causes identified")
         
-        return graph
+        return analysis
     
     def _identify_root_causes(
         self,
-        graph: CausalGraph,
-        incident_data: Dict
-    ) -> List[RootCause]:
-        """识别根因"""
-        root_causes = []
+        problem: str,
+        symptoms: List[str]
+    ) -> List[str]:
+        """识别根本原因"""
+        causes = []
         
-        # 基于因果图识别根因
-        # 寻找没有父节点的节点（根节点）
-        child_nodes = set(e.target_node_id for e in graph.edges)
+        # 基于症状推断
+        if any("slow" in s.lower() for s in symptoms):
+            causes.append("Performance bottleneck in critical path")
         
-        for node in graph.nodes:
-            if node.node_id not in child_nodes:
-                # 这是一个潜在的根因
-                root_cause = RootCause(
-                    root_cause_id="",
-                    description=f"Root cause: {node.name}",
-                    confidence=random.uniform(0.7, 0.95),
-                    evidence=[f"Node {node.name} has no upstream causes"],
-                    causal_path=[node.name],
-                    impact_score=random.uniform(0.6, 0.95),
-                    remediation_suggestions=[
-                        f"Investigate {node.name} further",
-                        "Implement monitoring for this factor",
-                        "Add preventive measures"
-                    ]
-                )
-                root_causes.append(root_cause)
+        if any("error" in s.lower() for s in symptoms):
+            causes.append("Insufficient error handling and validation")
         
-        # 如果没有找到根节点，创建默认根因
-        if not root_causes:
-            root_cause = RootCause(
-                root_cause_id="",
-                description="System configuration issue",
-                confidence=0.75,
-                evidence=["Multiple symptoms observed"],
-                causal_path=["Configuration -> Symptoms"],
-                impact_score=0.8,
-                remediation_suggestions=[
-                    "Review system configuration",
-                    "Check recent changes",
-                    "Validate deployment settings"
-                ]
-            )
-            root_causes.append(root_cause)
+        if any("timeout" in s.lower() for s in symptoms):
+            causes.append("Resource contention or deadlock")
         
-        # 按影响分数排序
-        root_causes.sort(key=lambda x: x.impact_score * x.confidence, reverse=True)
+        if any("memory" in s.lower() for s in symptoms):
+            causes.append("Memory management issues")
         
-        return root_causes
+        if not causes:
+            causes.append("System design flaw or architectural issue")
+        
+        return causes
     
-    def _validate_root_causes(
+    def _identify_contributing_factors(
         self,
-        root_causes: List[RootCause],
-        evidence: Dict
-    ) -> bool:
-        """验证根因"""
-        # 简化的验证逻辑
-        for rc in root_causes:
-            # 检查是否有足够的证据支持
-            if len(rc.evidence) >= 1:
-                rc.confidence *= 1.1  # 提升置信度
-                rc.confidence = min(1.0, rc.confidence)
+        symptoms: List[str],
+        context: Dict[str, Any]
+    ) -> List[str]:
+        """识别促成因素"""
+        factors = []
         
-        return True
+        if context.get("high_load", False):
+            factors.append("High system load")
+        
+        if context.get("recent_changes", False):
+            factors.append("Recent code changes")
+        
+        if context.get("external_dependencies", 0) > 3:
+            factors.append("Complex external dependencies")
+        
+        factors.append("Insufficient monitoring and alerting")
+        
+        return factors
     
-    def _generate_recommendations(self, root_causes: List[RootCause]) -> List[str]:
-        """生成建议"""
+    def _generate_recommendations(
+        self,
+        root_causes: List[str]
+    ) -> List[str]:
+        """生成建议行动"""
         recommendations = []
         
-        for rc in root_causes[:3]:  # Top 3根因
-            recommendations.extend(rc.remediation_suggestions[:2])
+        for cause in root_causes:
+            if "bottleneck" in cause.lower():
+                recommendations.append("Profile and optimize critical code paths")
+            elif "error handling" in cause.lower():
+                recommendations.append("Implement comprehensive error handling strategy")
+            elif "contention" in cause.lower():
+                recommendations.append("Review locking mechanisms and reduce contention")
+            elif "memory" in cause.lower():
+                recommendations.append("Conduct memory profiling and optimization")
+            else:
+                recommendations.append("Conduct architectural review and refactoring")
         
-        # 添加通用建议
-        recommendations.extend([
-            "Implement automated monitoring and alerting",
-            "Create runbook for similar incidents",
-            "Conduct post-mortem review"
-        ])
-        
-        return list(set(recommendations))  # 去重
-
-
-class A2PScaffolding:
-    """Abduction-Action-Prediction 脚手架
+        return recommendations
     
-    结构化因果推理框架
+    def get_analysis_summary(self) -> Dict[str, Any]:
+        """获取分析摘要"""
+        if not self.analyses:
+            return {"total_analyses": 0}
+        
+        total_causes = sum(len(a.root_causes) for a in self.analyses)
+        avg_causes = total_causes / len(self.analyses)
+        
+        return {
+            "total_analyses": len(self.analyses),
+            "total_root_causes_identified": total_causes,
+            "avg_root_causes_per_analysis": round(avg_causes, 2)
+        }
+
+
+class CausalReasoningSystem:
+    """因果推理系统
+    
+    整合因果图、反事实、A2P、根因分析
     """
     
     def __init__(self):
-        self.reasoning_history: List[Dict] = []
+        self.graph_builder = CausalGraphBuilder()
+        self.counterfactual_engine = CounterfactualEngine()
+        self.a2p_scaffolding = A2PScaffolding()
+        self.root_cause_analyzer = RootCauseAnalyzer()
     
-    def execute_a2p_reasoning(
+    def perform_comprehensive_causal_analysis(
         self,
-        observation: Dict[str, Any],
-        failure_context: Dict[str, Any]
+        problem: str,
+        symptoms: List[str],
+        context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        执行A2P推理
+        执行全面因果分析
         
         Args:
-            observation: 观测数据
-            failure_context: 失败上下文
+            problem: 问题描述
+            symptoms: 症状列表
+            context: 上下文
             
         Returns:
-            推理结果
+            综合分析结果
         """
-        result = {
-            "abduction": None,
-            "action": None,
-            "prediction": None,
-            "success": False
+        logger.info("Starting comprehensive causal analysis...")
+        
+        # Step 1: 根因分析
+        rca = self.root_cause_analyzer.analyze_root_causes(problem, symptoms, context)
+        
+        # Step 2: A2P分析
+        a2p_result = self.a2p_scaffolding.execute_a2p_analysis(problem, context)
+        
+        # Step 3: 生成反事实场景
+        counterfactuals = self.counterfactual_engine.generate_what_if_scenarios(
+            situation=problem,
+            num_scenarios=3
+        )
+        
+        # 整合结果
+        analysis_result = {
+            "problem": problem,
+            "root_cause_analysis": {
+                "root_causes": rca.root_causes,
+                "contributing_factors": rca.contributing_factors,
+                "recommendations": rca.recommended_actions
+            },
+            "a2p_analysis": {
+                "abduction_findings": a2p_result.abduction_findings,
+                "proposed_action": a2p_result.proposed_action,
+                "predicted_outcome": a2p_result.predicted_outcome,
+                "success_probability": a2p_result.success_probability
+            },
+            "counterfactual_scenarios": [
+                {
+                    "condition": cf.counterfactual_condition,
+                    "hypothetical_outcome": cf.hypothetical_outcome,
+                    "plausibility": cf.plausibility_score
+                }
+                for cf in counterfactuals
+            ],
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        # Step 1: Abduction - 推断隐藏根因
-        abduction_result = self._abduce_root_causes(observation, failure_context)
-        result["abduction"] = abduction_result
+        logger.info("Comprehensive causal analysis completed")
         
-        # Step 2: Action - 定义最小修正干预
-        action_result = self._define_corrective_action(abduction_result)
-        result["action"] = action_result
-        
-        # Step 3: Prediction - 模拟后续轨迹
-        prediction_result = self._predict_trajectory(action_result, failure_context)
-        result["prediction"] = prediction_result
-        
-        # 判断是否成功
-        result["success"] = prediction_result.get("resolves_failure", False)
-        
-        self.reasoning_history.append({
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "result": result
-        })
-        
-        logger.info(f"A2P reasoning completed: success={result['success']}")
-        
-        return result
+        return analysis_result
     
-    def _abduce_root_causes(
-        self,
-        observation: Dict,
-        context: Dict
-    ) -> Dict[str, Any]:
-        """Abduction: 推断根因"""
-        # 基于观测推断可能的根因
-        inferred_causes = []
-        
-        symptoms = observation.get("symptoms", [])
-        for symptom in symptoms:
-            # 简化的因果推断
-            cause = {
-                "cause": f"Potential cause of {symptom}",
-                "confidence": random.uniform(0.6, 0.9),
-                "evidence": [symptom]
-            }
-            inferred_causes.append(cause)
-        
+    def get_system_statistics(self) -> Dict[str, Any]:
+        """获取系统统计"""
         return {
-            "inferred_causes": inferred_causes,
-            "most_likely_cause": max(inferred_causes, key=lambda x: x["confidence"]) if inferred_causes else None
-        }
-    
-    def _define_corrective_action(self, abduction_result: Dict) -> Dict[str, Any]:
-        """Action: 定义修正行动"""
-        most_likely_cause = abduction_result.get("most_likely_cause")
-        
-        if not most_likely_cause:
-            return {"action": "No action defined", "confidence": 0.0}
-        
-        action = {
-            "action": f"Fix: {most_likely_cause['cause']}",
-            "type": "corrective",
-            "estimated_effort": random.choice(["low", "medium", "high"]),
-            "risk": random.choice(["low", "medium", "high"])
-        }
-        
-        return action
-    
-    def _predict_trajectory(
-        self,
-        action: Dict,
-        context: Dict
-    ) -> Dict[str, Any]:
-        """Prediction: 预测轨迹"""
-        resolves_failure = random.random() > 0.3  # 70%成功率
-        
-        return {
-            "resolves_failure": resolves_failure,
-            "predicted_outcome": "Failure resolved" if resolves_failure else "Partial improvement",
-            "confidence": random.uniform(0.7, 0.95),
-            "side_effects": [] if resolves_failure else ["May require additional fixes"]
+            "causal_graphs": self.graph_builder.get_graph_statistics(),
+            "counterfactual_scenarios": self.counterfactual_engine.get_scenario_statistics(),
+            "a2p_analyses": self.a2p_scaffolding.get_a2p_statistics(),
+            "root_cause_analyses": self.root_cause_analyzer.get_analysis_summary()
         }
 
 
-def create_causal_reasoning_system() -> Tuple[CausalGraphBuilder, CounterfactualEngine, RootCauseAnalyzer, A2PScaffolding]:
+def create_causal_reasoning_system() -> CausalReasoningSystem:
     """工厂函数：创建因果推理系统"""
-    builder = CausalGraphBuilder()
-    engine = CounterfactualEngine()
-    analyzer = RootCauseAnalyzer()
-    scaffolding = A2PScaffolding()
-    
-    return builder, engine, analyzer, scaffolding
+    system = CausalReasoningSystem()
+    return system
 
 
 if __name__ == "__main__":
@@ -732,107 +843,125 @@ if __name__ == "__main__":
     print("AI Agent Causal Reasoning & Counterfactual Thinking 测试")
     print("="*60)
     
-    builder, engine, analyzer, scaffolding = create_causal_reasoning_system()
+    system = create_causal_reasoning_system()
     
-    # 构建因果图
-    print("\n🕸️ 构建因果图...")
-    variables = [
-        {"name": "Server_Load", "type": "metric", "value": 85.5, "probability": 0.9},
-        {"name": "Response_Time", "type": "metric", "value": 2.3, "probability": 0.85},
-        {"name": "Error_Rate", "type": "metric", "value": 0.05, "probability": 0.8},
-        {"name": "User_Satisfaction", "type": "outcome", "value": 0.6, "probability": 0.7}
-    ]
-    
-    domain_knowledge = [
-        {
-            "source": "Server_Load",
-            "target": "Response_Time",
-            "relation_type": "direct_causation",
-            "strength": 0.9,
-            "description": "High server load causes slow response"
-        },
-        {
-            "source": "Response_Time",
-            "target": "User_Satisfaction",
-            "relation_type": "direct_causation",
-            "strength": 0.85,
-            "description": "Slow response reduces user satisfaction"
-        }
-    ]
-    
-    causal_graph = builder.build_causal_graph(variables, domain_knowledge)
-    print(f"   节点数: {len(causal_graph.nodes)}")
-    print(f"   边数: {len(causal_graph.edges)}")
-    
-    # 反事实推理
-    print("\n💭 反事实推理...")
-    scenario = engine.generate_counterfactual(
-        causal_graph=causal_graph,
-        intervention="Reduce server load by 30%",
-        intervention_details={"Server_Load": 60.0}
+    # 测试因果图构建
+    print("\n🕸️  测试因果图构建...")
+    graph = system.graph_builder.build_causal_graph(
+        domain="system_performance",
+        variables=["cpu_usage", "memory_usage", "response_time", "error_rate", "throughput"],
+        causal_relationships=[
+            ("cpu_usage", "response_time"),
+            ("memory_usage", "response_time"),
+            ("response_time", "error_rate"),
+            ("throughput", "cpu_usage")
+        ]
     )
     
-    print(f"   干预: {scenario.intervention}")
-    print(f"   预期收益: {scenario.predicted_outcome['expected_benefit']:.2f}")
-    print(f"   风险等级: {scenario.predicted_outcome['risk_level']}")
-    print(f"   置信度: {scenario.confidence:.2f}")
-    print(f"   推理链长度: {len(scenario.reasoning_chain)}")
+    print(f"   图ID: {graph.graph_id}")
+    print(f"   节点数: {len(graph.nodes)}")
+    print(f"   边数: {len(graph.edges)}")
     
-    # 根因分析
-    print("\n🔍 根因分析...")
-    incident_data = {
-        "incident_id": "INC-2026-001",
-        "symptoms": ["High latency", "Increased error rate", "User complaints"],
-        "timeline": [
-            {"time": "10:00", "event": "Latency spike detected"},
-            {"time": "10:05", "event": "Error rate increased"},
-            {"time": "10:10", "event": "Users reporting issues"}
-        ],
-        "metrics": {
-            "cpu_usage": 95.2,
-            "memory_usage": 88.5,
-            "disk_io": 120.3
-        },
-        "logs": ["ERROR: Connection timeout", "WARN: High memory usage"]
-    }
+    # 查询因果路径
+    paths = system.graph_builder.query_causal_paths(
+        domain="system_performance",
+        start_node="cpu_usage",
+        end_node="error_rate"
+    )
+    print(f"\n   从cpu_usage到error_rate的因果路径:")
+    for i, path in enumerate(paths, 1):
+        print(f"     路径{i}: {' → '.join(path)}")
     
-    rca_report = analyzer.analyze_root_cause(incident_data)
-    print(f"   事故ID: {rca_report.incident_id}")
-    print(f"   状态: {rca_report.status.value}")
-    print(f"   根因数: {len(rca_report.root_causes)}")
+    # 识别混淆变量
+    confounders = system.graph_builder.identify_confounders(
+        domain="system_performance",
+        variable_a="response_time",
+        variable_b="error_rate"
+    )
+    print(f"\n   response_time和error_rate的混淆变量: {confounders}")
     
-    if rca_report.root_causes:
-        top_cause = rca_report.root_causes[0]
-        print(f"\n   🔝 顶级根因:")
-        print(f"      描述: {top_cause.description}")
-        print(f"      置信度: {top_cause.confidence:.2f}")
-        print(f"      影响分数: {top_cause.impact_score:.2f}")
-        print(f"      建议:")
-        for rec in top_cause.remediation_suggestions[:2]:
-            print(f"        - {rec}")
+    # 测试反事实引擎
+    print("\n💭 测试反事实引擎...")
+    scenario = system.counterfactual_engine.generate_counterfactual(
+        original_outcome="System timeout occurred",
+        changed_factor="response_time",
+        change_direction="reduced by 50%"
+    )
     
-    print(f"\n   📋 总建议数: {len(rca_report.recommendations)}")
+    print(f"   原始结果: {scenario.original_outcome}")
+    print(f"   反事实条件: {scenario.counterfactual_condition}")
+    print(f"   假设结果: {scenario.hypothetical_outcome}")
+    print(f"   合理性分数: {scenario.plausibility_score:.2f}")
     
-    # A2P推理
-    print("\n🧠 A2P推理...")
-    observation = {
-        "symptoms": ["Service degradation", "Timeout errors"]
-    }
+    # 生成what-if场景
+    what_if_scenarios = system.counterfactual_engine.generate_what_if_scenarios(
+        situation="API request failed",
+        num_scenarios=3
+    )
+    print(f"\n   生成了 {len(what_if_scenarios)} 个what-if场景")
+    for i, sc in enumerate(what_if_scenarios, 1):
+        print(f"     场景{i}: {sc.counterfactual_condition[:50]}...")
     
-    failure_context = {
-        "service": "payment-api",
-        "severity": "high"
-    }
+    # 测试A2P脚手架
+    print("\n🔬 测试A2P脚手架...")
+    a2p_result = system.a2p_scaffolding.execute_a2p_analysis(
+        failure_description="Database query timeout after 30 seconds",
+        context={"database": "postgres", "query_complexity": "high"}
+    )
     
-    a2p_result = scaffolding.execute_a2p_reasoning(observation, failure_context)
+    print(f"   溯因发现:")
+    for finding in a2p_result.abduction_findings:
+        print(f"     - {finding}")
+    print(f"   提议行动: {a2p_result.proposed_action[:60]}...")
+    print(f"   预测结果: {a2p_result.predicted_outcome[:60]}...")
+    print(f"   成功概率: {a2p_result.success_probability:.2f}")
     
-    print(f"   Abduction: {len(a2p_result['abduction']['inferred_causes'])} causes inferred")
-    if a2p_result['abduction']['most_likely_cause']:
-        print(f"   最可能原因: {a2p_result['abduction']['most_likely_cause']['cause']}")
-        print(f"   置信度: {a2p_result['abduction']['most_likely_cause']['confidence']:.2f}")
+    # 测试根因分析
+    print("\n🔍 测试根因分析...")
+    rca = system.root_cause_analyzer.analyze_root_causes(
+        problem="Service degradation during peak hours",
+        symptoms=["slow response", "high error rate", "timeout errors"],
+        context={"high_load": True, "recent_changes": True, "external_dependencies": 5}
+    )
     
-    print(f"   Action: {a2p_result['action']['action']}")
-    print(f"   Prediction: {a2p_result['prediction']['predicted_outcome']}")
-    print(f"   解决失败: {'✅' if a2p_result['success'] else '❌'}")
+    print(f"   根本原因:")
+    for cause, conf in rca.confidence_scores.items():
+        print(f"     - {cause} (置信度: {conf:.2f})")
+    print(f"   促成因素:")
+    for factor in rca.contributing_factors:
+        print(f"     - {factor}")
+    print(f"   建议行动:")
+    for rec in rca.recommended_actions:
+        print(f"     - {rec}")
+    
+    # 测试全面因果分析
+    print("\n🎯 测试全面因果分析...")
+    comprehensive = system.perform_comprehensive_causal_analysis(
+        problem="Microservice communication failure",
+        symptoms=["connection timeout", "service unavailable", "circuit breaker triggered"],
+        context={"high_load": True, "recent_changes": False, "external_dependencies": 8}
+    )
+    
+    print(f"   问题: {comprehensive['problem']}")
+    print(f"   根本原因数: {len(comprehensive['root_cause_analysis']['root_causes'])}")
+    print(f"   A2P成功概率: {comprehensive['a2p_analysis']['success_probability']:.2f}")
+    print(f"   反事实场景数: {len(comprehensive['counterfactual_scenarios'])}")
+    
+    # 系统统计
+    stats = system.get_system_statistics()
+    print(f"\n📊 系统统计:")
+    print(f"   因果图:")
+    print(f"     总图数: {stats['causal_graphs']['total_graphs']}")
+    print(f"     总节点: {stats['causal_graphs']['total_nodes']}")
+    print(f"     总边数: {stats['causal_graphs']['total_edges']}")
+    print(f"   反事实场景:")
+    print(f"     总场景: {stats['counterfactual_scenarios']['total_scenarios']}")
+    print(f"     平均合理性: {stats['counterfactual_scenarios']['avg_plausibility_score']:.2f}")
+    print(f"   A2P分析:")
+    print(f"     总分析: {stats['a2p_analyses']['total_analyses']}")
+    print(f"     平均成功概率: {stats['a2p_analyses']['avg_success_probability']:.2f}")
+    print(f"   根因分析:")
+    print(f"     总分析: {stats['root_cause_analyses']['total_analyses']}")
+    print(f"     总根因数: {stats['root_cause_analyses']['total_root_causes_identified']}")
     
     print("\n✅ 测试完成！")
