@@ -15,12 +15,12 @@ pub enum FileEventType {
     Deleted,
 }
 
-impl ToString for FileEventType {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for FileEventType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FileEventType::Created => "Created".to_string(),
-            FileEventType::Modified => "Modified".to_string(),
-            FileEventType::Deleted => "Deleted".to_string(),
+            FileEventType::Created => write!(f, "Created"),
+            FileEventType::Modified => write!(f, "Modified"),
+            FileEventType::Deleted => write!(f, "Deleted"),
         }
     }
 }

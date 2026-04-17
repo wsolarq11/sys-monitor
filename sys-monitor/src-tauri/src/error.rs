@@ -161,7 +161,7 @@ impl From<rusqlite::Error> for AppError {
             rusqlite::Error::SqliteFailure(sqlite_err, _) => {
                 match sqlite_err.extended_code {
                     // 数据库文件相关错误
-                    1007 | 1008 | 1009 => {
+                    1007..=1009 => {
                         AppError::FileSystem(format!("数据库文件错误：{}", error))
                     }
                     // 权限相关错误
@@ -312,7 +312,7 @@ impl RecoveryStrategy {
             }
             RecoveryStrategy::Fallback => {
                 // Fallback 需要调用者提供默认值，这里简化处理
-                operation().or_else(|_| Err(AppError::Unknown("回退失败".to_string())))
+                operation().map_err(|_| AppError::Unknown("回退失败".to_string()))
             }
             RecoveryStrategy::Ignore => match operation() {
                 Ok(result) => Ok(result),

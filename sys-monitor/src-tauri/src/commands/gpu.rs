@@ -69,7 +69,7 @@ fn detect_gpu_vendor() -> GpuVendor {
 /// Get NVIDIA GPU info via nvidia-smi
 fn get_nvidia_gpu_info() -> Result<Option<GpuInfo>, AppError> {
     let output = Command::new("nvidia-smi")
-        .args(&[
+        .args([
             "--query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu,name",
             "--format=csv,noheader,nounits",
         ])

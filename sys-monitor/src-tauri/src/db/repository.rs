@@ -453,6 +453,7 @@ impl DatabaseRepository {
     }
 
     /// 原子性事务方法：创建扫描、插入 items、插入统计、更新结果
+    #[allow(clippy::too_many_arguments)]
     pub fn create_scan_with_items(
         &mut self,
         path: &str,
@@ -845,7 +846,7 @@ impl DatabaseRepository {
             .prepare(&format!("EXPLAIN QUERY PLAN {}", query))?;
 
         let rows = stmt.query_map([], |row| {
-            Ok(row.get::<_, String>(3)?) // detail 列在第 4 列（索引 3）
+            row.get::<_, String>(3) // detail 列在第 4 列（索引 3）
         })?;
 
         let mut plans = Vec::new();

@@ -325,7 +325,7 @@ pub async fn toggle_watched_folder_active<R: Runtime>(
 
     let folder_info = folders.iter().find(|f| f.id == folder_id).ok_or_else(|| {
         logger::log_error(&format!("未找到文件夹 ID: {}", folder_id));
-        AppError::invalid_parameter(&format!("Folder with id {} not found", folder_id))
+        AppError::invalid_parameter(format!("Folder with id {} not found", folder_id))
     })?;
 
     // 更新数据库状态
