@@ -62,7 +62,17 @@ jobs:
 
       - name: Run cargo clippy
         working-directory: ./sys-monitor/src-tauri
-        run: cargo clippy -- -D warnings
+        run: |
+          echo "=== Running cargo clippy with verbose output ==="
+          cargo clippy --verbose 2>&1 | tee clippy-output.txt
+          echo "=== Checking for warnings ==="
+          if grep -q "warning:" clippy-output.txt; then
+            echo "❌ Clippy warnings found:"
+            grep -A 5 "warning:" clippy-output.txt
+            exit 1
+          else
+            echo "✅ No clippy warnings"
+          fi
 
       - name: Run backend tests
         working-directory: ./sys-monitor/src-tauri
