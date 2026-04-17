@@ -29,6 +29,7 @@ class RootCleanlinessChecker:
             'LICENSE',
             '.gitignore',
             '.gitattributes',
+            '.lingmaignore',  # Lingma 配置
             'sys-monitor打开GitHub仓库.url',  # 项目特定
         }
         self.allowed_dirs = {
@@ -36,6 +37,7 @@ class RootCleanlinessChecker:
             '.github',
             '.lingma',
             'sys-monitor',  # 项目特定
+            'scripts',      # 项目脚本目录
         }
         self.forbidden_patterns = [
             r'^\$null$',
