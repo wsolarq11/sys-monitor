@@ -273,7 +273,29 @@ class QualityEvaluator:
 
 
 class IssueDetector:
-    """问题检测器"""
+    """问题检测器
+    
+    基于社区最佳实践的多层检测架构：
+    1. 静态分析层 - 语法、风格检查
+    2. 模式匹配层 - 最佳实践、安全漏洞
+    3. 语义分析层 - 逻辑正确性（Phase 2）
+    """
+    
+    def __init__(self, config_path: Optional[Path] = None):
+        """
+        初始化问题检测器
+        
+        Args:
+            config_path: 配置文件路径
+        """
+        self.config = self._load_config(config_path)
+    
+    def _load_config(self, config_path: Optional[Path]) -> Dict:
+        """加载配置"""
+        if config_path and config_path.exists():
+            with open(config_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return {}
     
     def detect(self, result: Any, context: Dict[str, Any] = None) -> List[Issue]:
         """
@@ -289,9 +311,192 @@ class IssueDetector:
         issues = []
         
         if isinstance(result, str):
-            issues.extend(self._detect_text_issues(result, context or {}))
+            # 分层检测
+            issues.extend(self._static_analysis(result, context or {}))
+            issues.extend(self._pattern_matching(result, context or {}))
         elif isinstance(result, dict):
             issues.extend(self._detect_structured_issues(result, context or {}))
+        
+        # 去重和排序
+        issues = self._deduplicate_and_sort(issues)
+        
+        return issues
+    
+    def _static_analysis(self, text: str, context: Dict) -> List[Issue]:
+        """静态分析层 - 语法和基本结构检查"""
+        issues = []
+        
+        # 检测语法错误
+        syntax_errors = self._check_syntax_errors(text)
+        issues.extend(syntax_errors)
+        
+        # 检测代码风格问题
+        style_issues = self._check_code_style(text)
+        issues.extend(style_issues)
+        
+        return issues
+    
+    def _pattern_matching(self, text: str, context: Dict) -> List[Issue]:
+        """模式匹配层 - 最佳实践和安全检查"""
+        issues = []
+        
+        # 检测安全风险
+        security_issues = self._check_security_risks(text)
+        issues.extend(security_issues)
+        
+        # 检测最佳实践违反
+        best_practice_issues = self._check_best_practices(text, context)
+        issues.extend(best_practice_issues)
+        
+        # 检测性能反模式
+        performance_issues = self._check_performance_antipatterns(text)
+        issues.extend(performance_issues)
+        
+        return issues
+    
+    def _check_syntax_errors(self, text: str) -> List[Issue]:
+        """检查语法错误"""
+        issues = []
+        
+        if "SyntaxError" in text or "IndentationError" in text:
+            issues.append(Issue(
+                issue_type=IssueType.SYNTAX_ERROR,
+                severity=SeverityLevel.CRITICAL,
+                description="检测到Python语法错误",
+                evidence="包含 SyntaxError 或 IndentationError",
+                impact="代码无法执行"
+            ))
+        
+        # 检查括号匹配
+        if text.count('(') != text.count(')'):
+            issues.append(Issue(
+                issue_type=IssueType.SYNTAX_ERROR,
+                severity=SeverityLevel.CRITICAL,
+                description="括号不匹配",
+                evidence=f"左括号{ text.count('(') }个，右括号{ text.count(')') }个",
+                impact="语法错误，代码无法解析"
+            ))
+        
+        return issues
+    
+    def _check_code_style(self, text: str) -> List[Issue]:
+        """检查代码风格"""
+        issues = []
+        
+        # 检查行长度（PEP 8: 79字符）
+        lines = text.split('\n')
+        long_lines = [i+1 for i, line in enumerate(lines) if len(line) > 100]
+        if long_lines:
+            issues.append(Issue(
+                issue_type=IssueType.READABILITY_ISSUE,
+                severity=SeverityLevel.LOW,
+                description=f"发现{ len(long_lines) }行超过100字符",
+                location=f"lines: { ', '.join(map(str, long_lines[:5])) }",
+                impact="降低代码可读性"
+            ))
+        
+        return issues
+    
+    def _check_security_risks(self, text: str) -> List[Issue]:
+        """检查安全风险"""
+        issues = []
+        
+        # 检测危险的函数调用
+        dangerous_functions = {
+            'eval(': ('使用 eval() 存在代码注入风险', SeverityLevel.HIGH),
+            'exec(': ('使用 exec() 存在代码注入风险', SeverityLevel.HIGH),
+            '__import__(': ('动态导入可能存在安全风险', SeverityLevel.MEDIUM),
+            'os.system(': ('直接执行系统命令存在注入风险', SeverityLevel.HIGH),
+            'subprocess.call(': ('未验证的用户输入可能导致命令注入', SeverityLevel.MEDIUM),
+        }
+        
+        for func, (desc, severity) in dangerous_functions.items():
+            if func in text:
+                issues.append(Issue(
+                    issue_type=IssueType.SECURITY_RISK,
+                    severity=severity,
+                    description=desc,
+                    evidence=f"包含 { func }",
+                    impact="可能导致安全漏洞"
+                ))
+        
+        # 检测硬编码密码/密钥
+        import re
+        password_patterns = [
+            r'password\s*=\s*["\'][^"\']+["\']',
+            r'api_key\s*=\s*["\'][^"\']+["\']',
+            r'secret\s*=\s*["\'][^"\']+["\']',
+        ]
+        
+        for pattern in password_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                issues.append(Issue(
+                    issue_type=IssueType.SECURITY_RISK,
+                    severity=SeverityLevel.HIGH,
+                    description="检测到硬编码的敏感信息",
+                    evidence=f"匹配模式: { pattern }",
+                    impact="敏感信息泄露风险"
+                ))
+                break
+        
+        return issues
+    
+    def _check_best_practices(self, text: str, context: Dict) -> List[Issue]:
+        """检查最佳实践"""
+        issues = []
+        
+        # 检测缺少类型注解
+        if text.startswith('def ') and ':' not in text.split('(')[1].split(')')[0]:
+            issues.append(Issue(
+                issue_type=IssueType.BEST_PRACTICE_VIOLATION,
+                severity=SeverityLevel.MEDIUM,
+                description="函数参数缺少类型注解",
+                impact="降低代码可维护性和IDE支持"
+            ))
+        
+        # 检测缺少文档字符串
+        if (text.startswith('def ') or text.startswith('class ')) and '"""' not in text and "'''" not in text:
+            issues.append(Issue(
+                issue_type=IssueType.DOCUMENTATION_GAP,
+                severity=SeverityLevel.LOW,
+                description="缺少文档字符串（docstring）",
+                impact="降低代码可读性和可维护性"
+            ))
+        
+        # 检测魔法数字
+        import re
+        magic_numbers = re.findall(r'(?<!\w)\d{2,}(?!\w)', text)
+        if len(magic_numbers) > 3:  # 超过3个魔法数字
+            issues.append(Issue(
+                issue_type=IssueType.BEST_PRACTICE_VIOLATION,
+                severity=SeverityLevel.LOW,
+                description=f"发现{ len(magic_numbers) }个魔法数字，建议使用常量",
+                impact="降低代码可读性"
+            ))
+        
+        return issues
+    
+    def _check_performance_antipatterns(self, text: str) -> List[Issue]:
+        """检查性能反模式"""
+        issues = []
+        
+        # 检测循环内的字符串拼接
+        if 'for ' in text and '+=' in text and "'" in text:
+            issues.append(Issue(
+                issue_type=IssueType.PERFORMANCE_ISSUE,
+                severity=SeverityLevel.MEDIUM,
+                description="循环内使用字符串拼接，建议使用 list.join()",
+                impact="O(n²) 时间复杂度，性能较差"
+            ))
+        
+        # 检测不必要的列表复制
+        if 'list(' in text and '[' in text:
+            issues.append(Issue(
+                issue_type=IssueType.PERFORMANCE_ISSUE,
+                severity=SeverityLevel.LOW,
+                description="可能存在不必要的列表复制",
+                impact="额外的内存分配"
+            ))
         
         return issues
     
@@ -357,10 +562,86 @@ class IssueDetector:
             ))
         
         return issues
+    
+    def _deduplicate_and_sort(self, issues: List[Issue]) -> List[Issue]:
+        """去重和排序问题"""
+        # 基于描述去重
+        seen = set()
+        unique_issues = []
+        
+        for issue in issues:
+            key = f"{issue.issue_type.value}:{issue.description}"
+            if key not in seen:
+                seen.add(key)
+                unique_issues.append(issue)
+        
+        # 按严重程度排序
+        severity_order = {
+            SeverityLevel.CRITICAL: 0,
+            SeverityLevel.HIGH: 1,
+            SeverityLevel.MEDIUM: 2,
+            SeverityLevel.LOW: 3
+        }
+        
+        unique_issues.sort(key=lambda x: severity_order.get(x.severity, 4))
+        
+        return unique_issues
 
 
 class SuggestionGenerator:
-    """改进建议生成器"""
+    """改进建议生成器
+    
+    基于问题类型生成具体、可执行的改进建议
+    参考社区最佳实践：每个建议包含行动、描述、示例、预期效果
+    """
+    
+    def __init__(self):
+        """初始化建议生成器"""
+        self.templates = self._load_templates()
+    
+    def _load_templates(self) -> Dict:
+        """加载建议模板"""
+        return {
+            "syntax_error": {
+                "action": "修复语法错误",
+                "description": "检查并修正代码中的语法错误",
+                "example": "# 检查缩进、括号匹配等\n# 使用 linter 工具自动检测\npython -m py_compile your_file.py",
+                "difficulty": "easy",
+                "priority": 1
+            },
+            "security_risk_eval": {
+                "action": "替换 eval() 为安全替代方案",
+                "description": "使用 ast.literal_eval() 或专门的解析器",
+                "example": "import ast\n# 不安全: result = eval(user_input)\n# 安全: result = ast.literal_eval(user_input)",
+                "expected_improvement": "消除代码注入风险",
+                "difficulty": "medium",
+                "priority": 1
+            },
+            "best_practice_type_hints": {
+                "action": "添加类型注解",
+                "description": "为函数参数和返回值添加类型提示",
+                "example": "def calculate_sum(a: int, b: int) -> int:\n    return a + b",
+                "expected_improvement": "提高代码可读性和IDE支持",
+                "difficulty": "easy",
+                "priority": 2
+            },
+            "documentation_gap": {
+                "action": "添加文档字符串",
+                "description": "为函数和类添加 Google-style docstring",
+                "example": '"""\n    函数说明\n    \n    Args:\n        param: 参数说明\n    \n    Returns:\n        返回值说明\n    """',
+                "expected_improvement": "提高代码可理解性和可维护性",
+                "difficulty": "easy",
+                "priority": 3
+            },
+            "performance_string_concat": {
+                "action": "使用 list.join() 替代循环拼接",
+                "description": "将循环内的字符串拼接改为列表收集后 join",
+                "example": "# 慢: result = ''\n#       for s in items: result += s\n# 快: result = ''.join(items)",
+                "expected_improvement": "从 O(n²) 优化到 O(n)",
+                "difficulty": "easy",
+                "priority": 2
+            }
+        }
     
     def generate(self, issues: List[Issue], result: Any = None) -> List[Suggestion]:
         """
