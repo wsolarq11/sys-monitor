@@ -87,7 +87,7 @@ class E2ETestSuite:
         # 确保目录存在
         os.makedirs(self.logs_dir, exist_ok=True)
 
-        self.results = []
+        self.results: list = []
 
     def run_all_tests(self):
         """运行所有测试"""

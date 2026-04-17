@@ -65,7 +65,7 @@ class SpecWorker:
     MAX_RETRIES = 3
     RETRY_DELAY = 5  # 秒
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         """
         初始化Worker
 
