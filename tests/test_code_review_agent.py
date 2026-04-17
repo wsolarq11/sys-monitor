@@ -2,6 +2,7 @@
 Unit tests for Code Review Agent with AsyncIO and Redis support.
 Tests cover code analysis, security scanning, caching, and event publishing.
 """
+
 import pytest
 import pytest_asyncio
 import asyncio
@@ -12,7 +13,7 @@ from datetime import timedelta
 
 class MockCodeChanges:
     """Mock code changes object for testing"""
-    
+
     def __init__(self, hash="abc123", path="/test/path"):
         self.hash = hash
         self.path = path
@@ -23,14 +24,14 @@ async def code_review_agent(mock_redis):
     """Fixture for Code Review Agent with mocked dependencies"""
     import sys
     from pathlib import Path
-    
+
     # Add .lingma/agents/python to path
     agents_path = Path(__file__).parent.parent / ".lingma" / "agents" / "python"
     if str(agents_path) not in sys.path:
         sys.path.insert(0, str(agents_path))
-    
+
     from code_review_agent import CodeReviewAgent
-    
+
     agent = CodeReviewAgent.__new__(CodeReviewAgent)
     agent.redis_client = mock_redis
     agent.agent_name = "code_review"
@@ -42,14 +43,14 @@ async def test_review_with_cache_hit(code_review_agent, mock_redis):
     """Test review when cache hit occurs"""
     changes = MockCodeChanges()
     cached_result = {"quality": [], "security": [], "score": 95}
-    
+
     # Set up cache
     cache_key = f"result:{changes.hash}:code_review"
     await mock_redis.setex(cache_key, 3600, json.dumps(cached_result))
-    
+
     # Execute
     result = await code_review_agent.review(changes)
-    
+
     # Verify
     assert result == cached_result
     assert len(mock_redis.published_messages) == 0  # No new events
@@ -59,22 +60,26 @@ async def test_review_with_cache_hit(code_review_agent, mock_redis):
 async def test_review_with_cache_miss(code_review_agent, mock_redis):
     """Test review when cache miss occurs"""
     changes = MockCodeChanges()
-    
+
     # Mock analysis methods
-    with patch.object(code_review_agent, 'analyze_quality', AsyncMock(return_value=[])), \
-         patch.object(code_review_agent, 'scan_security', AsyncMock(return_value=[])), \
-         patch.object(code_review_agent, 'analyze_performance', AsyncMock(return_value=[])), \
-         patch.object(code_review_agent, 'calculate_score', return_value=90):
-        
+    with (
+        patch.object(code_review_agent, "analyze_quality", AsyncMock(return_value=[])),
+        patch.object(code_review_agent, "scan_security", AsyncMock(return_value=[])),
+        patch.object(
+            code_review_agent, "analyze_performance", AsyncMock(return_value=[])
+        ),
+        patch.object(code_review_agent, "calculate_score", return_value=90),
+    ):
+
         # Execute
         result = await code_review_agent.review(changes)
-        
+
         # Verify
         assert "quality" in result
         assert "security" in result
         assert "performance" in result
         assert "score" in result
-        
+
         cache_key = f"result:{changes.hash}:code_review"
         assert cache_key in mock_redis.data
         assert len(mock_redis.published_messages) == 1
@@ -84,14 +89,14 @@ async def test_review_with_cache_miss(code_review_agent, mock_redis):
 async def test_security_scan_integration(code_review_agent):
     """Test Bandit security scan integration"""
     changes = MockCodeChanges(path="/test/code")
-    
+
     # Mock subprocess
     mock_process = AsyncMock()
-    mock_process.communicate = AsyncMock(return_value=(b'{"issues": []}', b''))
-    
-    with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+    mock_process.communicate = AsyncMock(return_value=(b'{"issues": []}', b""))
+
+    with patch("asyncio.create_subprocess_exec", return_value=mock_process):
         result = await code_review_agent.scan_security(changes)
-        
+
         assert result == {"issues": []}
 
 
@@ -99,12 +104,11 @@ async def test_security_scan_integration(code_review_agent):
 async def test_event_publishing(code_review_agent, mock_redis):
     """Test that completion events are published to Redis Pub/Sub"""
     score = 85
-    
+
     await mock_redis.publish(
-        "agent:code_review:completed",
-        json.dumps({"score": score})
+        "agent:code_review:completed", json.dumps({"score": score})
     )
-    
+
     assert len(mock_redis.published_messages) == 1
     assert mock_redis.published_messages[0]["channel"] == "agent:code_review:completed"
     assert json.loads(mock_redis.published_messages[0]["message"])["score"] == 85
@@ -115,10 +119,10 @@ async def test_cache_expiration(code_review_agent, mock_redis):
     """Test that cache has proper TTL"""
     changes = MockCodeChanges()
     result_data = {"score": 90}
-    
+
     cache_key = f"result:{changes.hash}:code_review"
     await mock_redis.setex(cache_key, timedelta(seconds=3600), json.dumps(result_data))
-    
+
     # Verify data is stored
     cached = await mock_redis.get(cache_key)
     assert cached is not None
@@ -130,9 +134,9 @@ async def test_quality_score_calculation(code_review_agent):
     """Test quality score calculation logic"""
     quality_issues = [{"severity": "high"}, {"severity": "medium"}]
     security_issues = [{"severity": "low"}]
-    
+
     # Mock the calculate_score method behavior
-    with patch.object(code_review_agent, 'calculate_score', return_value=75):
+    with patch.object(code_review_agent, "calculate_score", return_value=75):
         score = code_review_agent.calculate_score(quality_issues, security_issues)
         assert score == 75
 
@@ -142,7 +146,7 @@ async def test_subscribe_events(code_review_agent, mock_redis):
     """Test event subscription functionality"""
     pubsub = mock_redis.pubsub()
     await pubsub.subscribe("agent:code_review:*")
-    
+
     # Should not raise exception
     assert True
 
@@ -151,17 +155,25 @@ async def test_subscribe_events(code_review_agent, mock_redis):
 async def test_multiple_files_review(code_review_agent):
     """Test reviewing multiple files concurrently"""
     changes_list = [MockCodeChanges(f"hash-{i}") for i in range(5)]
-    
+
     results = []
     for changes in changes_list:
-        with patch.object(code_review_agent, 'analyze_quality', AsyncMock(return_value=[])), \
-             patch.object(code_review_agent, 'scan_security', AsyncMock(return_value=[])), \
-             patch.object(code_review_agent, 'analyze_performance', AsyncMock(return_value=[])), \
-             patch.object(code_review_agent, 'calculate_score', return_value=85):
-            
+        with (
+            patch.object(
+                code_review_agent, "analyze_quality", AsyncMock(return_value=[])
+            ),
+            patch.object(
+                code_review_agent, "scan_security", AsyncMock(return_value=[])
+            ),
+            patch.object(
+                code_review_agent, "analyze_performance", AsyncMock(return_value=[])
+            ),
+            patch.object(code_review_agent, "calculate_score", return_value=85),
+        ):
+
             result = await code_review_agent.review(changes)
             results.append(result)
-    
+
     assert len(results) == 5
 
 
@@ -169,9 +181,11 @@ async def test_multiple_files_review(code_review_agent):
 async def test_error_handling_in_analysis(code_review_agent):
     """Test error handling during analysis"""
     changes = MockCodeChanges()
-    
+
     # Mock methods to raise exceptions
-    with patch.object(code_review_agent, 'analyze_quality', side_effect=Exception("Analysis failed")):
+    with patch.object(
+        code_review_agent, "analyze_quality", side_effect=Exception("Analysis failed")
+    ):
         with pytest.raises(Exception):
             await code_review_agent.analyze_quality(changes)
 
