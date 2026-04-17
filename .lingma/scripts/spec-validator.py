@@ -21,7 +21,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 
 class SpecValidator:
@@ -32,7 +32,7 @@ class SpecValidator:
     VALID_PRIORITIES = ["P0", "P1", "P2", "P3", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
     CLARIFICATION_PATTERN = r"\[NEEDS CLARIFICATION\]"
 
-    def __init__(self, spec_path: str = None):
+    def __init__(self, spec_path: Optional[str] = None):
         """
         初始化验证器
 
@@ -108,7 +108,7 @@ class SpecValidator:
 
             # 8. 检查任务列表
             tasks = self._extract_tasks(content)
-            self._validate_tasks(tasks, metadata.get("status"))
+            self._validate_tasks(tasks, metadata.get("status") or "")
 
             # 9. 构建结果
             is_valid = len(self.errors) == 0 and len(clarifications) == 0
@@ -176,7 +176,7 @@ class SpecValidator:
 
             clarifications.append({"position": match.start(), "context": context})
 
-        return clarifications
+        return clarifications  # type: ignore
 
     def _extract_tasks(self, content: str) -> List[Dict]:
         """提取任务列表"""
@@ -214,9 +214,9 @@ class SpecValidator:
         is_valid: bool,
         mode: str,
         start_time: datetime,
-        errors: List[str] = None,
-        clarifications: List = None,
-        tasks: List = None,
+        errors: Optional[List[str]] = None,
+        clarifications: Optional[List[Any]] = None,
+        tasks: Optional[List[Any]] = None,
     ) -> Dict:
         """构建验证结果"""
         duration_ms = (datetime.now() - start_time).total_seconds() * 1000

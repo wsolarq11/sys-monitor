@@ -43,7 +43,7 @@ class DocGeneratorAgent:
             API文档列表
         """
         if not source_files:
-            source_files = list(self.repo_root.rglob("*.py"))
+            source_files = [str(f) for f in self.repo_root.rglob("*.py")]
             # 排除虚拟环境和缓存
             source_files = [
                 str(f)
@@ -119,7 +119,7 @@ class DocGeneratorAgent:
 
     def _extract_methods(self, content: str, start_pos: int) -> List[Dict[str, Any]]:
         """提取类方法"""
-        methods = []
+        methods: List[Dict[str, Any]] = []
 
         # 从start_pos开始查找方法
         remaining = content[start_pos:]
@@ -240,7 +240,7 @@ class DocGeneratorAgent:
         timestamp = datetime.now().strftime("%Y-%m-%d")
 
         # 按类型分组
-        grouped_changes = {
+        grouped_changes: Dict[str, List[str]] = {
             "Added": [],
             "Changed": [],
             "Fixed": [],
@@ -519,13 +519,13 @@ class DocGeneratorAgent:
                 changes = params.get("changes", [])
                 version = params.get("version", "auto")
                 changelog_info = self.generate_changelog_entry(changes, version)
-                result["changelog"] = changelog_info
+                result["changelog"] = changelog_info  # type: ignore
 
             elif action == "check_outdated":
                 # 检测过时文档
                 api_docs = self.extract_api_docs()
                 outdated = self.detect_outdated_docs(api_docs)
-                result["outdated_docs"] = outdated
+                result["outdated_docs"] = outdated  # type: ignore
 
             else:
                 result["status"] = "error"
