@@ -31,7 +31,7 @@ import time
 import signal
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 try:
     from watchdog.observers import Observer
@@ -56,7 +56,7 @@ class SpecFileHandler(FileSystemEventHandler):
         super().__init__()
         self.callback = callback
         self.log_path = log_path
-        self.last_modified = {}
+        self.last_modified: Dict[str, float] = {}
         self.debounce_delay = 1.0  # 防抖延迟（秒）
 
     def on_modified(self, event):
@@ -110,7 +110,7 @@ class SpecFileHandler(FileSystemEventHandler):
 class SpecWatcher:
     """Spec文件监听守护进程"""
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         """
         初始化监听器
 

@@ -36,7 +36,7 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from enum import Enum
 
 
@@ -246,7 +246,7 @@ class SpecWorker:
         with open(self.spec_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        tasks = []
+        tasks: List[Dict[str, Any]] = []
         # 匹配未完成任务: - [ ] Task-XXX 或 - [ ] 描述
         task_pattern = r"- \[ \]\s+(Task-\d+[:：]?\s*.+?)(?:\s+\(预计:.+?\))?$"
 
@@ -491,7 +491,7 @@ class SpecWorker:
             "notification_sent", {"type": "task_failure", "task_id": task["id"]}
         )
 
-    def start_worker(self, max_tasks: int = None, skip_validation: bool = False):
+    def start_worker(self, max_tasks: Optional[int] = None, skip_validation: bool = False):
         """
         启动Worker
 
