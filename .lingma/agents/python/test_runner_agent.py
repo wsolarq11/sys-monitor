@@ -13,7 +13,7 @@ Features:
 import asyncio
 import json
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 try:
     from agent_base import AsyncAgentBase
@@ -186,9 +186,9 @@ class TestRunnerAgent(AsyncAgentBase):
 
     async def analyze_failures(
         self,
-        unit_result: Dict = None,
-        integration_result: Dict = None,
-        e2e_result: Dict = None,
+        unit_result: Optional[Dict] = None,
+        integration_result: Optional[Dict] = None,
+        e2e_result: Optional[Dict] = None,
     ) -> List[Dict[str, Any]]:
         """
         Analyze test failures and identify root causes.

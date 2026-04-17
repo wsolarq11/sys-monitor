@@ -74,7 +74,11 @@ class SpecDrivenCoreAgent(AsyncAgentBase):
         )
 
         # Filter out exceptions
-        successful_tasks = [r for r in task_results if not isinstance(r, Exception)]
+        successful_tasks = [
+            r
+            for r in task_results
+            if not isinstance(r, Exception) and isinstance(r, dict)
+        ]
 
         # Step 4: Quality reflection
         quality_score = await self.reflect_on_quality(spec, successful_tasks)

@@ -21,7 +21,7 @@ try:
     import redis.asyncio as redis
 except ImportError:
     # Fallback if redis is not installed
-    redis = None
+    redis = None  # type: ignore
 
 
 class AsyncAgentBase(ABC):
