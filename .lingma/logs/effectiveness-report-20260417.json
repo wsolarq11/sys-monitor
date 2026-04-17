@@ -1,0 +1,47 @@
+{
+  "title": "学习效果评估报告",
+  "generated_at": "2026-04-17T05:45:32.085595",
+  "analysis_period_days": 7,
+  "metrics": {
+    "collection_timestamp": "2026-04-17T05:45:32.083100",
+    "analysis_period_days": 7,
+    "operational_metrics": {
+      "total_operations": 0
+    },
+    "learning_metrics": {
+      "total_learning_cycles": 1,
+      "last_learning_cycle": "2026-04-17T05:45:28.404694",
+      "total_preference_updates": 0,
+      "latest_report_path": ".lingma\\logs\\learning-report-20260417.json"
+    },
+    "preference_accuracy": {
+      "accuracy": 0.0,
+      "sample_size": 0
+    },
+    "system_health": {
+      "indicators": {
+        "preferences_configured": false,
+        "logging_active": false,
+        "learning_active": true
+      },
+      "health_score": 0.33,
+      "status": "unhealthy"
+    }
+  },
+  "analysis": {
+    "timestamp": "2026-04-17T05:45:32.085361",
+    "overall_assessment": "需要改进 - 多个指标不达标",
+    "strengths": [
+      "✅ 低用户覆盖率 (0%)，系统决策可靠"
+    ],
+    "weaknesses": [
+      "⚠️ 成功率偏低 (0%)",
+      "⚠️ 预测准确率低 (0%)"
+    ],
+    "recommendations": [
+      "🔧 检查高风险操作的配置，可能需要更保守的策略",
+      "📊 建议执行更多学习周期以积累数据"
+    ],
+    "trend_analysis": {}
+  }
+}
