@@ -1,217 +1,246 @@
 #!/usr/bin/env python3
 """
-AI Agent Federated Learning & Privacy-Preserving System - AI Agent 联邦学习与隐私保护系统
+AI Agent Federated Learning & Privacy-Preserving ML System - AI Agent 联邦学习与隐私保护机器学习系统
 
-联邦学习、差分隐私、安全聚合、边缘计算
-实现生产级 AI Agent 的隐私保护分布式训练框架
+联邦平均、差分隐私、安全聚合、同态加密、边缘计算
+实现生产级 AI Agent 的隐私保护学习能力
 
 参考社区最佳实践:
-- Federated Learning with secure aggregation
-- Differential privacy for gradient protection
-- Edge computing deployment
-- Privacy-preserving distributed training
-- Secure multi-party computation
+- Federated Learning - train models across decentralized devices without sharing data
+- Differential Privacy (DP) - add noise to protect individual privacy
+- Secure Aggregation - cryptographic protocols for private model updates
+- Homomorphic Encryption - compute on encrypted data
+- Edge Computing - process data at the edge, not in central servers
+- FedAvg algorithm - federated averaging for global model updates
 """
 
 import json
 import time
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
 import uuid
-import math
-import statistics
 import random
-import hashlib
+import statistics
+import math
+from collections import defaultdict
+import copy
 
 logger = logging.getLogger(__name__)
 
 
-class AggregationStrategy(Enum):
-    """聚合策略"""
-    FEDAVG = "fedavg"  # FedAvg (Federated Averaging)
-    FEDPROX = "fedprox"  # FedProx
-    SECURE_AGG = "secure_agg"  # 安全聚合
-    WEIGHTED_AGG = "weighted_agg"  # 加权聚合
+class AggregationMethod(Enum):
+    """聚合方法"""
+    FEDERATED_AVERAGING = "FedAvg"  # 联邦平均
+    SECURE_AGGREGATION = "secure_agg"  # 安全聚合
+    HOMOMORPHIC_ENCRYPTION = "homomorphic"  # 同态加密
+    DIFFERENTIAL_PRIVACY = "differential_privacy"  # 差分隐私
 
 
 class PrivacyMechanism(Enum):
     """隐私保护机制"""
-    DIFFERENTIAL_PRIVACY = "differential_privacy"  # 差分隐私
-    SECURE_MULTI_PARTY = "secure_multi_party"  # 安全多方计算
-    HOMOMORPHIC_ENCRYPTION = "homomorphic_encryption"  # 同态加密
-    SECRET_SHARING = "secret_sharing"  # 秘密分享
+    LOCAL_DP = "local_dp"  # 本地差分隐私
+    CENTRAL_DP = "central_dp"  # 中心差分隐私
+    SECURE_MPC = "secure_mpc"  # 安全多方计算
+    HOMOMORPHIC_ENC = "homomorphic_enc"  # 同态加密
 
 
 @dataclass
-class ClientUpdate:
-    """客户端更新"""
+class ClientNode:
+    """客户端节点（边缘设备）"""
     client_id: str
-    update_id: str
-    model_updates: Dict[str, float]
-    num_samples: int
-    local_epochs: int
-    training_loss: float
-    timestamp: str = ""
-    encrypted: bool = False
+    data_size: int = 0
+    local_model: Dict[str, float] = field(default_factory=dict)
+    training_history: List[Dict] = field(default_factory=list)
+    is_active: bool = True
     
     def __post_init__(self):
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
+        if not self.client_id:
+            self.client_id = str(uuid.uuid4())
+    
+    def local_train(self, global_model: Dict[str, float], epochs: int = 5) -> Dict[str, float]:
+        """
+        本地训练
+        
+        Args:
+            global_model: 全局模型参数
+            epochs: 本地训练轮数
+            
+        Returns:
+            模型更新
+        """
+        # 初始化本地模型
+        if not self.local_model:
+            self.local_model = {k: v + random.gauss(0, 0.1) for k, v in global_model.items()}
+        
+        # 模拟本地训练（简化）
+        model_update = {}
+        for param_name in global_model:
+            # 本地梯度下降（模拟）
+            gradient = random.gauss(0, 0.01) * self.data_size / 1000
+            self.local_model[param_name] -= 0.01 * gradient
+            model_update[param_name] = self.local_model[param_name] - global_model[param_name]
+        
+        # 记录训练历史
+        self.training_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "epochs": epochs,
+            "data_size": self.data_size,
+            "num_params": len(model_update)
+        })
+        
+        logger.debug(f"Client {self.client_id} trained: {len(model_update)} params updated")
+        
+        return model_update
+
+
+@dataclass
+class GlobalModel:
+    """全局模型"""
+    model_id: str
+    parameters: Dict[str, float] = field(default_factory=dict)
+    version: int = 0
+    training_rounds: int = 0
+    
+    def __post_init__(self):
+        if not self.model_id:
+            self.model_id = str(uuid.uuid4())
+    
+    def update_parameters(self, aggregated_params: Dict[str, float]):
+        """更新模型参数"""
+        self.parameters = aggregated_params.copy()
+        self.version += 1
+        self.training_rounds += 1
 
 
 @dataclass
 class PrivacyBudget:
-    """隐私预算"""
-    budget_id: str
-    epsilon: float  # 隐私预算参数 ε
-    delta: float  # 失败概率 δ
-    spent_epsilon: float = 0.0
-    mechanism: PrivacyMechanism = PrivacyMechanism.DIFFERENTIAL_PRIVACY
-    remaining_budget: float = 0.0
+    """隐私预算（ε, δ）- 差分隐私"""
+    epsilon: float = 1.0  # 隐私损失参数（越小越隐私）
+    delta: float = 1e-5  # 失败概率
+    spent_epsilon: float = 0.0  # 已消耗隐私预算
     
-    def __post_init__(self):
-        self.remaining_budget = self.epsilon - self.spent_epsilon
+    @property
+    def remaining_budget(self) -> float:
+        """剩余隐私预算"""
+        return max(0, self.epsilon - self.spent_epsilon)
     
-    def spend(self, epsilon_spent: float) -> bool:
+    def spend_budget(self, epsilon_spent: float):
         """消耗隐私预算"""
-        if self.remaining_budget >= epsilon_spent:
-            self.spent_epsilon += epsilon_spent
-            self.remaining_budget = self.epsilon - self.spent_epsilon
-            return True
-        else:
-            logger.warning(f"Privacy budget exceeded: {epsilon_spent} > {self.remaining_budget}")
-            return False
+        self.spent_epsilon += epsilon_spent
+        
+        if self.spent_epsilon > self.epsilon:
+            logger.warning(f"Privacy budget exceeded! Spent: {self.spent_epsilon:.2f}, Budget: {self.epsilon}")
 
 
-@dataclass
-class FederatedRound:
-    """联邦学习轮次"""
-    round_id: str
-    round_number: int
-    participating_clients: int
-    aggregated_model: Dict[str, float]
-    global_loss: float
-    convergence_metric: float
-    timestamp: str = ""
+class DifferentialPrivacy:
+    """差分隐私
     
-    def __post_init__(self):
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
-
-
-@dataclass
-class EdgeNode:
-    """边缘节点"""
-    node_id: str
-    location: str
-    compute_capacity: float  # 0-1
-    bandwidth: float  # Mbps
-    current_load: float  # 0-1
-    available: bool = True
-    last_heartbeat: str = ""
-    
-    def __post_init__(self):
-        if not self.last_heartbeat:
-            self.last_heartbeat = datetime.now(timezone.utc).isoformat()
-
-
-class DifferentialPrivacyEngine:
-    """差分隐私引擎
-    
-    为梯度添加噪声以保护隐私
+    通过添加噪声保护个体隐私
     """
     
-    def __init__(self, epsilon: float = 1.0, delta: float = 1e-5):
-        self.privacy_budget = PrivacyBudget(
-            budget_id=str(uuid.uuid4()),
-            epsilon=epsilon,
-            delta=delta
-        )
+    def __init__(self, epsilon: float = 1.0, delta: float = 1e-5, sensitivity: float = 1.0):
+        self.privacy_budget = PrivacyBudget(epsilon=epsilon, delta=delta)
+        self.sensitivity = sensitivity  # 敏感度
         self.noise_history: List[Dict] = []
     
-    def add_noise_to_gradients(
-        self,
-        gradients: Dict[str, float],
-        sensitivity: float = 1.0
-    ) -> Dict[str, float]:
+    def add_gaussian_noise(self, value: float) -> float:
         """
-        为梯度添加拉普拉斯噪声
+        添加高斯噪声
+        
+        σ = Δf * sqrt(2 * ln(1.25/δ)) / ε
         
         Args:
-            gradients: 原始梯度
-            sensitivity: 敏感度
+            value: 原始值
             
         Returns:
-            加噪后的梯度
+            加噪后的值
         """
-        # 计算噪声尺度
-        # 根据隐私预算和敏感度确定噪声大小
         if self.privacy_budget.remaining_budget <= 0:
-            logger.warning("Privacy budget exhausted, returning original gradients")
-            return gradients
+            logger.error("Privacy budget exhausted!")
+            return value
         
-        # 简化的噪声尺度计算
-        noise_scale = sensitivity / max(self.privacy_budget.remaining_budget, 1e-10)
+        # 计算噪声标准差
+        sigma = self.sensitivity * math.sqrt(2 * math.log(1.25 / self.privacy_budget.delta)) / self.privacy_budget.epsilon
         
-        noisy_gradients = {}
+        # 添加噪声
+        noise = random.gauss(0, sigma)
+        noisy_value = value + noise
         
-        for param_name, grad_value in gradients.items():
-            # 添加拉普拉斯噪声
-            noise = random.gauss(0, noise_scale)  # 使用高斯噪声替代
-            noisy_gradients[param_name] = grad_value + noise
-        
-        # 记录噪声添加
-        epsilon_spent = sensitivity / noise_scale if noise_scale > 0 else 0
-        self.privacy_budget.spend(epsilon_spent)
-        
+        # 记录噪声
         self.noise_history.append({
-            "noise_scale": noise_scale,
-            "epsilon_spent": epsilon_spent,
-            "remaining_budget": self.privacy_budget.remaining_budget,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "original_value": value,
+            "noise_added": noise,
+            "noisy_value": noisy_value,
+            "sigma": sigma,
+            "epsilon_spent": self.privacy_budget.epsilon / 10  # 简化：每次消耗1/10预算
         })
         
-        logger.debug(f"Noise added: scale={noise_scale:.4f}, epsilon_spent={epsilon_spent:.4f}")
+        # 消耗隐私预算
+        self.privacy_budget.spend_budget(self.privacy_budget.epsilon / 10)
         
-        return noisy_gradients
+        return noisy_value
     
-    def get_privacy_status(self) -> Dict:
-        """获取隐私状态"""
-        return {
-            "total_budget": self.privacy_budget.epsilon,
-            "spent_budget": self.privacy_budget.spent_epsilon,
-            "remaining_budget": self.privacy_budget.remaining_budget,
-            "budget_utilization": round(
-                self.privacy_budget.spent_epsilon / self.privacy_budget.epsilon * 100, 2
-            ) if self.privacy_budget.epsilon > 0 else 0,
-            "mechanism": self.privacy_budget.mechanism.value
-        }
+    def add_laplace_noise(self, value: float) -> float:
+        """
+        添加拉普拉斯噪声
+        
+        b = Δf / ε
+        
+        Args:
+            value: 原始值
+            
+        Returns:
+            加噪后的值
+        """
+        if self.privacy_budget.remaining_budget <= 0:
+            return value
+        
+        # 计算尺度参数
+        b = self.sensitivity / self.privacy_budget.epsilon
+        
+        # 添加拉普拉斯噪声
+        noise = random.lapvariate(0, b)
+        noisy_value = value + noise
+        
+        # 消耗预算
+        self.privacy_budget.spend_budget(self.privacy_budget.epsilon / 10)
+        
+        return noisy_value
+    
+    def clip_gradient(self, gradient: float, max_norm: float = 1.0) -> float:
+        """梯度裁剪（限制敏感度）"""
+        return max(-max_norm, min(max_norm, gradient))
 
 
 class SecureAggregator:
     """安全聚合器
     
-    使用秘密分享和安全聚合协议
+    使用密码学协议保护模型更新隐私
     """
     
-    def __init__(self):
+    def __init__(self, method: AggregationMethod = AggregationMethod.FEDERATED_AVERAGING):
+        self.method = method
         self.aggregation_history: List[Dict] = []
+        self.dp_mechanism = DifferentialPrivacy(epsilon=1.0)
     
-    def secure_aggregate(
+    def federated_average(
         self,
-        client_updates: List[ClientUpdate],
-        strategy: AggregationStrategy = AggregationStrategy.SECURE_AGG
+        client_updates: List[Dict[str, Any]],
+        total_data_size: int
     ) -> Dict[str, float]:
         """
-        安全聚合客户端更新
+        联邦平均算法 (FedAvg)
+        
+        w^{t+1} = Σ (n_k / n) * w_k^{t+1}
         
         Args:
-            client_updates: 客户端更新列表
-            strategy: 聚合策略
+            client_updates: 客户端更新列表 [{client_id, update, data_size}]
+            total_data_size: 总数据量
             
         Returns:
             聚合后的模型参数
@@ -219,492 +248,327 @@ class SecureAggregator:
         if not client_updates:
             return {}
         
-        if strategy == AggregationStrategy.FEDAVG:
-            return self._fedavg_aggregate(client_updates)
-        elif strategy == AggregationStrategy.WEIGHTED_AGG:
-            return self._weighted_aggregate(client_updates)
-        elif strategy == AggregationStrategy.SECURE_AGG:
-            return self._secure_aggregation_protocol(client_updates)
-        else:
-            return self._fedavg_aggregate(client_updates)
-    
-    def _fedavg_aggregate(self, client_updates: List[ClientUpdate]) -> Dict[str, float]:
-        """FedAvg 聚合"""
-        total_samples = sum(update.num_samples for update in client_updates)
+        aggregated_params = {}
         
-        if total_samples == 0:
-            return {}
+        # 获取所有参数名
+        param_names = list(client_updates[0]["update"].keys())
         
-        # 按样本数加权平均
-        aggregated = {}
-        
-        for update in client_updates:
-            weight = update.num_samples / total_samples
+        for param_name in param_names:
+            weighted_sum = 0.0
             
-            for param_name, param_value in update.model_updates.items():
-                if param_name not in aggregated:
-                    aggregated[param_name] = 0.0
-                aggregated[param_name] += param_value * weight
-        
-        logger.info(f"FedAvg aggregation: {len(client_updates)} clients, {total_samples} samples")
-        
-        return aggregated
-    
-    def _weighted_aggregate(self, client_updates: List[ClientUpdate]) -> Dict[str, float]:
-        """加权聚合（基于训练质量）"""
-        # 计算权重（基于损失值的倒数）
-        losses = [update.training_loss for update in client_updates]
-        min_loss = min(losses) if losses else 1e-10
-        
-        weights = []
-        for update in client_updates:
-            # 损失越小，权重越大
-            weight = 1.0 / max(update.training_loss, 1e-10)
-            weights.append(weight)
-        
-        total_weight = sum(weights)
-        
-        if total_weight == 0:
-            return {}
-        
-        # 加权聚合
-        aggregated = {}
-        
-        for update, weight in zip(client_updates, weights):
-            normalized_weight = weight / total_weight
-            
-            for param_name, param_value in update.model_updates.items():
-                if param_name not in aggregated:
-                    aggregated[param_name] = 0.0
-                aggregated[param_name] += param_value * normalized_weight
-        
-        logger.info(f"Weighted aggregation: {len(client_updates)} clients")
-        
-        return aggregated
-    
-    def _secure_aggregation_protocol(self, client_updates: List[ClientUpdate]) -> Dict[str, float]:
-        """安全聚合协议（简化版秘密分享）"""
-        # 在实际应用中，这里应实现真正的安全多方计算
-        # 目前使用简化的掩码方案
-        
-        num_clients = len(client_updates)
-        
-        if num_clients == 0:
-            return {}
-        
-        # 生成随机掩码
-        masks = {}
-        mask_sum = {}
-        
-        for update in client_updates:
-            client_mask = {}
-            
-            for param_name in update.model_updates.keys():
-                mask = random.gauss(0, 0.1)
-                client_mask[param_name] = mask
+            for update in client_updates:
+                client_weight = update["data_size"] / total_data_size
+                param_value = update["update"][param_name]
                 
-                if param_name not in mask_sum:
-                    mask_sum[param_name] = 0.0
-                mask_sum[param_name] += mask
+                # 可选：应用差分隐私
+                if self.method == AggregationMethod.DIFFERENTIAL_PRIVACY:
+                    param_value = self.dp_mechanism.add_gaussian_noise(param_value)
+                
+                weighted_sum += client_weight * param_value
             
-            masks[update.client_id] = client_mask
+            aggregated_params[param_name] = weighted_sum
         
-        # 应用掩码并聚合
-        masked_updates = []
+        # 记录聚合历史
+        self.aggregation_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "method": self.method.value,
+            "num_clients": len(client_updates),
+            "total_data_size": total_data_size,
+            "num_params": len(aggregated_params)
+        })
         
-        for update in client_updates:
-            masked_params = {}
-            
-            for param_name, param_value in update.model_updates.items():
-                mask = masks[update.client_id].get(param_name, 0.0)
-                masked_params[param_name] = param_value + mask
-            
-            masked_update = ClientUpdate(
-                client_id=update.client_id,
-                update_id=update.update_id,
-                model_updates=masked_params,
-                num_samples=update.num_samples,
-                local_epochs=update.local_epochs,
-                training_loss=update.training_loss,
-                encrypted=True
-            )
-            
-            masked_updates.append(masked_update)
+        logger.info(f"Federated averaging completed: {len(client_updates)} clients, {len(aggregated_params)} params")
         
-        # 聚合掩码后的更新
-        aggregated = self._fedavg_aggregate(masked_updates)
-        
-        # 移除掩码总和
-        for param_name in aggregated.keys():
-            if param_name in mask_sum:
-                aggregated[param_name] -= mask_sum[param_name] / num_clients
-        
-        logger.info(f"Secure aggregation: {num_clients} clients with masking")
-        
-        return aggregated
-
-
-class FederatedLearningCoordinator:
-    """联邦学习协调器
+        return aggregated_params
     
-    协调多个客户端的联邦学习过程
+    def secure_aggregate_with_encryption(
+        self,
+        client_updates: List[Dict[str, Any]]
+    ) -> Dict[str, float]:
+        """
+        带加密的安全聚合（模拟同态加密）
+        
+        Args:
+            client_updates: 客户端更新列表
+            
+        Returns:
+            聚合后的模型参数
+        """
+        if not client_updates:
+            return {}
+        
+        # 模拟同态加密聚合
+        aggregated_params = {}
+        param_names = list(client_updates[0]["update"].keys())
+        
+        for param_name in param_names:
+            # 在"加密域"中求和（简化：直接相加）
+            encrypted_sum = sum(update["update"][param_name] for update in client_updates)
+            
+            # "解密"得到平均值
+            aggregated_params[param_name] = encrypted_sum / len(client_updates)
+        
+        logger.info(f"Secure aggregation with encryption: {len(client_updates)} clients")
+        
+        return aggregated_params
+
+
+class FederatedLearningServer:
+    """联邦学习服务器
+    
+    协调客户端训练和模型聚合
     """
     
     def __init__(
         self,
-        num_rounds: int = 100,
-        min_clients: int = 2,
-        fraction_fit: float = 0.1
+        num_clients: int = 10,
+        aggregation_method: AggregationMethod = AggregationMethod.FEDERATED_AVERAGING,
+        client_fraction: float = 0.2
     ):
-        self.num_rounds = num_rounds
-        self.min_clients = min_clients
-        self.fraction_fit = fraction_fit
-        
-        self.global_model: Dict[str, float] = {}
-        self.round_history: List[FederatedRound] = []
-        self.dp_engine = DifferentialPrivacyEngine()
-        self.secure_aggregator = SecureAggregator()
-        
-        # 模拟客户端
-        self.clients: Dict[str, Dict] = {}
-    
-    def register_client(self, client_id: str, metadata: Dict = None):
-        """注册客户端"""
-        self.clients[client_id] = {
-            "client_id": client_id,
-            "metadata": metadata or {},
-            "status": "active",
-            "last_update": None
-        }
-        
-        logger.info(f"Client registered: {client_id}")
-    
-    def simulate_local_training(self, client_id: str, global_model: Dict) -> ClientUpdate:
-        """
-        模拟客户端本地训练
-        
-        Args:
-            client_id: 客户端ID
-            global_model: 全局模型
-            
-        Returns:
-            客户端更新
-        """
-        # 模拟本地训练过程
-        num_samples = random.randint(100, 1000)
-        local_epochs = random.randint(1, 5)
-        
-        # 模拟模型更新（在真实场景中，这是通过本地数据训练的）
-        model_updates = {}
-        
-        for param_name, param_value in global_model.items():
-            # 模拟梯度更新
-            gradient = random.gauss(0, 0.01)
-            model_updates[param_name] = param_value + gradient
-        
-        # 模拟训练损失
-        training_loss = random.uniform(0.1, 1.0)
-        
-        update = ClientUpdate(
-            client_id=client_id,
-            update_id=str(uuid.uuid4()),
-            model_updates=model_updates,
-            num_samples=num_samples,
-            local_epochs=local_epochs,
-            training_loss=training_loss
-        )
-        
-        logger.debug(f"Local training completed for {client_id}: {num_samples} samples, loss={training_loss:.3f}")
-        
-        return update
-    
-    def execute_federated_round(self, round_number: int) -> FederatedRound:
-        """
-        执行一轮联邦学习
-        
-        Args:
-            round_number: 轮次号
-            
-        Returns:
-            轮次结果
-        """
-        logger.info(f"Starting federated round {round_number}")
-        
-        # Step 1: 选择参与客户端
-        num_clients_to_select = max(
-            self.min_clients,
-            int(len(self.clients) * self.fraction_fit)
-        )
-        
-        selected_clients = random.sample(
-            list(self.clients.keys()),
-            min(num_clients_to_select, len(self.clients))
-        )
-        
-        if not selected_clients:
-            raise ValueError("No clients available for training")
-        
-        # Step 2: 分发全局模型并收集更新
-        client_updates = []
-        
-        for client_id in selected_clients:
-            # 模拟本地训练
-            update = self.simulate_local_training(client_id, self.global_model)
-            
-            # 应用差分隐私
-            if update.model_updates:
-                noisy_updates = self.dp_engine.add_noise_to_gradients(update.model_updates)
-                update.model_updates = noisy_updates
-            
-            client_updates.append(update)
-            
-            # 更新客户端状态
-            self.clients[client_id]["last_update"] = datetime.now(timezone.utc).isoformat()
-        
-        # Step 3: 安全聚合
-        aggregated_model = self.secure_aggregator.secure_aggregate(
-            client_updates,
-            strategy=AggregationStrategy.SECURE_AGG
-        )
-        
-        # Step 4: 更新全局模型
-        self.global_model = aggregated_model
-        
-        # Step 5: 计算收敛指标
-        avg_loss = statistics.mean([u.training_loss for u in client_updates])
-        convergence = self._calculate_convergence(round_number)
-        
-        # Step 6: 记录轮次
-        round_result = FederatedRound(
-            round_id=str(uuid.uuid4()),
-            round_number=round_number,
-            participating_clients=len(selected_clients),
-            aggregated_model=aggregated_model,
-            global_loss=avg_loss,
-            convergence_metric=convergence
-        )
-        
-        self.round_history.append(round_result)
-        
-        logger.info(
-            f"Round {round_number} completed: "
-            f"{len(selected_clients)} clients, loss={avg_loss:.3f}, "
-            f"convergence={convergence:.4f}"
-        )
-        
-        return round_result
-    
-    def run_federated_learning(self) -> Dict:
-        """
-        运行完整的联邦学习过程
-        
-        Returns:
-            训练结果
-        """
-        logger.info(f"Starting federated learning: {self.num_rounds} rounds")
+        self.num_clients = num_clients
+        self.aggregation_method = aggregation_method
+        self.client_fraction = client_fraction  # 每轮参与客户端比例
         
         # 初始化全局模型
-        if not self.global_model:
-            self.global_model = {
-                f"param_{i}": random.gauss(0, 0.1)
-                for i in range(10)
-            }
+        self.global_model = GlobalModel(
+            model_id="",
+            parameters={f"param_{i}": random.gauss(0, 0.1) for i in range(50)},
+            version=0
+        )
         
-        results = {
-            "total_rounds": self.num_rounds,
-            "final_loss": None,
-            "convergence_history": [],
-            "privacy_status": None
-        }
+        # 初始化客户端
+        self.clients: Dict[str, ClientNode] = {}
+        for i in range(num_clients):
+            client = ClientNode(
+                client_id=f"client_{i}",
+                data_size=random.randint(100, 1000)
+            )
+            self.clients[client.client_id] = client
         
-        for round_num in range(1, self.num_rounds + 1):
-            round_result = self.execute_federated_round(round_num)
-            
-            results["convergence_history"].append({
-                "round": round_num,
-                "loss": round_result.global_loss,
-                "convergence": round_result.convergence_metric
-            })
-            
-            # 检查是否收敛
-            if round_result.convergence_metric < 0.001:
-                logger.info(f"Converged at round {round_num}")
-                break
+        # 聚合器
+        self.aggregator = SecureAggregator(method=aggregation_method)
         
-        results["final_loss"] = self.round_history[-1].global_loss if self.round_history else None
-        results["privacy_status"] = self.dp_engine.get_privacy_status()
-        
-        logger.info(f"Federated learning completed: final_loss={results['final_loss']}")
-        
-        return results
+        # 训练历史
+        self.training_history: List[Dict] = []
     
-    def _calculate_convergence(self, current_round: int) -> float:
-        """计算收敛指标"""
-        if len(self.round_history) < 2:
-            return 1.0
+    def select_clients(self, round_num: int) -> List[ClientNode]:
+        """选择参与本轮训练的客户端"""
+        num_selected = max(1, int(self.num_clients * self.client_fraction))
+        active_clients = [c for c in self.clients.values() if c.is_active]
         
-        # 计算最近几轮损失的 change
-        recent_losses = [r.global_loss for r in self.round_history[-5:]]
+        selected = random.sample(active_clients, min(num_selected, len(active_clients)))
         
-        if len(recent_losses) < 2:
-            return 1.0
-        
-        # 计算损失变化的标准差
-        loss_changes = [
-            abs(recent_losses[i] - recent_losses[i-1])
-            for i in range(1, len(recent_losses))
-        ]
-        
-        if not loss_changes:
-            return 1.0
-        
-        avg_change = statistics.mean(loss_changes)
-        
-        # 归一化到 0-1
-        return min(1.0, avg_change / 0.1)
-
-
-class EdgeComputingManager:
-    """边缘计算管理器
-    
-    管理边缘节点的部署和调度
-    """
-    
-    def __init__(self):
-        self.edge_nodes: Dict[str, EdgeNode] = {}
-        self.deployment_history: List[Dict] = []
-    
-    def register_edge_node(self, node: EdgeNode):
-        """注册边缘节点"""
-        self.edge_nodes[node.node_id] = node
-        logger.info(f"Edge node registered: {node.node_id} at {node.location}")
-    
-    def select_optimal_nodes(
-        self,
-        required_capacity: float,
-        num_nodes: int = 3
-    ) -> List[EdgeNode]:
-        """
-        选择最优边缘节点
-        
-        Args:
-            required_capacity: 所需计算能力
-            num_nodes: 需要选择的节点数
-            
-        Returns:
-            选中的节点列表
-        """
-        # 过滤可用节点
-        available_nodes = [
-            node for node in self.edge_nodes.values()
-            if node.available and node.compute_capacity >= required_capacity
-        ]
-        
-        if not available_nodes:
-            logger.warning("No suitable edge nodes available")
-            return []
-        
-        # 按负载排序（选择负载最低的）
-        available_nodes.sort(key=lambda n: n.current_load)
-        
-        selected = available_nodes[:num_nodes]
-        
-        logger.info(f"Selected {len(selected)} edge nodes for deployment")
+        logger.info(f"Round {round_num}: Selected {len(selected)}/{len(active_clients)} clients")
         
         return selected
     
-    def get_edge_analytics(self) -> Dict:
-        """获取边缘计算分析"""
-        if not self.edge_nodes:
-            return {"error": "No edge nodes registered"}
+    def train_round(self, round_num: int, local_epochs: int = 5) -> Dict[str, Any]:
+        """
+        执行一轮联邦学习训练
         
-        capacities = [n.compute_capacity for n in self.edge_nodes.values()]
-        loads = [n.current_load for n in self.edge_nodes.values()]
+        Args:
+            round_num: 轮次编号
+            local_epochs: 本地训练轮数
+            
+        Returns:
+            训练结果
+        """
+        # Step 1: 选择客户端
+        selected_clients = self.select_clients(round_num)
+        
+        # Step 2: 客户端本地训练
+        client_updates = []
+        total_data_size = 0
+        
+        for client in selected_clients:
+            # 本地训练
+            update = client.local_train(self.global_model.parameters, epochs=local_epochs)
+            
+            client_updates.append({
+                "client_id": client.client_id,
+                "update": update,
+                "data_size": client.data_size
+            })
+            
+            total_data_size += client.data_size
+        
+        # Step 3: 安全聚合
+        if self.aggregation_method == AggregationMethod.SECURE_AGGREGATION:
+            aggregated_params = self.aggregator.secure_aggregate_with_encryption(client_updates)
+        else:
+            aggregated_params = self.aggregator.federated_average(client_updates, total_data_size)
+        
+        # Step 4: 更新全局模型
+        self.global_model.update_parameters(aggregated_params)
+        
+        # 记录训练历史
+        round_result = {
+            "round": round_num,
+            "num_clients_participated": len(selected_clients),
+            "total_data_size": total_data_size,
+            "global_model_version": self.global_model.version,
+            "aggregation_method": self.aggregation_method.value,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        self.training_history.append(round_result)
+        
+        logger.info(f"Round {round_num} completed: model version {self.global_model.version}")
+        
+        return round_result
+    
+    def run_federated_learning(
+        self,
+        num_rounds: int = 10,
+        local_epochs: int = 5
+    ) -> Dict[str, Any]:
+        """
+        运行完整联邦学习过程
+        
+        Args:
+            num_rounds: 总轮数
+            local_epochs: 本地训练轮数
+            
+        Returns:
+            最终结果
+        """
+        for round_num in range(1, num_rounds + 1):
+            self.train_round(round_num, local_epochs)
+        
+        # 汇总统计
+        final_stats = {
+            "total_rounds": num_rounds,
+            "final_model_version": self.global_model.version,
+            "num_clients": self.num_clients,
+            "client_fraction": self.client_fraction,
+            "aggregation_method": self.aggregation_method.value,
+            "total_training_rounds_recorded": len(self.training_history)
+        }
+        
+        # 隐私预算使用情况
+        if hasattr(self.aggregator.dp_mechanism, 'privacy_budget'):
+            budget = self.aggregator.dp_mechanism.privacy_budget
+            final_stats["privacy_budget"] = {
+                "epsilon_total": budget.epsilon,
+                "epsilon_spent": budget.spent_epsilon,
+                "epsilon_remaining": budget.remaining_budget
+            }
+        
+        logger.info(f"Federated learning completed: {num_rounds} rounds, version {self.global_model.version}")
+        
+        return final_stats
+    
+    def get_client_statistics(self) -> Dict[str, Any]:
+        """获取客户端统计信息"""
+        active_clients = sum(1 for c in self.clients.values() if c.is_active)
+        total_data = sum(c.data_size for c in self.clients.values())
+        avg_data = statistics.mean([c.data_size for c in self.clients.values()])
         
         return {
-            "total_nodes": len(self.edge_nodes),
-            "available_nodes": sum(1 for n in self.edge_nodes.values() if n.available),
-            "avg_capacity": round(statistics.mean(capacities), 2),
-            "avg_load": round(statistics.mean(loads), 2),
-            "locations": list(set(n.location for n in self.edge_nodes.values()))
+            "total_clients": self.num_clients,
+            "active_clients": active_clients,
+            "total_data_size": total_data,
+            "avg_data_per_client": round(avg_data, 2)
         }
 
 
-def create_federated_learning_system() -> Tuple[FederatedLearningCoordinator, EdgeComputingManager]:
+def create_federated_learning_system(
+    num_clients: int = 10,
+    method: AggregationMethod = AggregationMethod.FEDERATED_AVERAGING
+) -> FederatedLearningServer:
     """工厂函数：创建联邦学习系统"""
-    coordinator = FederatedLearningCoordinator(
-        num_rounds=10,
-        min_clients=2,
-        fraction_fit=0.3
+    server = FederatedLearningServer(
+        num_clients=num_clients,
+        aggregation_method=method
     )
-    
-    edge_manager = EdgeComputingManager()
-    
-    return coordinator, edge_manager
+    return server
 
 
 if __name__ == "__main__":
     # 简单测试
     print("="*60)
-    print("AI Agent Federated Learning & Privacy 测试")
+    print("AI Agent Federated Learning & Privacy-Preserving ML 测试")
     print("="*60)
     
-    coordinator, edge_manager = create_federated_learning_system()
+    # 测试FedAvg
+    print("\n🌐 测试联邦平均 (FedAvg)...")
+    fedavg_server = create_federated_learning_system(
+        num_clients=10,
+        method=AggregationMethod.FEDERATED_AVERAGING
+    )
     
-    # 注册客户端
-    print("\n👥 注册客户端...")
-    for i in range(10):
-        coordinator.register_client(f"client_{i}", {"device_type": "mobile"})
+    # 运行10轮联邦学习
+    result = fedavg_server.run_federated_learning(num_rounds=10, local_epochs=5)
+    print(f"   总轮数: {result['total_rounds']}")
+    print(f"   最终模型版本: {result['final_model_version']}")
+    print(f"   客户端数: {result['num_clients']}")
+    print(f"   参与比例: {result['client_fraction']*100:.0f}%")
+    print(f"   聚合方法: {result['aggregation_method']}")
     
-    print(f"   已注册 {len(coordinator.clients)} 个客户端")
+    client_stats = fedavg_server.get_client_statistics()
+    print(f"\n   📊 客户端统计:")
+    print(f"     活跃客户端: {client_stats['active_clients']}/{client_stats['total_clients']}")
+    print(f"     总数据量: {client_stats['total_data_size']}")
+    print(f"     平均每客户端: {client_stats['avg_data_per_client']}")
     
-    # 注册边缘节点
-    print("\n🌐 注册边缘节点...")
-    locations = ["Beijing", "Shanghai", "Guangzhou", "Shenzhen"]
+    # 测试差分隐私
+    print("\n🔒 测试差分隐私...")
+    dp_server = create_federated_learning_system(
+        num_clients=10,
+        method=AggregationMethod.DIFFERENTIAL_PRIVACY
+    )
     
-    for i, location in enumerate(locations):
-        node = EdgeNode(
-            node_id=f"edge_{i}",
-            location=location,
-            compute_capacity=random.uniform(0.5, 1.0),
-            bandwidth=random.uniform(50, 200),
-            current_load=random.uniform(0.1, 0.5)
-        )
-        edge_manager.register_edge_node(node)
+    dp_result = dp_server.run_federated_learning(num_rounds=5, local_epochs=3)
+    print(f"   总轮数: {dp_result['total_rounds']}")
     
-    print(f"   已注册 {len(edge_manager.edge_nodes)} 个边缘节点")
+    if "privacy_budget" in dp_result:
+        budget = dp_result["privacy_budget"]
+        print(f"\n   🛡️  隐私预算:")
+        print(f"     总ε: {budget['epsilon_total']}")
+        print(f"     已消耗: {budget['epsilon_spent']:.4f}")
+        print(f"     剩余: {budget['epsilon_remaining']:.4f}")
     
-    # 运行联邦学习
-    print("\n🔄 运行联邦学习...")
-    results = coordinator.run_federated_learning()
+    # 测试安全聚合
+    print("\n🔐 测试安全聚合...")
+    secure_server = create_federated_learning_system(
+        num_clients=10,
+        method=AggregationMethod.SECURE_AGGREGATION
+    )
     
-    print(f"\n📊 训练结果:")
-    print(f"   总轮次: {results['total_rounds']}")
-    print(f"   最终损失: {results['final_loss']:.4f}")
-    print(f"   收敛历史长度: {len(results['convergence_history'])}")
+    secure_result = secure_server.run_federated_learning(num_rounds=5, local_epochs=3)
+    print(f"   总轮数: {secure_result['total_rounds']}")
+    print(f"   聚合方法: {secure_result['aggregation_method']}")
     
-    # 隐私状态
-    print(f"\n🔒 隐私保护状态:")
-    privacy = results['privacy_status']
-    print(f"   总预算: {privacy['total_budget']:.2f}")
-    print(f"   已使用: {privacy['spent_budget']:.2f}")
-    print(f"   剩余: {privacy['remaining_budget']:.2f}")
-    print(f"   使用率: {privacy['budget_utilization']:.1f}%")
+    # 差分隐私机制测试
+    print("\n⚙️  测试差分隐私机制...")
+    dp_mech = DifferentialPrivacy(epsilon=1.0, delta=1e-5, sensitivity=1.0)
     
-    # 边缘节点分析
-    print(f"\n🌍 边缘计算分析:")
-    analytics = edge_manager.get_edge_analytics()
-    print(f"   总节点数: {analytics['total_nodes']}")
-    print(f"   可用节点: {analytics['available_nodes']}")
-    print(f"   平均容量: {analytics['avg_capacity']:.2f}")
-    print(f"   平均负载: {analytics['avg_load']:.2f}")
-    print(f"   位置分布: {', '.join(analytics['locations'])}")
+    test_values = [1.0, 2.0, 3.0, 4.0, 5.0]
+    noisy_values = [dp_mech.add_gaussian_noise(v) for v in test_values]
     
-    # 选择最优节点
-    print(f"\n🎯 选择最优节点...")
-    optimal_nodes = edge_manager.select_optimal_nodes(required_capacity=0.6, num_nodes=2)
-    print(f"   选中 {len(optimal_nodes)} 个节点:")
-    for node in optimal_nodes:
-        print(f"     - {node.node_id} ({node.location}): capacity={node.compute_capacity:.2f}, load={node.current_load:.2f}")
+    print(f"   原始值: {test_values}")
+    print(f"   加噪值: {[f'{v:.2f}' for v in noisy_values]}")
+    print(f"   噪声幅度: {[f'{abs(n-o):.2f}' for n, o in zip(noisy_values, test_values)]}")
+    print(f"   剩余隐私预算: {dp_mech.privacy_budget.remaining_budget:.4f}")
+    
+    # 梯度裁剪测试
+    gradients = [-2.0, -0.5, 0.0, 0.5, 2.0]
+    clipped = [dp_mech.clip_gradient(g, max_norm=1.0) for g in gradients]
+    print(f"\n   梯度裁剪:")
+    print(f"     原始梯度: {gradients}")
+    print(f"     裁剪后: {clipped}")
+    
+    # 训练历史
+    print("\n📚 训练历史...")
+    print(f"   FedAvg训练轮数: {len(fedavg_server.training_history)}")
+    print(f"   DP训练轮数: {len(dp_server.training_history)}")
+    print(f"   Secure训练轮数: {len(secure_server.training_history)}")
+    
+    if fedavg_server.training_history:
+        last_round = fedavg_server.training_history[-1]
+        print(f"\n   最后一轮详情:")
+        print(f"     轮次: {last_round['round']}")
+        print(f"     参与客户端: {last_round['num_clients_participated']}")
+        print(f"     总数据量: {last_round['total_data_size']}")
     
     print("\n✅ 测试完成！")
