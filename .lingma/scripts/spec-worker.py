@@ -24,7 +24,7 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from enum import Enum
 
 
@@ -53,7 +53,7 @@ class SpecWorker:
     MAX_RETRIES = 3
     RETRY_DELAY = 5  # 秒
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         """
         初始化Worker
 
@@ -136,7 +136,7 @@ class SpecWorker:
         with open(self.spec_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        tasks = []
+        tasks: List[Dict[str, Any]] = []
         # 匹配未完成任务: - [ ] Task-XXX 或 - [ ] 描述
         task_pattern = r"- \[ \]\s+(Task-\d+[:：]?\s*.+?)(?:\s+\(预计:.+?\))?$"
 
@@ -379,7 +379,7 @@ class SpecWorker:
             "notification_sent", {"type": "task_failure", "task_id": task["id"]}
         )
 
-    def start_worker(self, max_tasks: int = None):
+    def start_worker(self, max_tasks: Optional[int] = None):
         """
         启动Worker
 
