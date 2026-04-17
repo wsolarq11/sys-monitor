@@ -39,6 +39,10 @@ class RootCleanlinessChecker:
             'sys-monitor',  # 项目特定
             'scripts',      # 项目脚本目录
         }
+        self.forbidden_dirs = {
+            'docs',         # 应使用 .lingma/docs/
+            'run-logs',     # CI 日志目录
+        }
         self.forbidden_patterns = [
             r'^\$null$',
             r'^null$',
@@ -49,6 +53,11 @@ class RootCleanlinessChecker:
             r'^.*\.tmp$',
             r'^.*\.temp$',
             r'^.*\.bak$',
+            # 🚨 永久禁止的临时文件
+            r'^mypy-errors.*\.txt$',   # mypy 错误日志
+            r'^build-log.*\.txt$',     # 构建日志
+            r'^ci-.*\.txt$',           # CI 日志
+            r'^run-logs$',             # CI 日志目录
             # 对话产生的临时文件
             r'^\d+$',              # 纯数字: 100, 20, 50
             r'^\d+%$',             # 百分比: 100%, 58.9%
@@ -70,6 +79,12 @@ class RootCleanlinessChecker:
         
         for item in self.root_dir.iterdir():
             name = item.name
+            
+            # 🚨 优先检查禁止目录
+            if item.is_dir() and name in self.forbidden_dirs:
+                violations.append(f"❌ {name}/ (禁止的目录 - 应使用 .lingma/{name}/)")
+                score -= 3
+                continue
             
             # 跳过允许的文件和目录
             if name in self.allowed_files or name in self.allowed_dirs:

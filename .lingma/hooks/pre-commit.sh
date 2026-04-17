@@ -40,6 +40,38 @@ log_audit() {
 
 echo "🔍 执行Spec强制验证..."
 
+# 🚨 根目录清洁度检查（P0优先级）
+echo "   正在检查根目录清洁度..."
+ROOT_CHECK_SCRIPT="$PROJECT_ROOT/scripts/check_root_cleanliness.py"
+
+if [ -f "$ROOT_CHECK_SCRIPT" ]; then
+    ROOT_CHECK_OUTPUT=$(python3 "$ROOT_CHECK_SCRIPT" 2>&1) || ROOT_CHECK_EXIT=$?
+    
+    if echo "$ROOT_CHECK_OUTPUT" | grep -q "工作区脏度: 10/10"; then
+        echo -e "${GREEN}   ✅ 根目录清洁度检查通过${NC}"
+    else
+        echo -e "${RED}❌ 根目录清洁度检查失败${NC}"
+        echo ""
+        echo "$ROOT_CHECK_OUTPUT"
+        echo ""
+        echo "🚫 禁止以下文件出现在根目录："
+        echo "  - mypy-errors*.txt (临时调试文件)"
+        echo "  - docs/ (应使用 .lingma/docs/)"
+        echo "  - scripts/ 外的任何脚本文件"
+        echo "  - 任何数字/大小标记开头的文件"
+        echo "  - 任何 temp_/tmp_ 前缀的文件"
+        echo ""
+        echo "请立即删除这些文件后重新提交。"
+        
+        log_audit "root-cleanliness-check" "failed" "根目录存在违规文件"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}   ⚠️  警告: check_root_cleanliness.py不存在，跳过根目录检查${NC}"
+fi
+
+echo ""
+
 # 检查1: Spec文件是否存在
 if [ ! -f "$SPEC_PATH" ]; then
     echo -e "${RED}❌ 错误: current-spec.md不存在${NC}"
