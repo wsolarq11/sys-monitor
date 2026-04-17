@@ -1,0 +1,62 @@
+{
+  "timestamp": "20260417_212555",
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "warnings": 0,
+    "pass_rate": 100.0
+  },
+  "results": [
+    {
+      "name": "目录结构检查",
+      "status": "PASSED",
+      "duration": 0.0007448196411132812
+    },
+    {
+      "name": "Rule 加载测试",
+      "status": "PASSED",
+      "duration": 0.0007021427154541016
+    },
+    {
+      "name": "Agent 配置测试",
+      "status": "PASSED",
+      "duration": 0.0002911090850830078
+    },
+    {
+      "name": "Skill 文件测试",
+      "status": "PASSED",
+      "duration": 0.0008008480072021484
+    },
+    {
+      "name": "Spec 结构测试",
+      "status": "PASSED",
+      "duration": 0.0007207393646240234
+    },
+    {
+      "name": "决策缓存测试",
+      "status": "PASSED",
+      "duration": 0.008115768432617188
+    },
+    {
+      "name": "批量日志测试",
+      "status": "PASSED",
+      "duration": 0.11293721199035645
+    },
+    {
+      "name": "UX 改进测试",
+      "status": "PASSED",
+      "duration": 0.0008890628814697266
+    },
+    {
+      "name": "会话中间件测试",
+      "status": "PASSED",
+      "duration": 0.00837850570678711
+    },
+    {
+      "name": "性能指标测试",
+      "status": "PASSED",
+      "duration": 0.0009860992431640625
+    }
+  ]
+}

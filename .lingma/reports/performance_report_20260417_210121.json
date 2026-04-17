@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-04-17T21:01:21.886290",
+  "metrics": {
+    "before_optimization": {
+      "decision_latency": {
+        "avg_ms": 1.7821574211120605,
+        "min_ms": 1.0459423065185547,
+        "max_ms": 2.1169185638427734,
+        "p95_ms": 2.0241737365722656,
+        "iterations": 100
+      },
+      "memory_usage": {
+        "rss_mb": 19.984375,
+        "vms_mb": 13.10546875,
+        "percent": 0.12709425420192336
+      },
+      "file_operations": {
+        "avg_write_ms": 0.6419563293457031,
+        "avg_read_ms": 0.1136469841003418,
+        "total_write_ms": 64.19563293457031,
+        "total_read_ms": 11.36469841003418
+      }
+    },
+    "after_optimization": {
+      "decision_latency": {
+        "avg_ms": 1.7266511917114258,
+        "min_ms": 1.0318756103515625,
+        "max_ms": 2.0678043365478516,
+        "p95_ms": 2.025127410888672,
+        "iterations": 100
+      },
+      "memory_usage": {
+        "rss_mb": 20.65234375,
+        "vms_mb": 13.69140625,
+        "percent": 0.13134232251086178
+      },
+      "file_operations": {
+        "avg_write_ms": 0.45041799545288086,
+        "avg_read_ms": 0.09653806686401367,
+        "total_write_ms": 45.041799545288086,
+        "total_read_ms": 9.653806686401367
+      }
+    }
+  },
+  "recommendations": [
+    "ℹ️ 运行性能分析以获取建议"
+  ]
+}

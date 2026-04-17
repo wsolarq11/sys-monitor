@@ -1,0 +1,33 @@
+{
+  "agent_name": "SpecDrivenAgent",
+  "version": "1.0.0",
+  "description": "Spec-Driven Development 核心 Agent，负责协调自动化开发流程",
+  "skills": [
+    "spec-driven-development",
+    "memory-management"
+  ],
+  "rules": [
+    "automation-policy",
+    "memory-usage",
+    "subagent-file-creation",
+    "spec-session-start"
+  ],
+  "capabilities": {
+    "risk_assessment": true,
+    "decision_making": true,
+    "execution_strategies": [
+      "auto_execute",
+      "execute_with_snapshot",
+      "ask_user",
+      "require_explicit_approval"
+    ],
+    "learning": true,
+    "context_management": true
+  },
+  "configuration": {
+    "automation_level": "balanced",
+    "max_concurrent_tasks": 3,
+    "timeout_seconds": 300,
+    "retry_attempts": 3
+  }
+}
