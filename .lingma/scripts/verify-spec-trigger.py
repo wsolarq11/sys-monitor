@@ -32,14 +32,15 @@ import tempfile
 import shutil
 from pathlib import Path
 from datetime import datetime
+from typing import Optional, List, Dict, Any
 
 
 class SpecTriggerVerifier:
     """Spec强制约束机制验证器"""
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         self.project_root = project_root or os.getcwd()
-        self.results = []
+        self.results: List[Dict[str, Any]] = []
         self.passed = 0
         self.failed = 0
 

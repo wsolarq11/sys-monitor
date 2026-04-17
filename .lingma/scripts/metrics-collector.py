@@ -15,7 +15,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, DefaultDict
 from collections import defaultdict
 
 
@@ -180,7 +180,7 @@ class MetricsCollector:
                 continue
 
         # 按天分组
-        daily_activity = defaultdict(int)
+        daily_activity: DefaultDict[str, int] = defaultdict(int)
         for log in recent_logs:
             try:
                 date_str = log["timestamp"][:10]
