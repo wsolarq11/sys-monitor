@@ -1,0 +1,17 @@
+name: Test Actions
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hello World
+        run: echo "Hello from GitHub Actions!"
+      
+      - name: Check environment
+        run: |
+          echo "Runner OS: ${{ runner.os }}"
+          echo "GitHub Workspace: ${{ github.workspace }}"
+          pwd
+          ls -la
