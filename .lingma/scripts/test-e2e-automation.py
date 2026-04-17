@@ -31,6 +31,7 @@ import time
 import subprocess
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
 class TestResult:
@@ -39,7 +40,7 @@ class TestResult:
     def __init__(self, test_name: str):
         self.test_name = test_name
         self.passed = True
-        self.errors = []
+        self.errors: list = []
         self.start_time = None
         self.end_time = None
 
@@ -76,7 +77,7 @@ class TestResult:
 class E2ETestSuite:
     """E2E测试套件"""
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         self.project_root = project_root or os.getcwd()
         self.scripts_dir = os.path.join(self.project_root, ".lingma", "scripts")
         self.specs_dir = os.path.join(self.project_root, ".lingma", "specs")
