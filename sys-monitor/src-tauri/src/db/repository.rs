@@ -937,8 +937,10 @@ mod tests {
             disk_usage: Some(50.0),
             disk_total: Some(500.0),
         };
-        let metric_id = repo.insert_system_metric(&system_metric).expect("Failed to insert system metric");
-        
+        let metric_id = repo
+            .insert_system_metric(&system_metric)
+            .expect("Failed to insert system metric");
+
         let core = CpuCoreMetric {
             id: None,
             metric_id,
@@ -964,8 +966,10 @@ mod tests {
             disk_usage: Some(50.0),
             disk_total: Some(500.0),
         };
-        let metric_id = repo.insert_system_metric(&system_metric).expect("Failed to insert system metric");
-        
+        let metric_id = repo
+            .insert_system_metric(&system_metric)
+            .expect("Failed to insert system metric");
+
         let metric = DiskMetric {
             id: None,
             metric_id,
@@ -1020,9 +1024,10 @@ mod tests {
     fn test_insert_folder_item() {
         let repo = create_test_repo();
         // First insert parent FolderScan
-        let scan_id = repo.insert_folder_scan("/test/path", 1000000, 100, 10, 500)
+        let scan_id = repo
+            .insert_folder_scan("/test/path", 1000000, 100, 10, 500)
             .expect("Failed to insert scan");
-        
+
         let item = FolderItem {
             id: None,
             scan_id,
@@ -1043,9 +1048,10 @@ mod tests {
     fn test_insert_file_type_stat() {
         let repo = create_test_repo();
         // First insert parent FolderScan
-        let scan_id = repo.insert_folder_scan("/test/path", 1000000, 100, 10, 500)
+        let scan_id = repo
+            .insert_folder_scan("/test/path", 1000000, 100, 10, 500)
             .expect("Failed to insert scan");
-        
+
         let stat = FileTypeStat {
             id: None,
             scan_id,
@@ -1063,9 +1069,10 @@ mod tests {
     fn test_batch_insert_folder_items() {
         let mut repo = create_test_repo();
         // First insert parent FolderScan
-        let scan_id = repo.insert_folder_scan("/test/path", 1000000, 100, 10, 500)
+        let scan_id = repo
+            .insert_folder_scan("/test/path", 1000000, 100, 10, 500)
             .expect("Failed to insert scan");
-        
+
         let items = vec![
             FolderItem {
                 id: None,
@@ -1098,9 +1105,10 @@ mod tests {
     fn test_batch_insert_file_type_stats() {
         let mut repo = create_test_repo();
         // First insert parent FolderScan
-        let scan_id = repo.insert_folder_scan("/test/path", 1000000, 100, 10, 500)
+        let scan_id = repo
+            .insert_folder_scan("/test/path", 1000000, 100, 10, 500)
             .expect("Failed to insert scan");
-        
+
         let stats = vec![
             FileTypeStat {
                 id: None,
@@ -1145,14 +1153,22 @@ mod tests {
     fn test_insert_and_get_folder_events() {
         let mut repo = create_test_repo();
         // First insert parent WatchedFolder
-        let watched_folder_id = repo.insert_watched_folder("/test/path", Some("Test"))
+        let watched_folder_id = repo
+            .insert_watched_folder("/test/path", Some("Test"))
             .expect("Failed to insert watched folder");
-        
+
         let event_id = repo
-            .insert_folder_event(watched_folder_id, "Created", "/test/new_file.txt", Some(1024))
+            .insert_folder_event(
+                watched_folder_id,
+                "Created",
+                "/test/new_file.txt",
+                Some(1024),
+            )
             .expect("Failed to insert");
         assert!(event_id > 0);
-        let events = repo.get_folder_events(watched_folder_id, 10).expect("Failed to get");
+        let events = repo
+            .get_folder_events(watched_folder_id, 10)
+            .expect("Failed to get");
         assert_eq!(events.len(), 1);
         assert_eq!(events[0].event_type, "Created");
     }

@@ -161,9 +161,7 @@ impl From<rusqlite::Error> for AppError {
             rusqlite::Error::SqliteFailure(sqlite_err, _) => {
                 match sqlite_err.extended_code {
                     // 数据库文件相关错误
-                    1007..=1009 => {
-                        AppError::FileSystem(format!("数据库文件错误：{}", error))
-                    }
+                    1007..=1009 => AppError::FileSystem(format!("数据库文件错误：{}", error)),
                     // 权限相关错误
                     1031 => AppError::Permission(format!("数据库权限不足：{}", error)),
                     // 其他 SQLite 错误
