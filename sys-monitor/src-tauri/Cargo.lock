@@ -4782,7 +4782,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-shell",
  "tempfile",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tokio",
  "tokio-util",
  "walkdir",
