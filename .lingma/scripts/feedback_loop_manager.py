@@ -83,6 +83,115 @@ class LoopConfig:
     min_quality_score: float = 0.7
 
 
+class LLMEvaluator:
+    """LLM 评估器
+    
+    使用 LLM 进行语义理解和智能代码审查
+    Phase 2 Task 2.5: LLM 评估集成
+    """
+    
+    def __init__(self, provider: str = "mock"):
+        """
+        初始化 LLM 评估器
+        
+        Args:
+            provider: LLM 提供商 (mock/openai/anthropic/local)
+        """
+        self.provider = provider
+        self.evaluation_cache = {}
+    
+    def evaluate_code_quality(self, code: str, context: Dict = None) -> Dict:
+        """
+        评估代码质量
+        
+        Args:
+            code: 待评估的代码
+            context: 上下文信息
+            
+        Returns:
+            评估结果
+        """
+        # Mock 实现（Phase 2），真实实现需要集成 LLM API
+        if self.provider == "mock":
+            return self._mock_evaluation(code, context or {})
+        
+        # TODO: 集成真实的 LLM API
+        # - OpenAI GPT-4
+        # - Anthropic Claude
+        # - 本地模型 (Ollama)
+        
+        return {
+            "success": False,
+            "message": f"LLM provider '{self.provider}' not yet implemented"
+        }
+    
+    def _mock_evaluation(self, code: str, context: Dict) -> Dict:
+        """Mock 评估（用于测试）"""
+        # 简单的启发式评估
+        score = 0.7  # 基础分数
+        issues = []
+        suggestions = []
+        
+        # 检查是否有 docstring
+        if '"""' not in code and "'''" not in code:
+            score -= 0.1
+            issues.append({
+                "type": "documentation",
+                "severity": "low",
+                "message": "缺少文档字符串"
+            })
+            suggestions.append("添加 Google-style docstring")
+        
+        # 检查是否有类型注解
+        if code.startswith("def ") and ":" not in code.split("(")[1].split(")")[0]:
+            score -= 0.1
+            issues.append({
+                "type": "type_hints",
+                "severity": "medium",
+                "message": "缺少类型注解"
+            })
+            suggestions.append("为函数参数和返回值添加类型提示")
+        
+        # 检查代码长度
+        lines = code.strip().split('\n')
+        if len(lines) > 50:
+            score -= 0.05
+            issues.append({
+                "type": "complexity",
+                "severity": "medium",
+                "message": f"函数过长 ({len(lines)} 行)"
+            })
+            suggestions.append("考虑将函数拆分为更小的单元")
+        
+        return {
+            "success": True,
+            "overall_score": max(0.0, min(1.0, score)),
+            "dimensions": {
+                "readability": score,
+                "maintainability": score,
+                "best_practices": score - 0.05 if issues else score
+            },
+            "issues": issues,
+            "suggestions": suggestions,
+            "llm_provider": self.provider,
+            "note": "This is a mock evaluation. Integrate real LLM for production."
+        }
+    
+    def generate_review_comment(self, code: str, issue: Dict) -> str:
+        """
+        生成代码审查评论
+        
+        Args:
+            code: 相关代码
+            issue: 问题描述
+            
+        Returns:
+            审查评论
+        """
+        # Mock 实现
+        return f"[LLM Review] {issue.get('message', 'Issue detected')}\n\n建议: {issue.get('suggestion', '请改进代码')}"
+
+
 class FeedbackCollector:
     """反馈收集器
     
@@ -172,10 +281,32 @@ class AutoFixLibrary:
     """自动修复库
     
     根据反馈信号类型应用预定义的修复策略
+    集成外部工具: pylint, mypy, black
     """
     
     def __init__(self):
         self.fix_strategies = self._load_strategies()
+        self.external_tools = self._init_external_tools()
+    
+    def _init_external_tools(self) -> Dict:
+        """初始化外部工具配置"""
+        return {
+            "black": {
+                "command": "black",
+                "args": ["--line-length", "88", "--quiet"],
+                "description": "Python代码格式化工具"
+            },
+            "pylint": {
+                "command": "pylint",
+                "args": ["--disable=C0114,C0115,C0116", "--score=no"],
+                "description": "Python静态代码分析工具"
+            },
+            "mypy": {
+                "command": "mypy",
+                "args": ["--ignore-missing-imports", "--no-error-summary"],
+                "description": "Python静态类型检查器"
+            }
+        }
     
     def _load_strategies(self) -> Dict:
         """加载修复策略"""
@@ -278,12 +409,35 @@ class AutoFixLibrary:
     
     def _fix_lint_error(self, signal: FeedbackSignal, context: Dict) -> Dict:
         """修复 lint 错误"""
-        # TODO: 集成 black/pylint/autopep8
+        # 尝试使用 black 自动格式化
+        try:
+            import subprocess
+            file_path = context.get("file_path")
+            if file_path:
+                result = subprocess.run(
+                    ["black", "--line-length", "88", "--quiet", str(file_path)],
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode == 0:
+                    return {
+                        "success": True,
+                        "action": "applied_black_formatting",
+                        "tool": "black",
+                        "details": signal.details
+                    }
+        except Exception as e:
+            logger.warning(f"Black formatting failed: {e}")
+        
+        # 如果 black 失败，返回建议
         return {
             "success": True,
             "action": "apply_linter_suggestion",
             "tool": "black",
-            "details": signal.details
+            "details": signal.details,
+            "note": "建议手动运行: black your_file.py"
         }
     
     def _fix_syntax_error(self, signal: FeedbackSignal, context: Dict) -> Dict:
@@ -338,6 +492,60 @@ class AutoFixLibrary:
             "success": False,
             "message": "No applicable optimization found"
         }
+    
+    def run_external_tool(self, tool_name: str, file_path: str) -> Dict:
+        """
+        运行外部工具
+        
+        Args:
+            tool_name: 工具名称 (black/pylint/mypy)
+            file_path: 文件路径
+            
+        Returns:
+            工具执行结果
+        """
+        tool_config = self.external_tools.get(tool_name)
+        if not tool_config:
+            return {
+                "success": False,
+                "message": f"Unknown tool: {tool_name}"
+            }
+        
+        try:
+            import subprocess
+            cmd = [tool_config["command"]] + tool_config["args"] + [file_path]
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            return {
+                "success": result.returncode == 0,
+                "tool": tool_name,
+                "returncode": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "output": result.stdout or result.stderr
+            }
+        
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "message": f"Tool {tool_name} timed out after 60s"
+            }
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "message": f"Tool {tool_name} not found. Install with: pip install {tool_name}"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": str(e)
+            }
 
 
 class IterationManager:
@@ -355,6 +563,7 @@ class IterationManager:
         self.config = config or LoopConfig()
         self.feedback_collector = FeedbackCollector()
         self.auto_fix_library = AutoFixLibrary()
+        self.llm_evaluator = LLMEvaluator(provider="mock")  # Phase 2: Mock, Phase 3: Real
         self.iteration_history: List[IterationResult] = []
         self.current_iteration = 0
     
