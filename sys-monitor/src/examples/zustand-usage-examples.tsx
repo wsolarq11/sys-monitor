@@ -27,7 +27,6 @@ import {
   AlertType,
   
   // Settings Store
-  useAppSettings,
   useScanSettings,
   useAlertSettings,
   useUISettings,
