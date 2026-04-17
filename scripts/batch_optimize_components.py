@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 批量精简 .lingma 组件工具
 一次性处理所有臃肿的 Agent/Rule/Skill 文件
 """
 
 import os
+import sys
 import re
 from pathlib import Path
 from typing import List, Tuple
+
+# 确保 stdout 使用 UTF-8 编码
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 class ComponentOptimizer:

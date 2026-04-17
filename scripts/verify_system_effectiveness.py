@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 自迭代流系统有效性验证工具
 验证 Rules/Skills/Agents 是否正确配置并能跨会话生效
@@ -9,6 +10,11 @@ import re
 import sys
 from pathlib import Path
 from typing import List, Dict
+
+# 确保 stdout 使用 UTF-8 编码
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 class SystemVerifier:

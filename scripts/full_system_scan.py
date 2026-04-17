@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """全盘扫描所有可能的冗余问题"""
 
 import os
+import sys
 from pathlib import Path
+
+# 确保 stdout 使用 UTF-8 编码
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 print('='*70)
 print('🔍 全盘扫描：检查所有可能的冗余问题')
