@@ -1,0 +1,103 @@
+
+> Backend Tests (ubuntu-latest)	Run cargo clippy	2026-04-17T19:33:00.7996459Z ##[error]Process completed with exit code 101.
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	锘?026-04-17T19:33:00.8083043Z Post job cleanup.
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9031139Z [command]/usr/bin/git version
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9069197Z git version 2.53.0
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9114663Z Temporarily overriding HOME='/home/runner/work/_temp/e0f04cfd-47ec-4ce9-b284-b1dce587fdd2' before making global git config changes
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9116002Z Adding repository directory to the temporary git global config as a safe directory
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9122357Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/sys-monitor/sys-monitor
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9169510Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9204568Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9439785Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9460443Z http.https://github.com/.extraheader
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9472537Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9502253Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9719218Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+  Backend Tests (ubuntu-latest)	Post Run actions/checkout@v4	2026-04-17T19:33:00.9749560Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+  Backend Tests (ubuntu-latest)	Complete job	锘?026-04-17T19:33:01.0083723Z Cleaning up orphan processes
+  Backend Tests (ubuntu-latest)	Complete job	2026-04-17T19:33:01.0380595Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  Backend Tests (windows-latest)	Set up job	锘?026-04-17T19:30:34.8605287Z Current runner version: '2.333.1'
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3413806Z ##[group]Runner Image Provisioner
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3414843Z Hosted Compute Agent
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3415611Z Version: 20260213.493
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3416335Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3417274Z Build Date: 2026-02-13T00:28:41Z
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3418106Z Worker ID: {f46f5de5-e70e-481a-8796-95635c0067e7}
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3418968Z Azure Region: centralus
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3419576Z ##[endgroup]
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3421052Z ##[group]Operating System
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3421827Z Microsoft Windows Server 2025
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3422537Z 10.0.26100
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3423658Z Datacenter
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3424225Z ##[endgroup]
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3424882Z ##[group]Runner Image
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3425602Z Image: windows-2025
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3426281Z Version: 20260413.84.1
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3427779Z Included Software: https://github.com/actions/runner-images/blob/win25/20260413.84/images/windows/Windows2025-Readme.md
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3430393Z Image Release: https://github.com/actions/runner-images/releases/tag/win25%2F20260413.84
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3431739Z ##[endgroup]
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3433406Z ##[group]GITHUB_TOKEN Permissions
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3435922Z Contents: read
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3436712Z Metadata: read
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3437646Z Packages: read
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3438534Z ##[endgroup]
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3441077Z Secret source: Actions
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3442397Z Prepare workflow directory
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3839126Z Prepare all required actions
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.3878654Z Getting action download info
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.6787832Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:35.9272682Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:36.2249406Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+  Backend Tests (windows-latest)	Set up job	2026-04-17T19:30:37.5439763Z Complete job name: Backend Tests (windows-latest)
+  Backend Tests (windows-latest)	Run actions/checkout@v4	锘?026-04-17T19:30:37.8123708Z ##[group]Run actions/checkout@v4
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8124554Z with:
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8124785Z   repository: wsolarq11/sys-monitor
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8125311Z   token: ***
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8125640Z   ssh-strict: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8126251Z   ssh-user: git
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8126477Z   persist-credentials: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8126786Z   clean: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8127090Z   sparse-checkout-cone-mode: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8127442Z   fetch-depth: 1
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8127737Z   fetch-tags: false
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8128027Z   show-progress: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8128331Z   lfs: false
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8128596Z   submodules: false
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8128972Z   set-safe-directory: true
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8129680Z env:
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8129966Z   CARGO_TERM_COLOR: always
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8130311Z   RUST_BACKTRACE: 1
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8130646Z   CARGO_INCREMENTAL: 0
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8131031Z   RUSTFLAGS: -C codegen-units=1
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.8131451Z ##[endgroup]
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.9921237Z Syncing repository: wsolarq11/sys-monitor
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.9923053Z ##[group]Getting Git version info
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:37.9923583Z Working directory is 'D:\a\sys-monitor\sys-monitor'
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.1008336Z [command]"C:\Program Files\Git\bin\git.exe" version
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.4433193Z git version 2.53.0.windows.2
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.4498627Z ##[endgroup]
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.4525523Z Temporarily overriding HOME='D:\a\_temp\28ff89c5-6be1-4853-9b9e-aba6ff82ded4' before making global git config changes
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.4526676Z Adding repository directory to the temporary git global config as a safe directory
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.4538678Z [command]"C:\Program Files\Git\bin\git.exe" config --global --add safe.directory D:\a\sys-monitor\sys-monitor
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.5189517Z Deleting the contents of 'D:\a\sys-monitor\sys-monitor'
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.5196466Z ##[group]Initializing the repository
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.5206696Z [command]"C:\Program Files\Git\bin\git.exe" init D:\a\sys-monitor\sys-monitor
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.6079203Z Initialized empty Git repository in D:/a/sys-monitor/sys-monitor/.git/
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.6135749Z [command]"C:\Program Files\Git\bin\git.exe" remote add origin https://github.com/wsolarq11/sys-monitor
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.6668183Z ##[endgroup]
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.6668641Z ##[group]Disabling automatic garbage collection
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.6683552Z [command]"C:\Program Files\Git\bin\git.exe" config --local gc.auto 0
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.7021678Z ##[endgroup]
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.7022268Z ##[group]Setting up auth
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.7022980Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp core\.sshCommand
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:38.7357917Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :\""
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:42.6649393Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:42.6955815Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "sh -c \"git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :\""
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.2451538Z [command]"C:\Program Files\Git\bin\git.exe" config --local --name-only --get-regexp ^includeIf\.gitdir:
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.2742388Z [command]"C:\Program Files\Git\bin\git.exe" submodule foreach --recursive "git config --local --show-origin --name-only --get-regexp remote.origin.url"
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.8289436Z [command]"C:\Program Files\Git\bin\git.exe" config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ***"
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.8595838Z ##[endgroup]
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.8596799Z ##[group]Fetching the repository
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:43.8610178Z [command]"C:\Program Files\Git\bin\git.exe" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8e55cf764f480850f35a4af3f3e7377dbbc2a509:refs/remotes/origin/main
+  Backend Tests (windows-latest)	Run actions/checkout@v4	2026-04-17T19:30:46.7918485Z From https://github.com/wsolarq11/sys-monitor
+
