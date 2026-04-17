@@ -216,7 +216,7 @@ class TestRunnerAgent:
                 result["errors"].append(f"{error_match.group(1)} errors occurred")  # type: ignore
 
             result["total_tests"] = (  # type: ignore
-                result["passed"] + result["failed"] + result["skipped"]
+                int(result["passed"]) + int(result["failed"]) + int(result["skipped"])  # type: ignore
             )
 
             # 提取失败详情
@@ -250,7 +250,7 @@ class TestRunnerAgent:
             if fail_match:
                 result["failed"] = int(fail_match.group(1))
 
-            result["total_tests"] = result["passed"] + result["failed"]
+            result["total_tests"] = int(result["passed"]) + int(result["failed"])  # type: ignore
 
         return result
 
