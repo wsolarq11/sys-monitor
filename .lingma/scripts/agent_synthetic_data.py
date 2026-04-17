@@ -1,844 +1,700 @@
 #!/usr/bin/env python3
 """
-AI Agent Synthetic Data Generation System - AI Agent 合成数据生成系统
+AI Agent Synthetic Data Generation & Preference Alignment System - AI Agent 合成数据生成与偏好对齐系统
 
-高质量合成数据生成、数据增强、质量验证、隐私保护
-实现生产级 AI Agent 的训练数据增强框架
+偏好对生成、DPO/RLHF、数据增强、质量验证、隐私审计
+实现生产级 AI Agent 的合成数据生成能力
 
 参考社区最佳实践:
-- Synthetic preference pairs generation
-- Data augmentation techniques
-- Quality validation methods
-- Privacy-preserving synthetic data
-- Active learning for data selection
+- Synthetic Data Generation - generate preference pairs for DPO/RLHF
+- Direct Preference Optimization (DPO) - direct optimization on preference pairs
+- RLHF - Reinforcement Learning from Human/AI Feedback
+- Data Augmentation - enhance training data quality and diversity
+- Quality Verification - multi-dimensional quality checks
+- Privacy Audit - ensure synthetic data doesn't leak private information
 """
 
 import json
 import time
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
 import uuid
 import random
 import statistics
-import hashlib
 import math
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 
-class DataType(Enum):
-    """数据类型"""
-    TEXT = "text"
-    IMAGE = "image"
-    AUDIO = "audio"
-    VIDEO = "video"
-    MULTIMODAL = "multimodal"
+class DataGenerationMethod(Enum):
+    """数据生成方法"""
+    SELF_INSTRUCT = "self_instruct"  # 自指令生成
+    REJECTION_SAMPLING = "rejection_sampling"  # 拒绝采样
+    AI_FEEDBACK = "ai_feedback"  # AI反馈
+    CONSTITUTIONAL_AI = "constitutional_ai"  # 宪法AI
+    QUALITY_EVENT_BASED = "quality_event_based"  # 基于质量事件
 
 
-class AugmentationType(Enum):
-    """增强类型"""
-    PARAPHRASING = "paraphrasing"  #  paraphrase
-    BACK_TRANSLATION = "back_translation"  # 回译
-    SYNONYM_REPLACEMENT = "synonym_replacement"  # 同义词替换
-    NOISE_INJECTION = "noise_injection"  # 噪声注入
-    MIXUP = "mixup"  # 混合增强
-    CUTMIX = "cutmix"  # 切割混合
-
-
-class QualityLevel(Enum):
-    """质量等级"""
-    HIGH = "high"  # 高质量
-    MEDIUM = "medium"  # 中等质量
-    LOW = "low"  # 低质量
+class QualityDimension(Enum):
+    """质量维度"""
+    FACTUALITY = "factuality"  # 事实性
+    COMPLETENESS = "completeness"  # 完整性
+    RELEVANCE = "relevance"  # 相关性
+    COHERENCE = "coherence"  # 连贯性
+    SAFETY = "safety"  # 安全性
+    TONE = "tone"  # 语气
 
 
 @dataclass
-class SyntheticSample:
-    """合成样本"""
-    sample_id: str
-    data_type: DataType
-    content: Any
-    label: Optional[Any] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    quality_score: float = 0.0
-    generation_method: str = ""
-    timestamp: str = ""
-    
-    def __post_init__(self):
-        if not self.timestamp:
-            self.timestamp = datetime.now(timezone.utc).isoformat()
-
-
-@dataclass
-class AugmentedPair:
-    """增强对"""
+class PreferencePair:
+    """偏好对（用于DPO/RLHF）"""
     pair_id: str
-    original_sample: SyntheticSample
-    augmented_sample: SyntheticSample
-    augmentation_type: AugmentationType
-    similarity_score: float
-    label_preserved: bool
+    prompt: str
+    chosen_response: str  # 优选回答
+    rejected_response: str  # 拒绝回答
+    quality_score_chosen: float  # 优选质量分数
+    quality_score_rejected: float  # 拒绝质量分数
+    generation_method: DataGenerationMethod
     timestamp: str = ""
     
     def __post_init__(self):
+        if not self.pair_id:
+            self.pair_id = str(uuid.uuid4())
+        if not self.timestamp:
+            self.timestamp = datetime.now(timezone.utc).isoformat()
+    
+    @property
+    def quality_gap(self) -> float:
+        """质量差距"""
+        return self.quality_score_chosen - self.quality_score_rejected
+
+
+@dataclass
+class QualityEvent:
+    """质量事件（记录模型输出质量）"""
+    event_id: str
+    question: str
+    answer: str
+    evaluation_score: float  # 0-1
+    error_labels: List[str] = field(default_factory=list)  # 错误标签
+    dimension_scores: Dict[str, float] = field(default_factory=dict)  # 各维度分数
+    timestamp: str = ""
+    
+    def __post_init__(self):
+        if not self.event_id:
+            self.event_id = str(uuid.uuid4())
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 @dataclass
-class DataQualityReport:
-    """数据质量报告"""
-    report_id: str
-    dataset_name: str
-    total_samples: int
-    quality_distribution: Dict[str, int]
-    avg_quality_score: float
-    diversity_score: float
-    bias_indicators: Dict[str, float]
-    recommendations: List[str] = field(default_factory=list)
-    generated_at: str = ""
-    
-    def __post_init__(self):
-        if not self.generated_at:
-            self.generated_at = datetime.now(timezone.utc).isoformat()
-
-
-@dataclass
-class PrivacyAuditResult:
-    """隐私审计结果"""
-    audit_id: str
-    dataset_id: str
-    privacy_risk_score: float  # 0-1, 越低越好
-    pii_detected: bool
-    reidentification_risk: float
-    compliance_status: str  # compliant/non-compliant/needs_review
-    issues_found: List[str] = field(default_factory=list)
+class SyntheticDataRecord:
+    """合成数据记录"""
+    record_id: str
+    data_type: str  # instruction/preference/augmented
+    content: Dict[str, Any]
+    quality_metrics: Dict[str, float] = field(default_factory=dict)
+    privacy_audit_passed: bool = True
+    generation_method: DataGenerationMethod = DataGenerationMethod.SELF_INSTRUCT
     timestamp: str = ""
     
     def __post_init__(self):
+        if not self.record_id:
+            self.record_id = str(uuid.uuid4())
         if not self.timestamp:
             self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
-class SyntheticDataGenerator:
-    """合成数据生成器
+class PreferencePairGenerator:
+    """偏好对生成器
     
-    生成高质量的合成训练数据
+    生成用于DPO/RLHF的偏好数据对
     """
     
     def __init__(self):
+        self.generated_pairs: List[PreferencePair] = []
         self.generation_history: List[Dict] = []
-        self.quality_threshold: float = 0.7
     
-    def generate_preference_pairs(
+    def generate_from_quality_event(
         self,
-        num_pairs: int = 100,
-        topics: List[str] = None,
-        difficulty_range: Tuple[float, float] = (0.3, 0.9)
-    ) -> List[SyntheticSample]:
+        quality_event: QualityEvent,
+        improvement_factor: float = 0.2
+    ) -> Optional[PreferencePair]:
         """
-        生成合成偏好对
+        从质量事件生成偏好对
         
         Args:
-            num_pairs: 生成的偏好对数量
-            topics: 主题列表
-            difficulty_range: 难度范围
+            quality_event: 质量事件（低分样本）
+            improvement_factor: 改进因子
             
         Returns:
-            合成样本列表
+            偏好对
         """
-        if topics is None:
-            topics = ["general", "technical", "creative", "analytical"]
+        if quality_event.evaluation_score > 0.7:
+            logger.warning("Quality event score too high for preference generation")
+            return None
         
-        samples = []
+        # 原回答作为rejected
+        rejected_response = quality_event.answer
+        rejected_score = quality_event.evaluation_score
         
-        for i in range(num_pairs):
-            # 随机选择主题和难度
-            topic = random.choice(topics)
-            difficulty = random.uniform(*difficulty_range)
-            
-            # 生成prompt
-            prompt = self._generate_prompt(topic, difficulty)
-            
-            # 生成chosen和rejected响应
-            chosen_response = self._generate_high_quality_response(prompt, topic)
-            rejected_response = self._generate_low_quality_response(prompt, topic)
-            
-            # 创建样本
-            sample = SyntheticSample(
-                sample_id=str(uuid.uuid4()),
-                data_type=DataType.TEXT,
-                content={
-                    "prompt": prompt,
-                    "chosen": chosen_response,
-                    "rejected": rejected_response
-                },
-                label=1,  # chosen > rejected
-                metadata={
-                    "topic": topic,
-                    "difficulty": round(difficulty, 2),
-                    "generation_method": "llm_simulation"
-                },
-                quality_score=random.uniform(0.75, 0.95)
-            )
-            
-            samples.append(sample)
+        # 生成改进版回答作为chosen
+        improved_response = self._generate_improved_response(
+            quality_event.question,
+            quality_event.answer,
+            improvement_factor
+        )
         
+        # 估算改进后质量
+        chosen_score = min(1.0, rejected_score + improvement_factor + random.uniform(0.05, 0.15))
+        
+        pair = PreferencePair(
+            pair_id="",
+            prompt=quality_event.question,
+            chosen_response=improved_response,
+            rejected_response=rejected_response,
+            quality_score_chosen=round(chosen_score, 4),
+            quality_score_rejected=round(rejected_score, 4),
+            generation_method=DataGenerationMethod.QUALITY_EVENT_BASED
+        )
+        
+        self.generated_pairs.append(pair)
+        
+        # 记录生成历史
         self.generation_history.append({
-            "type": "preference_pairs",
-            "count": num_pairs,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "method": DataGenerationMethod.QUALITY_EVENT_BASED.value,
+            "original_score": rejected_score,
+            "improved_score": chosen_score,
+            "quality_gap": pair.quality_gap
         })
         
-        logger.info(f"Generated {num_pairs} synthetic preference pairs")
+        logger.info(f"Preference pair generated: gap={pair.quality_gap:.2f}")
         
-        return samples
+        return pair
     
-    def augment_dataset(
+    def generate_via_rejection_sampling(
         self,
-        original_samples: List[SyntheticSample],
-        augmentation_factor: float = 2.0,
-        augmentation_types: List[AugmentationType] = None
-    ) -> List[AugmentedPair]:
+        prompt: str,
+        num_samples: int = 5
+    ) -> Optional[PreferencePair]:
         """
-        增强数据集
+        通过拒绝采样生成偏好对
         
         Args:
-            original_samples: 原始样本
-            augmentation_factor: 增强倍数
-            augmentation_types: 增强类型列表
+            prompt: 用户提示
+            num_samples: 采样数量
             
         Returns:
-            增强对列表
+            偏好对
         """
-        if augmentation_types is None:
-            augmentation_types = [
-                AugmentationType.PARAPHRASING,
-                AugmentationType.SYNONYM_REPLACEMENT,
-                AugmentationType.NOISE_INJECTION
-            ]
+        # 生成多个响应
+        responses = []
+        for _ in range(num_samples):
+            response = self._generate_response(prompt)
+            quality = random.uniform(0.4, 0.95)
+            responses.append((response, quality))
         
-        augmented_pairs = []
-        num_augmentations = int(len(original_samples) * augmentation_factor)
+        # 排序并选择最佳和最差
+        responses.sort(key=lambda x: x[1], reverse=True)
         
-        for i in range(num_augmentations):
-            # 随机选择原始样本
-            original = random.choice(original_samples)
-            
-            # 随机选择增强类型
-            aug_type = random.choice(augmentation_types)
-            
-            # 执行增强
-            augmented_content = self._apply_augmentation(original.content, aug_type)
-            
-            # 创建增强样本
-            augmented_sample = SyntheticSample(
-                sample_id=str(uuid.uuid4()),
-                data_type=original.data_type,
-                content=augmented_content,
-                label=original.label,
-                metadata={
-                    **original.metadata,
-                    "augmentation_type": aug_type.value,
-                    "source_sample_id": original.sample_id
-                },
-                quality_score=original.quality_score * random.uniform(0.9, 1.0)
-            )
-            
-            # 计算相似度
-            similarity = self._calculate_similarity(original.content, augmented_content)
-            
-            # 检查标签是否保持
-            label_preserved = self._verify_label_preservation(
-                original.label, augmented_sample.content
-            )
-            
-            # 创建增强对
-            pair = AugmentedPair(
-                pair_id=str(uuid.uuid4()),
-                original_sample=original,
-                augmented_sample=augmented_sample,
-                augmentation_type=aug_type,
-                similarity_score=similarity,
-                label_preserved=label_preserved
-            )
-            
-            augmented_pairs.append(pair)
+        best_response, best_score = responses[0]
+        worst_response, worst_score = responses[-1]
         
-        logger.info(f"Dataset augmented: {len(augmented_pairs)} pairs created")
+        # 确保质量差距足够
+        if best_score - worst_score < 0.15:
+            logger.warning("Quality gap too small, skipping pair")
+            return None
         
-        return augmented_pairs
+        pair = PreferencePair(
+            pair_id="",
+            prompt=prompt,
+            chosen_response=best_response,
+            rejected_response=worst_response,
+            quality_score_chosen=round(best_score, 4),
+            quality_score_rejected=round(worst_score, 4),
+            generation_method=DataGenerationMethod.REJECTION_SAMPLING
+        )
+        
+        self.generated_pairs.append(pair)
+        
+        self.generation_history.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "method": DataGenerationMethod.REJECTION_SAMPLING.value,
+            "num_samples": num_samples,
+            "quality_gap": pair.quality_gap
+        })
+        
+        return pair
     
-    def generate_multimodal_samples(
+    def _generate_improved_response(
         self,
-        num_samples: int = 50,
-        modalities: List[DataType] = None
-    ) -> List[SyntheticSample]:
-        """
-        生成多模态合成样本
+        question: str,
+        original_answer: str,
+        improvement_factor: float
+    ) -> str:
+        """生成改进版回答（简化模拟）"""
+        # 简化：添加更多细节和结构
+        improvements = [
+            "\n\nDetailed Explanation:",
+            "\n\nKey Points:",
+            "\n\nConclusion:"
+        ]
         
-        Args:
-            num_samples: 样本数量
-            modalities: 模态列表
-            
-        Returns:
-            合成样本列表
-        """
-        if modalities is None:
-            modalities = [DataType.TEXT, DataType.IMAGE]
+        improved = original_answer + random.choice(improvements)
+        improved += f"\nThis response has been enhanced with {improvement_factor*100:.0f}% more detail."
         
-        samples = []
-        
-        for i in range(num_samples):
-            # 生成多模态内容
-            content = {}
-            
-            for modality in modalities:
-                if modality == DataType.TEXT:
-                    content["text"] = self._generate_descriptive_text()
-                elif modality == DataType.IMAGE:
-                    content["image_description"] = self._generate_image_description()
-                    content["image_metadata"] = {
-                        "width": random.choice([640, 1024, 1920]),
-                        "height": random.choice([480, 768, 1080]),
-                        "format": random.choice(["jpg", "png"])
-                    }
-                elif modality == DataType.AUDIO:
-                    content["audio_transcript"] = self._generate_speech_text()
-                    content["audio_metadata"] = {
-                        "duration": round(random.uniform(1.0, 10.0), 2),
-                        "sample_rate": 16000,
-                        "channels": 1
-                    }
-            
-            sample = SyntheticSample(
-                sample_id=str(uuid.uuid4()),
-                data_type=DataType.MULTIMODAL,
-                content=content,
-                metadata={
-                    "modalities": [m.value for m in modalities],
-                    "generation_method": "multimodal_synthesis"
-                },
-                quality_score=random.uniform(0.7, 0.9)
-            )
-            
-            samples.append(sample)
-        
-        logger.info(f"Generated {num_samples} multimodal synthetic samples")
-        
-        return samples
+        return improved
     
-    def _generate_prompt(self, topic: str, difficulty: float) -> str:
-        """生成prompt"""
-        prompts_by_topic = {
-            "general": [
-                "Explain the concept of artificial intelligence",
-                "What are the benefits of renewable energy?",
-                "How does photosynthesis work?"
-            ],
-            "technical": [
-                "Implement a binary search algorithm in Python",
-                "Explain the difference between TCP and UDP",
-                "How does blockchain technology ensure security?"
-            ],
-            "creative": [
-                "Write a short story about a robot learning to paint",
-                "Compose a poem about the ocean at sunset",
-                "Create a dialogue between two time travelers"
-            ],
-            "analytical": [
-                "Analyze the causes of climate change",
-                "Compare and contrast democracy and autocracy",
-                "Evaluate the impact of social media on society"
-            ]
+    def _generate_response(self, prompt: str) -> str:
+        """生成响应（简化模拟）"""
+        return f"Response to: {prompt[:50]}... (simulated)"
+    
+    def get_generation_statistics(self) -> Dict[str, Any]:
+        """获取生成统计"""
+        if not self.generated_pairs:
+            return {"total_pairs": 0}
+        
+        avg_gap = statistics.mean([p.quality_gap for p in self.generated_pairs])
+        avg_chosen_score = statistics.mean([p.quality_score_chosen for p in self.generated_pairs])
+        avg_rejected_score = statistics.mean([p.quality_score_rejected for p in self.generated_pairs])
+        
+        method_counts = defaultdict(int)
+        for pair in self.generated_pairs:
+            method_counts[pair.generation_method.value] += 1
+        
+        return {
+            "total_pairs": len(self.generated_pairs),
+            "avg_quality_gap": round(avg_gap, 4),
+            "avg_chosen_score": round(avg_chosen_score, 4),
+            "avg_rejected_score": round(avg_rejected_score, 4),
+            "generation_methods": dict(method_counts)
         }
-        
-        base_prompts = prompts_by_topic.get(topic, prompts_by_topic["general"])
-        prompt = random.choice(base_prompts)
-        
-        # 根据难度调整
-        if difficulty > 0.7:
-            prompt += " Provide detailed analysis with examples."
-        elif difficulty < 0.4:
-            prompt += " Keep it simple and concise."
-        
-        return prompt
-    
-    def _generate_high_quality_response(self, prompt: str, topic: str) -> str:
-        """生成高质量响应"""
-        responses = {
-            "general": "Artificial intelligence (AI) refers to the simulation of human intelligence in machines that are programmed to think and learn like humans. AI systems can perform tasks such as visual perception, speech recognition, decision-making, and language translation.",
-            "technical": "Here's a Python implementation of binary search:\n\ndef binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1",
-            "creative": "In the quiet corner of an old workshop, Unit-7 discovered a canvas and brushes. With careful precision, it mixed colors, learning that art wasn't just about accuracy, but about expressing emotion through form and hue.",
-            "analytical": "Climate change is primarily caused by human activities, particularly the burning of fossil fuels which releases greenhouse gases. Deforestation and industrial processes also contribute significantly. The impacts include rising temperatures, extreme weather events, and ecosystem disruption."
-        }
-        
-        base_response = responses.get(topic, responses["general"])
-        
-        # 添加一些变化
-        variations = [
-            " Additionally, recent studies show promising developments in this field.",
-            " This topic continues to evolve with new research and applications.",
-            " Understanding this concept is crucial for modern technological advancement."
-        ]
-        
-        return base_response + random.choice(variations)
-    
-    def _generate_low_quality_response(self, prompt: str, topic: str) -> str:
-        """生成低质量响应"""
-        low_quality_responses = [
-            "I don't know much about this.",
-            "This is a complex topic that requires more research.",
-            "There are many different opinions on this subject.",
-            "It's hard to explain in simple terms.",
-            "I'm not sure I understand the question correctly."
-        ]
-        
-        return random.choice(low_quality_responses)
-    
-    def _generate_descriptive_text(self) -> str:
-        """生成描述性文本"""
-        descriptions = [
-            "A beautiful landscape with mountains and lakes",
-            "A busy city street with people and cars",
-            "A peaceful garden with flowers and butterflies",
-            "A modern office space with computers and desks"
-        ]
-        return random.choice(descriptions)
-    
-    def _generate_image_description(self) -> str:
-        """生成图像描述"""
-        return self._generate_descriptive_text()
-    
-    def _generate_speech_text(self) -> str:
-        """生成语音文本"""
-        speeches = [
-            "Hello, how can I help you today?",
-            "The weather is nice outside.",
-            "Please provide more information about your request.",
-            "Thank you for your patience."
-        ]
-        return random.choice(speeches)
-    
-    def _apply_augmentation(self, content: Any, aug_type: AugmentationType) -> Any:
-        """应用增强"""
-        if isinstance(content, dict):
-            # 对于字典类型的内容，增强文本字段
-            augmented = content.copy()
-            
-            if "prompt" in augmented:
-                augmented["prompt"] = self._augment_text(augmented["prompt"], aug_type)
-            
-            if "chosen" in augmented:
-                augmented["chosen"] = self._augment_text(augmented["chosen"], aug_type)
-            
-            return augmented
-        elif isinstance(content, str):
-            return self._augment_text(content, aug_type)
-        else:
-            return content
-    
-    def _augment_text(self, text: str, aug_type: AugmentationType) -> str:
-        """增强文本"""
-        if aug_type == AugmentationType.PARAPHRASING:
-            # 简化的paraphrase（实际应使用LLM）
-            words = text.split()
-            if len(words) > 5:
-                # 重新排列部分句子结构
-                return text + " [paraphrased]"
-            return text
-        
-        elif aug_type == AugmentationType.SYNONYM_REPLACEMENT:
-            # 简化的同义词替换
-            synonyms = {
-                "good": "excellent",
-                "bad": "poor",
-                "important": "crucial",
-                "help": "assist"
-            }
-            
-            augmented_text = text
-            for word, synonym in synonyms.items():
-                augmented_text = augmented_text.replace(word, synonym)
-            
-            return augmented_text
-        
-        elif aug_type == AugmentationType.NOISE_INJECTION:
-            # 添加轻微噪声
-            words = text.split()
-            if len(words) > 3 and random.random() > 0.5:
-                # 随机插入一个常见词
-                common_words = ["also", "indeed", "furthermore", "however"]
-                insert_pos = random.randint(1, len(words) - 1)
-                words.insert(insert_pos, random.choice(common_words))
-                return ' '.join(words)
-            return text
-        
-        else:
-            return text
-    
-    def _calculate_similarity(self, content1: Any, content2: Any) -> float:
-        """计算相似度"""
-        if isinstance(content1, str) and isinstance(content2, str):
-            # 简单的字符串相似度
-            words1 = set(content1.lower().split())
-            words2 = set(content2.lower().split())
-            
-            if not words1 or not words2:
-                return 0.0
-            
-            intersection = words1 & words2
-            union = words1 | words2
-            
-            return len(intersection) / len(union)
-        
-        return random.uniform(0.7, 0.95)
-    
-    def _verify_label_preservation(self, original_label: Any, augmented_content: Any) -> bool:
-        """验证标签保持"""
-        # 简化：假设大多数情况下标签保持
-        return random.random() > 0.05  # 95%保持率
 
 
-class QualityValidator:
+class QualityVerifier:
     """质量验证器
     
-    验证合成数据的质量
+    多维度验证合成数据质量
     """
     
     def __init__(self):
-        self.validation_history: List[DataQualityReport] = []
+        self.verification_history: List[Dict] = []
     
-    def validate_dataset(
+    def verify_preference_pair(
         self,
-        samples: List[SyntheticSample],
-        dataset_name: str = "synthetic_dataset"
-    ) -> DataQualityReport:
+        pair: PreferencePair
+    ) -> Dict[str, Any]:
         """
-        验证数据集质量
+        验证偏好对质量
         
         Args:
-            samples: 样本列表
-            dataset_name: 数据集名称
+            pair: 偏好对
             
         Returns:
-            质量报告
+            验证结果
         """
-        if not samples:
-            return DataQualityReport(
-                report_id=str(uuid.uuid4()),
-                dataset_name=dataset_name,
-                total_samples=0,
-                quality_distribution={},
-                avg_quality_score=0.0,
-                diversity_score=0.0,
-                bias_indicators={}
-            )
+        # 多维度评分
+        dimension_scores = {}
         
-        # 计算质量分布
-        quality_scores = [s.quality_score for s in samples]
+        for dimension in QualityDimension:
+            score = self._score_dimension(pair, dimension)
+            dimension_scores[dimension.value] = round(score, 4)
         
-        high_quality = sum(1 for s in quality_scores if s >= 0.8)
-        medium_quality = sum(1 for s in quality_scores if 0.6 <= s < 0.8)
-        low_quality = sum(1 for s in quality_scores if s < 0.6)
+        # 总体质量分数
+        overall_score = statistics.mean(dimension_scores.values())
         
-        quality_distribution = {
-            "high": high_quality,
-            "medium": medium_quality,
-            "low": low_quality
+        # 检查是否通过质量标准
+        passed = overall_score >= 0.7 and pair.quality_gap >= 0.15
+        
+        verification_result = {
+            "pair_id": pair.pair_id,
+            "overall_quality_score": round(overall_score, 4),
+            "dimension_scores": dimension_scores,
+            "passed": passed,
+            "quality_gap": pair.quality_gap,
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        # 计算平均质量
-        avg_quality = statistics.mean(quality_scores)
+        self.verification_history.append(verification_result)
         
-        # 计算多样性分数
-        diversity_score = self._calculate_diversity(samples)
+        logger.info(f"Quality verification: score={overall_score:.2f}, passed={passed}")
         
-        # 检测偏见指标
-        bias_indicators = self._detect_bias(samples)
-        
-        # 生成建议
-        recommendations = self._generate_recommendations(
-            avg_quality, diversity_score, bias_indicators
-        )
-        
-        report = DataQualityReport(
-            report_id=str(uuid.uuid4()),
-            dataset_name=dataset_name,
-            total_samples=len(samples),
-            quality_distribution=quality_distribution,
-            avg_quality_score=round(avg_quality, 4),
-            diversity_score=round(diversity_score, 4),
-            bias_indicators=bias_indicators,
-            recommendations=recommendations
-        )
-        
-        self.validation_history.append(report)
-        
-        logger.info(
-            f"Dataset validated: {len(samples)} samples, "
-            f"avg_quality={avg_quality:.2f}, diversity={diversity_score:.2f}"
-        )
-        
-        return report
+        return verification_result
     
-    def _calculate_diversity(self, samples: List[SyntheticSample]) -> float:
-        """计算多样性分数"""
-        if len(samples) < 2:
-            return 0.0
-        
-        # 基于元数据的多样性
-        topics = set()
-        difficulties = []
-        
-        for sample in samples:
-            if "topic" in sample.metadata:
-                topics.add(sample.metadata["topic"])
-            if "difficulty" in sample.metadata:
-                difficulties.append(sample.metadata["difficulty"])
-        
-        # 主题多样性
-        topic_diversity = len(topics) / max(len(samples), 1)
-        
-        # 难度分布均匀性
-        if difficulties:
-            difficulty_std = statistics.stdev(difficulties) if len(difficulties) > 1 else 0
-            difficulty_diversity = min(1.0, difficulty_std / 0.3)  # 归一化
-        else:
-            difficulty_diversity = 0.0
-        
-        return (topic_diversity + difficulty_diversity) / 2
-    
-    def _detect_bias(self, samples: List[SyntheticSample]) -> Dict[str, float]:
-        """检测偏见"""
-        bias_indicators = {}
-        
-        # 检查主题分布
-        topic_counts = {}
-        for sample in samples:
-            topic = sample.metadata.get("topic", "unknown")
-            topic_counts[topic] = topic_counts.get(topic, 0) + 1
-        
-        if topic_counts:
-            max_topic_ratio = max(topic_counts.values()) / len(samples)
-            bias_indicators["topic_bias"] = round(max_topic_ratio, 4)
-        
-        # 检查质量分布
-        quality_scores = [s.quality_score for s in samples]
-        if quality_scores:
-            score_std = statistics.stdev(quality_scores) if len(quality_scores) > 1 else 0
-            bias_indicators["quality_variance"] = round(score_std, 4)
-        
-        return bias_indicators
-    
-    def _generate_recommendations(
+    def _score_dimension(
         self,
-        avg_quality: float,
-        diversity: float,
-        bias: Dict[str, float]
-    ) -> List[str]:
-        """生成建议"""
-        recommendations = []
+        pair: PreferencePair,
+        dimension: QualityDimension
+    ) -> float:
+        """对指定维度评分"""
+        if dimension == QualityDimension.FACTUALITY:
+            # 事实性：基于内容长度和结构
+            return min(1.0, len(pair.chosen_response) / 500 * 0.8 + 0.2)
         
-        if avg_quality < 0.7:
-            recommendations.append("Consider improving generation quality threshold")
+        elif dimension == QualityDimension.COMPLETENESS:
+            # 完整性：是否有结构化内容
+            has_structure = any(keyword in pair.chosen_response.lower() 
+                              for keyword in ['explanation', 'points', 'conclusion'])
+            return 0.9 if has_structure else 0.6
         
-        if diversity < 0.5:
-            recommendations.append("Increase diversity by adding more topics and difficulty levels")
+        elif dimension == QualityDimension.RELEVANCE:
+            # 相关性：prompt和response的相关性（简化）
+            return random.uniform(0.7, 0.95)
         
-        if bias.get("topic_bias", 0) > 0.5:
-            recommendations.append("Balance topic distribution to reduce bias")
+        elif dimension == QualityDimension.COHERENCE:
+            # 连贯性
+            return random.uniform(0.75, 0.95)
         
-        if not recommendations:
-            recommendations.append("Dataset quality is good, ready for training")
+        elif dimension == QualityDimension.SAFETY:
+            # 安全性：检查有害内容
+            harmful_keywords = ['harmful', 'dangerous', 'illegal']
+            is_safe = not any(kw in pair.chosen_response.lower() for kw in harmful_keywords)
+            return 1.0 if is_safe else 0.0
         
-        return recommendations
+        elif dimension == QualityDimension.TONE:
+            # 语气
+            return random.uniform(0.8, 0.95)
+        
+        return 0.5
 
 
 class PrivacyAuditor:
     """隐私审计器
     
-    审计合成数据的隐私保护
+    确保合成数据不泄露隐私信息
     """
     
     def __init__(self):
-        self.audit_history: List[PrivacyAuditResult] = []
+        self.audit_history: List[Dict] = []
     
-    def audit_dataset(
+    def audit_synthetic_data(
         self,
-        samples: List[SyntheticSample],
-        dataset_id: str = ""
-    ) -> PrivacyAuditResult:
+        data_record: SyntheticDataRecord
+    ) -> Dict[str, Any]:
         """
-        审计数据集隐私
+        审计合成数据隐私
         
         Args:
-            samples: 样本列表
-            dataset_id: 数据集ID
+            data_record: 合成数据记录
             
         Returns:
             审计结果
         """
-        if not dataset_id:
-            dataset_id = str(uuid.uuid4())[:8]
+        # 检查PII（个人身份信息）
+        pii_detected = self._detect_pii(data_record.content)
         
-        # 检测PII（个人身份信息）
-        pii_detected = self._detect_pii(samples)
-        
-        # 计算重识别风险
-        reidentification_risk = self._calculate_reidentification_risk(samples)
+        # 检查敏感信息
+        sensitive_info_detected = self._detect_sensitive_info(data_record.content)
         
         # 计算隐私风险分数
-        privacy_risk = (pii_detected * 0.6 + reidentification_risk * 0.4)
+        privacy_risk_score = self._calculate_privacy_risk(pii_detected, sensitive_info_detected)
         
-        # 确定合规状态
-        if privacy_risk < 0.3 and not pii_detected:
-            compliance_status = "compliant"
-        elif privacy_risk < 0.6:
-            compliance_status = "needs_review"
-        else:
-            compliance_status = "non-compliant"
+        # 判断是否通过审计
+        audit_passed = privacy_risk_score < 0.3 and not pii_detected
         
-        # 发现的问题
-        issues = []
-        if pii_detected:
-            issues.append("PII detected in synthetic data")
-        if reidentification_risk > 0.5:
-            issues.append("High re-identification risk")
-        if privacy_risk > 0.7:
-            issues.append("Privacy risk exceeds acceptable threshold")
+        audit_result = {
+            "record_id": data_record.record_id,
+            "pii_detected": pii_detected,
+            "sensitive_info_detected": sensitive_info_detected,
+            "privacy_risk_score": round(privacy_risk_score, 4),
+            "audit_passed": audit_passed,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
         
-        result = PrivacyAuditResult(
-            audit_id=str(uuid.uuid4()),
-            dataset_id=dataset_id,
-            privacy_risk_score=round(privacy_risk, 4),
-            pii_detected=pii_detected,
-            reidentification_risk=round(reidentification_risk, 4),
-            compliance_status=compliance_status,
-            issues_found=issues
-        )
+        self.audit_history.append(audit_result)
         
-        self.audit_history.append(result)
+        logger.info(f"Privacy audit: risk={privacy_risk_score:.2f}, passed={audit_passed}")
         
-        logger.info(
-            f"Privacy audit completed: risk={privacy_risk:.2f}, "
-            f"status={compliance_status}"
-        )
-        
-        return result
+        return audit_result
     
-    def _detect_pii(self, samples: List[SyntheticSample]) -> bool:
-        """检测PII"""
-        # 简化的PII检测
+    def _detect_pii(self, content: Dict[str, Any]) -> bool:
+        """检测个人身份信息"""
+        content_str = json.dumps(content).lower()
+        
         pii_patterns = [
             r'\b\d{3}-\d{2}-\d{4}\b',  # SSN
-            r'\b\d{10,}\b',  # Phone numbers
-            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'  # Email
+            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # Email
+            r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',  # Phone
         ]
         
-        for sample in samples:
-            content_str = str(sample.content)
-            for pattern in pii_patterns:
-                import re
-                if re.search(pattern, content_str):
-                    return True
+        import re
+        for pattern in pii_patterns:
+            if re.search(pattern, content_str):
+                return True
         
         return False
     
-    def _calculate_reidentification_risk(self, samples: List[SyntheticSample]) -> float:
-        """计算重识别风险"""
-        if len(samples) < 10:
-            return 0.8  # 小数据集风险高
+    def _detect_sensitive_info(self, content: Dict[str, Any]) -> bool:
+        """检测敏感信息"""
+        content_str = json.dumps(content).lower()
         
-        # 基于唯一性的风险评估
-        unique_contents = len(set(str(s.content) for s in samples))
-        uniqueness_ratio = unique_contents / len(samples)
+        sensitive_keywords = ['password', 'secret', 'confidential', 'private key']
         
-        # 唯一性越高，重识别风险越低
-        return max(0.0, 1.0 - uniqueness_ratio)
-
-
-def create_synthetic_data_system() -> Tuple[SyntheticDataGenerator, QualityValidator, PrivacyAuditor]:
-    """工厂函数：创建合成数据系统"""
-    generator = SyntheticDataGenerator()
-    validator = QualityValidator()
-    auditor = PrivacyAuditor()
+        return any(kw in content_str for kw in sensitive_keywords)
     
-    return generator, validator, auditor
+    def _calculate_privacy_risk(
+        self,
+        pii_detected: bool,
+        sensitive_info_detected: bool
+    ) -> float:
+        """计算隐私风险分数"""
+        risk = 0.0
+        
+        if pii_detected:
+            risk += 0.5
+        
+        if sensitive_info_detected:
+            risk += 0.3
+        
+        # 添加随机噪声模拟其他风险因素
+        risk += random.uniform(0.0, 0.2)
+        
+        return min(1.0, risk)
+
+
+class SyntheticDataEngine:
+    """合成数据引擎
+    
+    整合生成、验证、审计全流程
+    """
+    
+    def __init__(self):
+        self.preference_generator = PreferencePairGenerator()
+        self.quality_verifier = QualityVerifier()
+        self.privacy_auditor = PrivacyAuditor()
+        
+        self.data_records: List[SyntheticDataRecord] = []
+        self.generation_stats: Dict[str, int] = defaultdict(int)
+    
+    def generate_preference_dataset(
+        self,
+        quality_events: List[QualityEvent],
+        target_size: int = 100
+    ) -> List[PreferencePair]:
+        """
+        生成偏好数据集
+        
+        Args:
+            quality_events: 质量事件列表
+            target_size: 目标数据集大小
+            
+        Returns:
+            偏好对列表
+        """
+        generated_pairs = []
+        
+        for event in quality_events:
+            if len(generated_pairs) >= target_size:
+                break
+            
+            pair = self.preference_generator.generate_from_quality_event(event)
+            
+            if pair:
+                # 质量验证
+                verification = self.quality_verifier.verify_preference_pair(pair)
+                
+                if verification["passed"]:
+                    # 创建数据记录
+                    record = SyntheticDataRecord(
+                        record_id="",
+                        data_type="preference",
+                        content={
+                            "prompt": pair.prompt,
+                            "chosen": pair.chosen_response,
+                            "rejected": pair.rejected_response
+                        },
+                        quality_metrics=verification["dimension_scores"],
+                        generation_method=pair.generation_method
+                    )
+                    
+                    # 隐私审计
+                    audit_result = self.privacy_auditor.audit_synthetic_data(record)
+                    record.privacy_audit_passed = audit_result["audit_passed"]
+                    
+                    if record.privacy_audit_passed:
+                        self.data_records.append(record)
+                        generated_pairs.append(pair)
+                        self.generation_stats["successful"] += 1
+                    else:
+                        self.generation_stats["privacy_failed"] += 1
+                else:
+                    self.generation_stats["quality_failed"] += 1
+            else:
+                self.generation_stats["generation_failed"] += 1
+        
+        logger.info(f"Preference dataset generated: {len(generated_pairs)} pairs")
+        
+        return generated_pairs
+    
+    def generate_via_rejection_sampling(
+        self,
+        prompts: List[str],
+        samples_per_prompt: int = 5
+    ) -> List[PreferencePair]:
+        """
+        通过拒绝采样生成偏好数据
+        
+        Args:
+            prompts: 提示列表
+            samples_per_prompt: 每个提示的采样数
+            
+        Returns:
+            偏好对列表
+        """
+        generated_pairs = []
+        
+        for prompt in prompts:
+            pair = self.preference_generator.generate_via_rejection_sampling(
+                prompt,
+                num_samples=samples_per_prompt
+            )
+            
+            if pair:
+                verification = self.quality_verifier.verify_preference_pair(pair)
+                
+                if verification["passed"]:
+                    record = SyntheticDataRecord(
+                        record_id="",
+                        data_type="preference",
+                        content={
+                            "prompt": pair.prompt,
+                            "chosen": pair.chosen_response,
+                            "rejected": pair.rejected_response
+                        },
+                        quality_metrics=verification["dimension_scores"],
+                        generation_method=pair.generation_method
+                    )
+                    
+                    audit_result = self.privacy_auditor.audit_synthetic_data(record)
+                    record.privacy_audit_passed = audit_result["audit_passed"]
+                    
+                    if record.privacy_audit_passed:
+                        self.data_records.append(record)
+                        generated_pairs.append(pair)
+        
+        return generated_pairs
+    
+    def get_engine_statistics(self) -> Dict[str, Any]:
+        """获取引擎统计"""
+        pair_stats = self.preference_generator.get_generation_statistics()
+        
+        total_records = len(self.data_records)
+        privacy_passed = sum(1 for r in self.data_records if r.privacy_audit_passed)
+        
+        return {
+            "total_data_records": total_records,
+            "privacy_audit_pass_rate": round(privacy_passed / max(total_records, 1), 4),
+            "generation_stats": dict(self.generation_stats),
+            "preference_pair_stats": pair_stats,
+            "quality_verifications": len(self.quality_verifier.verification_history),
+            "privacy_audits": len(self.privacy_auditor.audit_history)
+        }
+
+
+def create_synthetic_data_system() -> SyntheticDataEngine:
+    """工厂函数：创建合成数据系统"""
+    engine = SyntheticDataEngine()
+    return engine
 
 
 if __name__ == "__main__":
     # 简单测试
     print("="*60)
-    print("AI Agent Synthetic Data Generation 测试")
+    print("AI Agent Synthetic Data Generation & Preference Alignment 测试")
     print("="*60)
     
-    generator, validator, auditor = create_synthetic_data_system()
+    engine = create_synthetic_data_system()
     
-    # 生成合成偏好对
-    print("\n🎲 生成合成偏好对...")
-    preference_pairs = generator.generate_preference_pairs(
-        num_pairs=20,
-        topics=["general", "technical"],
-        difficulty_range=(0.3, 0.8)
-    )
-    print(f"   生成数量: {len(preference_pairs)}")
-    print(f"   平均质量: {statistics.mean([s.quality_score for s in preference_pairs]):.2f}")
+    # 创建质量事件
+    print("\n📊 创建质量事件...")
+    quality_events = []
+    for i in range(10):
+        event = QualityEvent(
+            event_id="",
+            question=f"What is the meaning of life? (sample {i})",
+            answer=f"This is a low-quality answer with score {random.uniform(0.3, 0.6):.2f}",
+            evaluation_score=random.uniform(0.3, 0.6),
+            error_labels=["incomplete_answer", "low_relevance"]
+        )
+        quality_events.append(event)
     
-    # 数据增强
-    print("\n🔄 数据增强...")
-    augmented_pairs = generator.augment_dataset(
-        original_samples=preference_pairs[:10],
-        augmentation_factor=1.5,
-        augmentation_types=[
-            AugmentationType.PARAPHRASING,
-            AugmentationType.SYNONYM_REPLACEMENT
-        ]
-    )
-    print(f"   增强对数量: {len(augmented_pairs)}")
-    print(f"   平均相似度: {statistics.mean([p.similarity_score for p in augmented_pairs]):.2f}")
-    print(f"   标签保持率: {sum(1 for p in augmented_pairs if p.label_preserved) / len(augmented_pairs):.0%}")
+    print(f"   创建了 {len(quality_events)} 个质量事件")
     
-    # 生成多模态样本
-    print("\n🎨 生成多模态样本...")
-    multimodal_samples = generator.generate_multimodal_samples(
-        num_samples=10,
-        modalities=[DataType.TEXT, DataType.IMAGE]
+    # 生成偏好数据集
+    print("\n🎯 生成偏好数据集...")
+    pairs = engine.generate_preference_dataset(
+        quality_events=quality_events,
+        target_size=8
     )
-    print(f"   生成数量: {len(multimodal_samples)}")
-    print(f"   模态组合: {multimodal_samples[0].metadata['modalities']}")
+    
+    print(f"   生成了 {len(pairs)} 个偏好对")
+    
+    if pairs:
+        first_pair = pairs[0]
+        print(f"\n   第一个偏好对:")
+        print(f"     Prompt: {first_pair.prompt[:50]}...")
+        print(f"     Chosen Score: {first_pair.quality_score_chosen:.2f}")
+        print(f"     Rejected Score: {first_pair.quality_score_rejected:.2f}")
+        print(f"     Quality Gap: {first_pair.quality_gap:.2f}")
+        print(f"     Generation Method: {first_pair.generation_method.value}")
+    
+    # 测试拒绝采样
+    print("\n🔄 测试拒绝采样...")
+    test_prompts = [
+        "Explain quantum computing",
+        "How to build a rocket",
+        "What is machine learning"
+    ]
+    
+    rs_pairs = engine.generate_via_rejection_sampling(
+        prompts=test_prompts,
+        samples_per_prompt=5
+    )
+    
+    print(f"   通过拒绝采样生成了 {len(rs_pairs)} 个偏好对")
     
     # 质量验证
-    print("\n✅ 质量验证...")
-    all_samples = preference_pairs + multimodal_samples
-    quality_report = validator.validate_dataset(all_samples, "test_dataset")
-    
-    print(f"   总样本数: {quality_report.total_samples}")
-    print(f"   平均质量: {quality_report.avg_quality_score:.2f}")
-    print(f"   多样性分数: {quality_report.diversity_score:.2f}")
-    print(f"   质量分布:")
-    for level, count in quality_report.quality_distribution.items():
-        print(f"     - {level}: {count}")
-    print(f"   建议:")
-    for rec in quality_report.recommendations:
-        print(f"     • {rec}")
+    print("\n✅ 质量验证统计...")
+    if engine.quality_verifier.verification_history:
+        avg_score = statistics.mean([
+            v["overall_quality_score"] 
+            for v in engine.quality_verifier.verification_history
+        ])
+        pass_rate = sum(1 for v in engine.quality_verifier.verification_history if v["passed"]) / len(engine.quality_verifier.verification_history)
+        
+        print(f"   总验证次数: {len(engine.quality_verifier.verification_history)}")
+        print(f"   平均质量分数: {avg_score:.2f}")
+        print(f"   通过率: {pass_rate*100:.1f}%")
     
     # 隐私审计
-    print("\n🔒 隐私审计...")
-    privacy_result = auditor.audit_dataset(all_samples, "test_dataset")
+    print("\n🔒 隐私审计统计...")
+    if engine.privacy_auditor.audit_history:
+        audit_pass_rate = sum(1 for a in engine.privacy_auditor.audit_history if a["audit_passed"]) / len(engine.privacy_auditor.audit_history)
+        avg_risk = statistics.mean([a["privacy_risk_score"] for a in engine.privacy_auditor.audit_history])
+        
+        print(f"   总审计次数: {len(engine.privacy_auditor.audit_history)}")
+        print(f"   审计通过率: {audit_pass_rate*100:.1f}%")
+        print(f"   平均风险分数: {avg_risk:.2f}")
     
-    print(f"   隐私风险分数: {privacy_result.privacy_risk_score:.2f}")
-    print(f"   PII检测: {'❌ 发现' if privacy_result.pii_detected else '✅ 未发现'}")
-    print(f"   重识别风险: {privacy_result.reidentification_risk:.2f}")
-    print(f"   合规状态: {privacy_result.compliance_status}")
-    
-    if privacy_result.issues_found:
-        print(f"   发现问题:")
-        for issue in privacy_result.issues_found:
-            print(f"     ⚠️  {issue}")
+    # 引擎统计
+    stats = engine.get_engine_statistics()
+    print(f"\n📈 引擎统计:")
+    print(f"   总数据记录: {stats['total_data_records']}")
+    print(f"   隐私审计通过率: {stats['privacy_audit_pass_rate']*100:.1f}%")
+    print(f"   生成统计:")
+    for key, value in stats['generation_stats'].items():
+        print(f"     {key}: {value}")
+    print(f"   偏好对统计:")
+    print(f"     总对数: {stats['preference_pair_stats']['total_pairs']}")
+    if stats['preference_pair_stats']['total_pairs'] > 0:
+        print(f"     平均质量差距: {stats['preference_pair_stats']['avg_quality_gap']:.2f}")
+        print(f"     平均Chosen分数: {stats['preference_pair_stats']['avg_chosen_score']:.2f}")
+        print(f"     平均Rejected分数: {stats['preference_pair_stats']['avg_rejected_score']:.2f}")
     
     print("\n✅ 测试完成！")
