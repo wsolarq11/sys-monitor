@@ -41,7 +41,11 @@ class CodeReviewerAgent:
         Returns:
             静态分析结果
         """
-        results: Dict[str, Any] = {"pylint": None, "flake8": None, "security_scan": None}
+        results: Dict[str, Any] = {
+            "pylint": None,
+            "flake8": None,
+            "security_scan": None,
+        }
 
         target = file_path or str(self.repo_root)
 

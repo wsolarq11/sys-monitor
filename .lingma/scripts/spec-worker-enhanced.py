@@ -491,7 +491,9 @@ class SpecWorker:
             "notification_sent", {"type": "task_failure", "task_id": task["id"]}
         )
 
-    def start_worker(self, max_tasks: Optional[int] = None, skip_validation: bool = False):
+    def start_worker(
+        self, max_tasks: Optional[int] = None, skip_validation: bool = False
+    ):
         """
         启动Worker
 
