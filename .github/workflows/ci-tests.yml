@@ -47,10 +47,12 @@ jobs:
             --tb=short
       
       - name: Upload coverage to Codecov
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Security scan (Bandit)
@@ -94,8 +96,11 @@ jobs:
         working-directory: sys-monitor
       
       - name: Run E2E tests (Playwright)
-        run: npx playwright test
-        working-directory: sys-monitor
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          npx playwright test
+        working-directory: sys-monitor/tests/e2e
         env:
           CI: true
       
