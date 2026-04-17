@@ -30,7 +30,7 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 
 class RulePriority:
@@ -166,7 +166,7 @@ class Violation:
 class RuleEngine:
     """规则解析引擎"""
 
-    def __init__(self, project_root: str = None):
+    def __init__(self, project_root: Optional[str] = None):
         """
         初始化规则引擎
 
@@ -201,7 +201,7 @@ class RuleEngine:
 
     def _load_rules(self) -> List[Rule]:
         """加载所有规则文件"""
-        rules = []
+        rules: List[Rule] = []
 
         if not os.path.exists(self.rules_dir):
             print(f"[WARN] 规则目录不存在: {self.rules_dir}")
@@ -366,7 +366,7 @@ class RuleEngine:
 
         # 检查是否有重复的章节标题
         headings = re.findall(r"^#{1,6}\s+(.+)$", spec_content, re.MULTILINE)
-        heading_counts = {}
+        heading_counts: Dict[str, int] = {}
 
         for heading in headings:
             heading_lower = heading.lower().strip()
