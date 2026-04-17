@@ -1,0 +1,91 @@
+{
+  "version": "1.0",
+  "description": "质量标准配置 - 用于 Reflection Engine 评估任务结果质量",
+  
+  "weights": {
+    "correctness": 0.3,
+    "completeness": 0.2,
+    "readability": 0.15,
+    "performance": 0.15,
+    "security": 0.1,
+    "maintainability": 0.1
+  },
+  
+  "thresholds": {
+    "excellent": 0.9,
+    "good": 0.7,
+    "acceptable": 0.5,
+    "poor": 0.3
+  },
+  
+  "quality_criteria": {
+    "code": {
+      "required_elements": [
+        "function_or_class_definition",
+        "docstring",
+        "type_hints"
+      ],
+      "forbidden_patterns": [
+        "eval(",
+        "exec(",
+        "__import__("
+      ],
+      "best_practices": [
+        "use_type_annotations",
+        "add_docstrings",
+        "follow_pep8",
+        "handle_exceptions"
+      ]
+    },
+    "documentation": {
+      "required_sections": [
+        "title",
+        "description",
+        "examples"
+      ],
+      "min_length": 100,
+      "readability_score_min": 0.6
+    },
+    "configuration": {
+      "required_fields": [],
+      "validation_rules": [
+        "valid_json",
+        "no_hardcoded_secrets",
+        "proper_structure"
+      ]
+    }
+  },
+  
+  "issue_severity_mapping": {
+    "syntax_error": "critical",
+    "security_risk": "high",
+    "logic_error": "high",
+    "best_practice_violation": "medium",
+    "performance_issue": "medium",
+    "documentation_gap": "low",
+    "readability_issue": "low"
+  },
+  
+  "auto_fix_rules": {
+    "enabled": true,
+    "max_iterations": 3,
+    "convergence_threshold": 0.05,
+    "strategies": [
+      {
+        "issue_type": "syntax_error",
+        "action": "run_linter",
+        "tools": ["black", "pylint"]
+      },
+      {
+        "issue_type": "best_practice_violation",
+        "action": "apply_template",
+        "templates": ["function_template", "class_template"]
+      },
+      {
+        "issue_type": "documentation_gap",
+        "action": "generate_docstring",
+        "style": "google"
+      }
+    ]
+  }
+}
