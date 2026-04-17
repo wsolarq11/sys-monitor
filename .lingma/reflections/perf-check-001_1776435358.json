@@ -1,0 +1,29 @@
+{
+  "task_id": "perf-check-001",
+  "timestamp": "2026-04-17T14:15:58.796746+00:00",
+  "quality_score": {
+    "overall": 0.66,
+    "correctness": 0.8,
+    "completeness": 0.6,
+    "readability": 0.5,
+    "performance": 0.5,
+    "security": 0.9,
+    "maintainability": 0.6
+  },
+  "issues": [
+    {
+      "type": "performance_issue",
+      "severity": "medium",
+      "description": "循环内使用字符串拼接，建议使用 list.join()",
+      "location": null,
+      "evidence": null,
+      "impact": "O(n²) 时间复杂度，性能较差"
+    }
+  ],
+  "suggestions": [],
+  "execution_time": 0.0,
+  "metadata": {
+    "type": "code",
+    "check_performance": true
+  }
+}

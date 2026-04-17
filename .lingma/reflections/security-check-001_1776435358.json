@@ -1,0 +1,56 @@
+{
+  "task_id": "security-check-001",
+  "timestamp": "2026-04-17T14:15:58.793523+00:00",
+  "quality_score": {
+    "overall": 0.6,
+    "correctness": 0.8,
+    "completeness": 0.6,
+    "readability": 0.5,
+    "performance": 0.5,
+    "security": 0.3,
+    "maintainability": 0.6
+  },
+  "issues": [
+    {
+      "type": "security_risk",
+      "severity": "high",
+      "description": "使用 eval() 存在代码注入风险",
+      "location": null,
+      "evidence": "包含 eval(",
+      "impact": "可能导致安全漏洞"
+    },
+    {
+      "type": "security_risk",
+      "severity": "high",
+      "description": "检测到硬编码的敏感信息",
+      "location": null,
+      "evidence": "匹配模式: password\\s*=\\s*[\"\\'][^\"\\']+[\"\\']",
+      "impact": "敏感信息泄露风险"
+    }
+  ],
+  "suggestions": [
+    {
+      "issue_id": "issue-0",
+      "action": "移除不安全函数",
+      "description": "使用更安全的替代方案",
+      "example": "# 不使用 eval()\n# 改用 ast.literal_eval() 或专门的解析器\nimport ast\nresult = ast.literal_eval(user_input)",
+      "expected_improvement": "消除安全漏洞",
+      "difficulty": "medium",
+      "priority": 1
+    },
+    {
+      "issue_id": "issue-1",
+      "action": "移除不安全函数",
+      "description": "使用更安全的替代方案",
+      "example": "# 不使用 eval()\n# 改用 ast.literal_eval() 或专门的解析器\nimport ast\nresult = ast.literal_eval(user_input)",
+      "expected_improvement": "消除安全漏洞",
+      "difficulty": "medium",
+      "priority": 1
+    }
+  ],
+  "execution_time": 0.0,
+  "metadata": {
+    "type": "code",
+    "check_security": true
+  }
+}

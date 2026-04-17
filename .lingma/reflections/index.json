@@ -1,0 +1,52 @@
+{
+  "reflections": [
+    {
+      "task_id": "test-001",
+      "timestamp": "2026-04-17T14:06:47.005508",
+      "quality_score": 0.6,
+      "issues_count": 0,
+      "suggestions_count": 0,
+      "file": "test-001_1776434807.json"
+    },
+    {
+      "task_id": "test-001",
+      "timestamp": "2026-04-17T14:13:49.657777+00:00",
+      "quality_score": 0.6,
+      "issues_count": 0,
+      "suggestions_count": 0,
+      "file": "test-001_1776435229.json"
+    },
+    {
+      "task_id": "code-gen-001",
+      "timestamp": "2026-04-17T14:15:58.787190+00:00",
+      "quality_score": 0.66,
+      "issues_count": 0,
+      "suggestions_count": 0,
+      "file": "code-gen-001_1776435358.json"
+    },
+    {
+      "task_id": "doc-review-001",
+      "timestamp": "2026-04-17T14:15:58.791307+00:00",
+      "quality_score": 0.7,
+      "issues_count": 0,
+      "suggestions_count": 0,
+      "file": "doc-review-001_1776435358.json"
+    },
+    {
+      "task_id": "security-check-001",
+      "timestamp": "2026-04-17T14:15:58.793523+00:00",
+      "quality_score": 0.6,
+      "issues_count": 2,
+      "suggestions_count": 2,
+      "file": "security-check-001_1776435358.json"
+    },
+    {
+      "task_id": "perf-check-001",
+      "timestamp": "2026-04-17T14:15:58.796746+00:00",
+      "quality_score": 0.66,
+      "issues_count": 1,
+      "suggestions_count": 0,
+      "file": "perf-check-001_1776435358.json"
+    }
+  ]
+}

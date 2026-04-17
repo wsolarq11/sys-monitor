@@ -1,0 +1,19 @@
+{
+  "task_id": "test-001",
+  "timestamp": "2026-04-17T14:06:47.005508",
+  "quality_score": {
+    "overall": 0.6,
+    "correctness": 0.8,
+    "completeness": 0.3,
+    "readability": 0.5,
+    "performance": 0.5,
+    "security": 0.9,
+    "maintainability": 0.6
+  },
+  "issues": [],
+  "suggestions": [],
+  "execution_time": 0.0,
+  "metadata": {
+    "type": "code"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "trace_id": "e6772b35-2b57-4f8b-90dc-e5539fce7907",
+  "root_span_id": "65755f41-dc6c-44",
+  "spans_count": 4,
+  "start_time": "2026-04-17T14:47:44.663818+00:00",
+  "end_time": "2026-04-17T14:47:44.664437+00:00",
+  "total_duration_ms": 0.619,
+  "metadata": {
+    "user_id": "user-001"
+  },
+  "span_tree": [
+    {
+      "span_id": "65755f41-dc6c-44",
+      "name": "Agent:Planning",
+      "type": "agent",
+      "duration_ms": 0.377,
+      "status": "ok",
+      "depth": 0,
+      "children": [
+        {
+          "span_id": "29a7074d-e16b-4f",
+          "name": "LLM:gpt-4",
+          "type": "llm",
+          "duration_ms": 0.031,
+          "status": "ok",
+          "depth": 1,
+          "children": []
+        },
+        {
+          "span_id": "1588da24-da30-43",
+          "name": "Tool:search",
+          "type": "tool",
+          "duration_ms": 0.023,
+          "status": "ok",
+          "depth": 1,
+          "children": []
+        },
+        {
+          "span_id": "e7ff6862-e98b-43",
+          "name": "Tool:database_query",
+          "type": "tool",
+          "duration_ms": 0.016,
+          "status": "error",
+          "depth": 1,
+          "children": []
+        }
+      ]
+    }
+  ]
+}

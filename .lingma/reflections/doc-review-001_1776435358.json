@@ -1,0 +1,19 @@
+{
+  "task_id": "doc-review-001",
+  "timestamp": "2026-04-17T14:15:58.791307+00:00",
+  "quality_score": {
+    "overall": 0.7,
+    "correctness": 0.8,
+    "completeness": 0.8,
+    "readability": 0.5,
+    "performance": 0.5,
+    "security": 0.9,
+    "maintainability": 0.6
+  },
+  "issues": [],
+  "suggestions": [],
+  "execution_time": 0.001,
+  "metadata": {
+    "type": "documentation"
+  }
+}
