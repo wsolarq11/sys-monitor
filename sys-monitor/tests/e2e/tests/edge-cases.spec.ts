@@ -398,7 +398,7 @@ test.describe('Edge Cases and Performance Testing', () => {
     });
 
     await page.route('**/invoke/scan_folder', async route => {
-      await page.waitForTimeout(2000);
+      await new Promise(r => setTimeout(r, 2000));
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -446,7 +446,7 @@ test.describe('Edge Cases and Performance Testing', () => {
     for (let i = 0; i < 3; i++) {
       await page.click('button:has-text("浏览...")');
       await page.click('button:has-text("扫描文件夹")');
-      await page.waitForTimeout(1000);
+      await new Promise(r => setTimeout(r, 1000));
     }
     
     await expect(page.locator('text=扫描历史')).toBeVisible();
@@ -489,7 +489,7 @@ test.describe('Edge Cases and Performance Testing', () => {
     });
 
     await page.route('**/invoke/scan_folder', async route => {
-      await page.waitForTimeout(5000);
+      await new Promise(r => setTimeout(r, 5000));
       route.fulfill({
         status: 200,
         contentType: 'application/json',

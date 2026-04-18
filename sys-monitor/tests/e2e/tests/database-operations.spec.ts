@@ -17,7 +17,7 @@ test.describe('Database Operations', () => {
 
     await page.reload();
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const pathInput = page.locator('input[placeholder*="文件夹路径"]');
     await expect(pathInput).toBeVisible();
@@ -34,7 +34,7 @@ test.describe('Database Operations', () => {
 
     await page.reload();
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const pathInput = page.locator('input[placeholder*="文件夹路径"]');
     await expect(pathInput).toBeVisible();
@@ -171,7 +171,7 @@ test.describe('Database Operations', () => {
     });
 
     await page.route('**/invoke/scan_folder', async route => {
-      await page.waitForTimeout(10000);
+      await new Promise(r => setTimeout(r, 10000));
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -241,7 +241,7 @@ test.describe('Database Operations', () => {
     
     for (let i = 0; i < 3; i++) {
       await page.click('button:has-text("扫描文件夹")');
-      await page.waitForTimeout(1000);
+      await new Promise(r => setTimeout(r, 1000));
     }
     
     await expect(page.locator('text=扫描历史')).toBeVisible();
@@ -283,7 +283,7 @@ test.describe('Database Operations', () => {
 
     await page.reload();
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const scanHistory = page.locator('text=扫描历史');
     await expect(scanHistory).not.toBeVisible();
@@ -442,7 +442,7 @@ test.describe('Database Operations', () => {
 
     await page.reload();
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const scanHistory = page.locator('text=扫描历史');
     await expect(scanHistory).not.toBeVisible();

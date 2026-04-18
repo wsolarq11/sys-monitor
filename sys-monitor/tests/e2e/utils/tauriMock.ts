@@ -6,6 +6,13 @@
 import { Page } from '@playwright/test';
 
 /**
+ * Helper function to replace deprecated page.waitForTimeout
+ */
+export async function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * Tauri 命令Mock配置接口
  */
 export interface TauriCommandMock {

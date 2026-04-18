@@ -18,7 +18,7 @@ test.describe('API and UI Coordination Tests', () => {
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.getByText(/%/).first();
     await expect(cpuValue).toBeVisible();
@@ -40,7 +40,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     const metricsDisplay = page.getByText(/cpu usage/i);
     await expect(metricsDisplay).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     const cpuMonitor = page.getByText(/cpu usage/i);
     await expect(cpuMonitor).toBeVisible();
@@ -79,7 +79,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.getByText(/%/).first();
     const cpuText = await cpuValue.textContent();
@@ -101,7 +101,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.getByText(/%/).first();
     await expect(cpuValue).toBeVisible();
@@ -144,7 +144,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.getByText(/%/).first();
     await expect(cpuValue).toBeVisible();
@@ -165,7 +165,7 @@ test.describe('API and UI Coordination Tests', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.getByText(/%/).first();
     await expect(cpuValue).toBeVisible();

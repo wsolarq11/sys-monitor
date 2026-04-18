@@ -10,7 +10,7 @@ test.describe('System Monitoring', () => {
     const cpuValue = page.locator('text=%').first();
     
     const initialValue = await cpuValue.textContent();
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     const updatedValue = await cpuValue.textContent();
     
     expect(initialValue).not.toBe(updatedValue);
@@ -24,7 +24,7 @@ test.describe('System Monitoring', () => {
     const memoryValue = page.locator('text=GB').first();
     
     const initialValue = await memoryValue.textContent();
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     const updatedValue = await memoryValue.textContent();
     
     expect(initialValue).not.toBe(updatedValue);
@@ -42,7 +42,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();
@@ -57,7 +57,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const memoryMonitor = page.locator('text=Memory Usage');
     await expect(memoryMonitor).toBeVisible();
@@ -83,7 +83,7 @@ test.describe('System Monitoring', () => {
     const cpuGraph = page.locator('text=CPU Usage Over Time');
     await expect(cpuGraph).toBeVisible();
     
-    await page.waitForTimeout(5000);
+    await new Promise(r => setTimeout(r, 5000));
     
     await expect(cpuGraph).toBeVisible();
   });
@@ -111,7 +111,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.locator('text=%').first();
     await expect(cpuValue).toHaveText('0.0%');
@@ -135,7 +135,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.locator('text=%').first();
     await expect(cpuValue).toHaveText('100.0%');
@@ -152,7 +152,7 @@ test.describe('System Monitoring', () => {
       route.continue();
     });
 
-    await page.waitForTimeout(5000);
+    await new Promise(r => setTimeout(r, 5000));
     
     expect(requestTimes.length).toBeGreaterThan(3);
     
@@ -185,7 +185,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     const cpuValue = page.locator('text=%').first();
     const cpuText = await cpuValue.textContent();
@@ -196,11 +196,11 @@ test.describe('System Monitoring', () => {
 
   test('should handle system metrics API timeouts', async ({ page }) => {
     await page.route('**/invoke/get_system_metrics', async route => {
-      await page.waitForTimeout(3000);
+      await new Promise(r => setTimeout(r, 3000));
       route.continue();
     });
 
-    await page.waitForTimeout(5000);
+    await new Promise(r => setTimeout(r, 5000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();
@@ -221,7 +221,7 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuValue = page.locator('text=%').first();
     await expect(cpuValue).toHaveText('87.7%');
@@ -238,7 +238,7 @@ test.describe('System Monitoring', () => {
       concurrentRequests++;
       maxConcurrent = Math.max(maxConcurrent, concurrentRequests);
       
-      await page.waitForTimeout(100);
+      await new Promise(r => setTimeout(r, 100));
       
       route.fulfill({
         status: 200,
@@ -255,7 +255,7 @@ test.describe('System Monitoring', () => {
       concurrentRequests--;
     });
 
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     expect(maxConcurrent).toBeLessThanOrEqual(2);
   });
@@ -272,24 +272,24 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();
   });
 
   test('should maintain system monitoring during navigation', async ({ page }) => {
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     await page.click('a[href="/folder-analysis"]');
     await page.waitForURL('**/folder-analysis');
     
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     await page.click('a[href="/"]');
     await page.waitForURL('**/');
     
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();

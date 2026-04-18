@@ -13,7 +13,7 @@ test.describe('SysMonitor Functional Tests', () => {
     expect(title).toContain('SysMonitor');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 检查导航菜单
     const navLinks = page.locator('nav a');
@@ -35,14 +35,14 @@ test.describe('SysMonitor Functional Tests', () => {
     await page.goto('http://localhost:1420');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 测试导航到文件夹分析页面
     const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
     await folderAnalysisLink.click();
     
     // 等待页面切换
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 检查文件夹分析页面
     const pathInput = page.locator('input[placeholder*="文件夹路径"]');
@@ -53,7 +53,7 @@ test.describe('SysMonitor Functional Tests', () => {
     await dashboardLink.click();
     
     // 等待页面切换
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const dashboardTitle = page.locator('h1').nth(1); // 第二个h1元素
     await expect(dashboardTitle).toContainText('SysMonitor Dashboard');
@@ -86,7 +86,7 @@ test.describe('SysMonitor Functional Tests', () => {
     await page.goto('http://localhost:1420');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 模拟系统监控数据
     await page.route('**/invoke/get_system_metrics', route => {
@@ -104,7 +104,7 @@ test.describe('SysMonitor Functional Tests', () => {
     });
     
     // 等待数据加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 检查CPU使用率显示
     const cpuValue = page.locator('text=%').first();
@@ -119,17 +119,17 @@ test.describe('SysMonitor Functional Tests', () => {
     await page.goto('http://localhost:1420');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 测试不同屏幕尺寸
     await page.setViewportSize({ width: 375, height: 667 }); // 移动端
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const dashboardTitle = page.locator('h1').nth(1); // 第二个h1元素
     await expect(dashboardTitle).toBeVisible();
     
     await page.setViewportSize({ width: 1920, height: 1080 }); // 桌面端
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     await expect(dashboardTitle).toBeVisible();
   });
@@ -138,7 +138,7 @@ test.describe('SysMonitor Functional Tests', () => {
     await page.goto('http://localhost:1420');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 模拟API错误
     await page.route('**/invoke/get_system_metrics', route => {
@@ -150,7 +150,7 @@ test.describe('SysMonitor Functional Tests', () => {
     });
     
     // 等待错误处理
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 检查应用程序是否仍然正常运行
     const dashboardTitle = page.locator('h1').nth(1); // 第二个h1元素
@@ -161,7 +161,7 @@ test.describe('SysMonitor Functional Tests', () => {
     await page.goto('http://localhost:1420/folder-analysis');
     
     // 等待React应用加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 测试基本的UI交互，不模拟具体的Tauri API调用
     // 因为Tauri API调用需要实际的桌面应用程序环境
@@ -185,7 +185,7 @@ test.describe('SysMonitor Functional Tests', () => {
     await scanButton.click();
     
     // 等待可能的UI状态变化
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 验证应用程序没有崩溃，仍然可以正常交互
     await expect(pathInput).toBeVisible();
@@ -194,7 +194,7 @@ test.describe('SysMonitor Functional Tests', () => {
     // 测试导航回仪表板
     const dashboardLink = page.locator('a[href="/"]');
     await dashboardLink.click();
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 验证成功导航到仪表板
     const dashboardTitle = page.locator('h1').nth(1);
@@ -211,10 +211,10 @@ test.describe('SysMonitor Functional Tests', () => {
       const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
       
       await dashboardLink.click();
-      await page.waitForTimeout(500);
+      await new Promise(r => setTimeout(r, 500));
       
       await folderAnalysisLink.click();
-      await page.waitForTimeout(500);
+      await new Promise(r => setTimeout(r, 500));
     }
     
     // 最终状态检查
@@ -259,10 +259,10 @@ test.describe('SysMonitor Functional Tests', () => {
       const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
       
       await dashboardLink.click();
-      await page.waitForTimeout(200);
+      await new Promise(r => setTimeout(r, 200));
       
       await folderAnalysisLink.click();
-      await page.waitForTimeout(200);
+      await new Promise(r => setTimeout(r, 200));
     }
     
     const endTime = Date.now();

@@ -57,7 +57,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
     await page.click('text=文件夹分析');
     
     // 等待页面加载
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 验证文件夹选择按钮存在
     const selectButton = page.locator('button:has-text("选择文件夹")').first();
@@ -67,7 +67,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
   test('应该显示扫描历史记录', async ({ page }) => {
     // 导航到文件夹分析页面
     await page.click('text=文件夹分析');
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 验证历史记录区域存在（即使为空）
     const historySection = page.locator('text=扫描历史').first();
@@ -77,7 +77,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
   test('应该能够添加监控文件夹', async ({ page }) => {
     // 导航到监控文件夹页面
     await page.click('text=监控文件夹');
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 验证添加按钮存在
     const addButton = page.locator('button:has-text("添加监控文件夹")').first();
@@ -96,14 +96,14 @@ test.describe('Sys-Monitor E2E Tests', () => {
 
   test('应该实时更新系统指标', async ({ page }) => {
     // 等待初始数据加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 获取初始CPU使用率
     const initialCpuLocator = page.locator('.cpu-usage-value').first();
     const initialCpu = await initialCpuLocator.textContent();
     
     // 等待一段时间让数据更新
-    await page.waitForTimeout(5000);
+    await new Promise(r => setTimeout(r, 5000));
     
     // 验证数据仍然存在（说明有持续更新）
     await expect(initialCpuLocator).toBeVisible();
@@ -130,11 +130,11 @@ test.describe('Sys-Monitor E2E Tests', () => {
     
     // 测试平板视图
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.waitForTimeout(500);
+    await new Promise(r => setTimeout(r, 500));
     
     // 测试手机视图
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.waitForTimeout(500);
+    await new Promise(r => setTimeout(r, 500));
     
     // 验证在小屏幕上仍然可见关键元素
     await expect(page.locator('text=系统监控')).toBeVisible();
@@ -149,7 +149,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
       
       // 点击切换主题
       await themeToggle.click();
-      await page.waitForTimeout(500);
+      await new Promise(r => setTimeout(r, 500));
       
       // 验证主题已切换（通过检查CSS类或属性）
       const body = page.locator('body');
@@ -157,7 +157,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
       
       // 再次切换
       await themeToggle.click();
-      await page.waitForTimeout(500);
+      await new Promise(r => setTimeout(r, 500));
     }
   });
 
@@ -175,7 +175,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
   test('应该保持状态持久化', async ({ page }) => {
     // 执行一些操作
     await page.click('text=文件夹分析');
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 刷新页面
     await page.reload();
@@ -196,7 +196,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
     
     // 尝试执行需要API的操作
     await page.click('text=文件夹分析');
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 验证应用没有崩溃，仍然可用
     await expect(page.locator('body')).toBeVisible();
@@ -218,7 +218,7 @@ test.describe('Sys-Monitor E2E Tests', () => {
 
   test('性能测试 - 图表渲染性能', async ({ page }) => {
     await page.goto('/');
-    await page.waitForTimeout(3000); // 等待图表渲染
+    await new Promise(r => setTimeout(r, 3000)); // 等待图表渲染
     
     // 获取性能指标
     const metrics = await page.evaluate(() => {

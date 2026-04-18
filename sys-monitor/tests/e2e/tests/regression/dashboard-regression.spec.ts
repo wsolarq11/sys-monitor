@@ -39,7 +39,7 @@ test.describe('Dashboard Regression Tests @regression', () => {
     });
 
     await page.goto('/');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuMonitor = page.getByText(/cpu usage/i);
     await expect(cpuMonitor).toBeVisible();

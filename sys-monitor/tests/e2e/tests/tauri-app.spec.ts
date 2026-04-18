@@ -37,7 +37,7 @@ test.describe('Tauri Application E2E Tests', () => {
     test.setTimeout(TEST_TIMEOUT);
     
     // 等待应用程序窗口出现
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 检查应用程序标题
     const title = await page.title();
@@ -48,7 +48,7 @@ test.describe('Tauri Application E2E Tests', () => {
     test.setTimeout(TEST_TIMEOUT);
     
     // 等待页面加载
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 检查仪表板标题
     const dashboardTitle = page.locator('h1');
@@ -74,7 +74,7 @@ test.describe('Tauri Application E2E Tests', () => {
     await folderAnalysisLink.click();
     
     // 等待页面切换
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 检查文件夹分析页面元素
     const pathInput = page.locator('input[placeholder*="文件夹路径"]');
@@ -95,7 +95,7 @@ test.describe('Tauri Application E2E Tests', () => {
     await dashboardLink.click();
     
     // 等待页面切换
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 检查仪表板页面
     const dashboardTitle = page.locator('h1');
@@ -106,7 +106,7 @@ test.describe('Tauri Application E2E Tests', () => {
     test.setTimeout(TEST_TIMEOUT);
     
     // 等待数据加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 检查CPU使用率
     const cpuValue = page.locator('text=%').first();
@@ -129,7 +129,7 @@ test.describe('Tauri Application E2E Tests', () => {
     // 导航到文件夹分析页面
     const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
     await folderAnalysisLink.click();
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 测试路径输入
     const testPath = 'C:\\test-folder';
@@ -149,7 +149,7 @@ test.describe('Tauri Application E2E Tests', () => {
     // 导航到文件夹分析页面
     const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
     await folderAnalysisLink.click();
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     // 尝试扫描空路径
     const scanButton = page.locator('button:has-text("扫描文件夹")');
@@ -165,7 +165,7 @@ test.describe('Tauri Application E2E Tests', () => {
     
     // 设置小窗口尺寸
     await page.setViewportSize({ width: 800, height: 600 });
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     // 检查布局适应性
     const dashboardTitle = page.locator('h1');
@@ -173,7 +173,7 @@ test.describe('Tauri Application E2E Tests', () => {
     
     // 恢复默认尺寸
     await page.setViewportSize({ width: 1200, height: 800 });
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     await expect(dashboardTitle).toBeVisible();
   });
@@ -188,10 +188,10 @@ test.describe('Tauri Application E2E Tests', () => {
       const folderAnalysisLink = page.locator('a[href="/folder-analysis"]');
       
       await dashboardLink.click();
-      await page.waitForTimeout(1000);
+      await new Promise(r => setTimeout(r, 1000));
       
       await folderAnalysisLink.click();
-      await page.waitForTimeout(1000);
+      await new Promise(r => setTimeout(r, 1000));
     }
     
     // 最终检查应用程序状态

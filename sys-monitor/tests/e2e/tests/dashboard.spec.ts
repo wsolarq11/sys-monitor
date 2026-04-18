@@ -66,7 +66,7 @@ test.describe('Dashboard Page', () => {
   test('should update system metrics in real-time', async ({ page }) => {
     const initialCpuValue = await page.locator('text=%').first().textContent();
     
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     const updatedCpuValue = await page.locator('text=%').first().textContent();
     
@@ -82,7 +82,7 @@ test.describe('Dashboard Page', () => {
       });
     });
 
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();

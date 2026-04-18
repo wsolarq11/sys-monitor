@@ -5,7 +5,7 @@ test.describe('Visual Regression Tests', () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
   });
 
   test('dashboard baseline visual regression', async ({ page }) => {
@@ -48,7 +48,7 @@ test.describe('Visual Regression Tests', () => {
   test('folder analysis page visual regression', async ({ page }) => {
     await page.goto('/folder-analysis');
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
     
     await expect(page).toHaveScreenshot('folder-analysis-baseline.png', {
       fullPage: true,
@@ -73,7 +73,7 @@ test.describe('Visual Regression Tests', () => {
 
   test('mobile viewport visual regression', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     await expect(page).toHaveScreenshot('dashboard-mobile.png', {
       fullPage: true,
@@ -83,7 +83,7 @@ test.describe('Visual Regression Tests', () => {
 
   test('tablet viewport visual regression', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     await expect(page).toHaveScreenshot('dashboard-tablet.png', {
       fullPage: true,
@@ -95,7 +95,7 @@ test.describe('Visual Regression Tests', () => {
     await page.evaluate(() => {
       document.body.classList.add('dark');
     });
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     await expect(page).toHaveScreenshot('dashboard-dark-mode.png', {
       fullPage: false,

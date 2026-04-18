@@ -49,7 +49,7 @@ test.describe('Performance Tests', () => {
     console.log('Starting chart rendering performance test...');
     
     // 等待图表加载
-    await page.waitForTimeout(3000);
+    await new Promise(r => setTimeout(r, 3000));
     
     // 测量首次绘制时间
     const paintMetrics = await page.evaluate(() => {

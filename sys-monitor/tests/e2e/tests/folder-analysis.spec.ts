@@ -33,7 +33,7 @@ test.describe('Folder Analysis Page', () => {
 
     await page.click('button:has-text("浏览...")');
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const pathInput = page.locator('input[placeholder*="文件夹路径"]');
     await expect(pathInput).toHaveValue('');
@@ -146,7 +146,7 @@ test.describe('Folder Analysis Page', () => {
     await page.route('**/invoke/scan_folder', async route => {
       if (!scanStarted) {
         scanStarted = true;
-        await page.waitForTimeout(1000);
+        await new Promise(r => setTimeout(r, 1000));
       }
       
       route.fulfill({
@@ -282,7 +282,7 @@ test.describe('Folder Analysis Page', () => {
 
     await page.click('button:has-text("浏览...")');
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
     
     const errorMessage = page.locator('[class*="bg-red-50"]');
     await expect(errorMessage).toBeVisible();

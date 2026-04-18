@@ -41,7 +41,7 @@ test.describe('Folder Analysis Critical Tests @critical', () => {
     await page.getByPlaceholder(/.*文件夹路径.*/).fill('C:\\Test');
     await page.getByRole('button', { name: /扫描文件夹/i }).click();
     
-    await page.waitForTimeout(2000);
+    await new Promise(r => setTimeout(r, 2000));
   });
 
   test('should support path input navigation @critical', async ({ folderAnalysisPage }) => {
@@ -64,6 +64,6 @@ test.describe('Folder Analysis Critical Tests @critical', () => {
     await folderAnalysisPage.enterPath('C:\\Test');
     await folderAnalysisPage.clickScan();
     
-    await page.waitForTimeout(1000);
+    await new Promise(r => setTimeout(r, 1000));
   });
 });
