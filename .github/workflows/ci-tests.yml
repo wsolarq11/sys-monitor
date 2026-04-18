@@ -169,10 +169,13 @@ jobs:
             ${{ runner.os }}-cargo-
       
       - name: Run tests
-        run: cargo test --all-targets --verbose -- --test-threads=1
+        run: |
+          # Clean up disk space
+          df -h /tmp
+          sudo rm -rf /tmp/* 2>/dev/null || true
+          # Run tests with single thread and tmp dir
+          SQLITE_TMPDIR=/tmp cargo test --all-targets --verbose -- --test-threads=1
         working-directory: sys-monitor/src-tauri
-        env:
-          SQLITE_TMPDIR: /tmp
       
       - name: Run clippy (linting)
         run: cargo clippy -- -D warnings
