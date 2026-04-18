@@ -9,20 +9,21 @@ test.describe('Application Functionality Tests', () => {
     // 设置页面环境，模拟应用程序状态
     await page.addInitScript(() => {
       // 模拟Tauri环境
-      (window as any).__TAURI__ = {
+      (window as any).__TAURI_INTERNALS__ = {
         invoke: async (command: string, payload?: any) => {
           // 模拟Tauri命令调用
           console.log(`Tauri command invoked: ${command}`, payload);
           
           // 根据命令返回模拟数据
           switch (command) {
-            case 'get_cpu_usage':
-              return { usage: Math.random() * 100 };
-            case 'get_memory_usage':
-              return { 
-                used: Math.random() * 8000, 
-                total: 16000, 
-                usage: Math.random() * 100 
+            case 'get_system_metrics':
+              return {
+                cpu_usage: 45.5,
+                memory_usage: 8589934592,
+                memory_total: 17179869184,
+                disk_usage: 65.2,
+                disk_total: 1099511627776,
+                network_usage: 12.5
               };
             case 'scan_folder':
               return {
