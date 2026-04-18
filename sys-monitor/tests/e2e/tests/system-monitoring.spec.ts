@@ -304,8 +304,7 @@ test.describe('System Monitoring', () => {
       });
     });
     
-    // Wait for initial page load and component rendering
-    await page.waitForLoadState('networkidle');
+    // Wait for component to render with mocked data (Tauri invoke may not trigger networkidle)
     await new Promise(r => setTimeout(r, 3000));
     
     // Verify CPU monitor is visible on dashboard
@@ -329,7 +328,7 @@ test.describe('System Monitoring', () => {
     // Navigate back to dashboard
     await page.goto('/');
     await page.waitForURL('**/');
-    await page.waitForLoadState('networkidle');
+    // Wait for component to render with mocked data (Tauri invoke may not trigger networkidle)
     await new Promise(r => setTimeout(r, 3000));
     
     // Verify system monitoring is still working
