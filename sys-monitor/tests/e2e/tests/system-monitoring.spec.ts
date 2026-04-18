@@ -287,7 +287,7 @@ test.describe('System Monitoring', () => {
   });
 
   test('should maintain system monitoring during navigation', async ({ page }) => {
-    // Set up a default mock for system metrics
+    // Set up a default mock for system metrics BEFORE page loads
     const mockMetrics = {
       cpu_usage: 45.5,
       memory_usage: 8589934592,
@@ -304,8 +304,10 @@ test.describe('System Monitoring', () => {
       });
     });
     
-    // Wait for component to render with mocked data (Tauri invoke may not trigger networkidle)
-    await new Promise(r => setTimeout(r, 3000));
+    // Navigate to dashboard to trigger component mount with mocked data
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 2000));
     
     // Verify CPU monitor is visible on dashboard
     const cpuMonitor = page.locator('text=CPU Usage');
