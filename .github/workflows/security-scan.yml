@@ -24,13 +24,13 @@ jobs:
           components: clippy
 
       - name: Cache Cargo registry
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/registry
           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Cache Cargo index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
@@ -65,7 +65,7 @@ jobs:
           version: latest
 
       - name: Cache pnpm store
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
