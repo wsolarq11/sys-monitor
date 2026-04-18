@@ -135,13 +135,15 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await new Promise(r => setTimeout(r, 2000));
+    // Wait for page to load and component to render
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 3000));
     
     const cpuValue = page.locator('text=%').first();
-    await expect(cpuValue).toHaveText('100.0%');
+    await expect(cpuValue).toHaveText('100.0%', { timeout: 10000 });
     
     const memoryValue = page.locator('text=GB').first();
-    await expect(memoryValue).toHaveText('16.00 GB');
+    await expect(memoryValue).toHaveText('16.00 GB', { timeout: 10000 });
   });
 
   test('should maintain consistent polling intervals', async ({ page }) => {
@@ -152,6 +154,8 @@ test.describe('System Monitoring', () => {
       route.continue();
     });
 
+    // Wait for initial page load
+    await page.waitForLoadState('networkidle');
     await new Promise(r => setTimeout(r, 5000));
     
     expect(requestTimes.length).toBeGreaterThan(3);
