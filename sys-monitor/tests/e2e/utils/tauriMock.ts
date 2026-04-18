@@ -31,6 +31,13 @@ export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []
     const tauriInvoke = async (command: string, args?: any) => {
       console.log(`[TauriMock] invoke called: ${command}`, args);
       
+      // 检查是否有自定义mock配置（由测试通过page.evaluate设置）
+      const customMocks = (window as any).__TAURI_MOCKS__;
+      if (customMocks && customMocks[command]) {
+        console.log(`[TauriMock] Using custom mock for ${command}`);
+        return customMocks[command];
+      }
+      
       // 返回合理的默认值，避免undefined/null错误
       if (command === 'get_system_metrics') {
         return {
