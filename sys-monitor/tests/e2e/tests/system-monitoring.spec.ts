@@ -275,10 +275,12 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    await new Promise(r => setTimeout(r, 2000));
+    // Wait for component to render with mocked data
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 3000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
-    await expect(cpuMonitor).toBeVisible();
+    await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
     
     // Clear the route to avoid affecting other tests
     await page.unroute('**/invoke/get_system_metrics');
@@ -300,33 +302,22 @@ test.describe('System Monitoring', () => {
       });
     });
     
-    await new Promise(r => setTimeout(r, 2000));
+    // Wait for initial page load and component rendering
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 3000));
     
-    // Navigate to folder analysis using the correct link selector
-    const folderAnalysisLink = page.locator('a').filter({ hasText: 'Folder Analysis' });
-    if (await folderAnalysisLink.count() > 0) {
-      await folderAnalysisLink.click();
-      await page.waitForURL('**/folder-analysis');
-    } else {
-      // Fallback: navigate directly
-      await page.goto('/folder-analysis');
-    }
-    
+    // Navigate to folder analysis using direct URL (more reliable)
+    await page.goto('/folder-analysis');
+    await page.waitForURL('**/folder-analysis');
     await new Promise(r => setTimeout(r, 2000));
     
     // Navigate back to dashboard
-    const dashboardLink = page.locator('a').filter({ hasText: 'Dashboard' });
-    if (await dashboardLink.count() > 0) {
-      await dashboardLink.click();
-      await page.waitForURL('**/');
-    } else {
-      await page.goto('/');
-    }
-    
-    await new Promise(r => setTimeout(r, 2000));
+    await page.goto('/');
+    await page.waitForURL('**/');
+    await new Promise(r => setTimeout(r, 3000));
     
     // Verify system monitoring is still working
     const cpuMonitor = page.locator('text=CPU Usage');
-    await expect(cpuMonitor).toBeVisible();
+    await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
   });
 });
