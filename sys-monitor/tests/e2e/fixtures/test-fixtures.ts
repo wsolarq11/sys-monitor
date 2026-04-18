@@ -14,14 +14,16 @@ export const test = base.extend<Fixtures>({
     // Automatically inject Tauri mock for all tests
     await injectTauriMock(page);
     
-    // Inject mock appState for web mode
+    // Inject mock appState for web mode (must be after injectTauriMock)
     await page.addInitScript(() => {
-      (window as any).appState = {
-        isRunning: true,
-        version: '1.0.0',
-        monitoringEnabled: true,
-        environment: 'web'
-      };
+      if (!(window as any).appState) {
+        (window as any).appState = {
+          isRunning: true,
+          version: '1.0.0',
+          monitoringEnabled: true,
+          environment: 'web'
+        };
+      }
     });
     
     await use(page);
