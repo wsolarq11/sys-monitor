@@ -282,7 +282,7 @@ pub fn get_process_list(limit: u32, sort_by: Option<String>) -> Result<Vec<Proce
     // Sort by specified field
     match sort_field.as_str() {
         "memory" => {
-            processes.sort_by(|a, b| b.memory.cmp(&a.memory));
+            processes.sort_by_key(|b| std::cmp::Reverse(b.memory));
         }
         _ => {
             // Default to CPU usage
