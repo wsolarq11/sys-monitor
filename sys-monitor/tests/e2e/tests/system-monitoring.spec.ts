@@ -261,6 +261,7 @@ test.describe('System Monitoring', () => {
   });
 
   test('should handle system metrics with missing data', async ({ page }) => {
+    // Set up mock BEFORE page loads (override beforeEach)
     await page.route('**/invoke/get_system_metrics', route => {
       route.fulfill({
         status: 200,
@@ -275,9 +276,10 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    // Wait for component to render with mocked data
+    // Navigate to trigger component mount with mocked data
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 2000));
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
