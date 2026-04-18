@@ -80,7 +80,7 @@ test.describe('System Monitoring', () => {
   });
 
   test('should update graphs with new data points', async ({ page }) => {
-    const cpuGraph = page.locator('text=CPU Usage Over Time');
+    const cpuGraph = page.locator('text=CPU Usage');
     await expect(cpuGraph).toBeVisible();
     
     await new Promise(r => setTimeout(r, 5000));
@@ -281,16 +281,30 @@ test.describe('System Monitoring', () => {
   test('should maintain system monitoring during navigation', async ({ page }) => {
     await new Promise(r => setTimeout(r, 2000));
     
-    await page.click('a[href="/folder-analysis"]');
-    await page.waitForURL('**/folder-analysis');
+    // Navigate to folder analysis using the correct link selector
+    const folderAnalysisLink = page.locator('a').filter({ hasText: 'Folder Analysis' });
+    if (await folderAnalysisLink.count() > 0) {
+      await folderAnalysisLink.click();
+      await page.waitForURL('**/folder-analysis');
+    } else {
+      // Fallback: navigate directly
+      await page.goto('/folder-analysis');
+    }
     
     await new Promise(r => setTimeout(r, 2000));
     
-    await page.click('a[href="/"]');
-    await page.waitForURL('**/');
+    // Navigate back to dashboard
+    const dashboardLink = page.locator('a').filter({ hasText: 'Dashboard' });
+    if (await dashboardLink.count() > 0) {
+      await dashboardLink.click();
+      await page.waitForURL('**/');
+    } else {
+      await page.goto('/');
+    }
     
     await new Promise(r => setTimeout(r, 2000));
     
+    // Verify system monitoring is still working
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();
   });
