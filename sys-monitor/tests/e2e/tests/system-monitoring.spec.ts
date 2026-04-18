@@ -267,7 +267,10 @@ test.describe('System Monitoring', () => {
         contentType: 'application/json',
         body: JSON.stringify({
           cpu_usage: 50,
-          memory_usage: 8589934592
+          memory_usage: 8589934592,
+          memory_total: 17179869184,
+          disk_usage: 50,
+          disk_total: 1099511627776
         })
       });
     });
@@ -276,9 +279,27 @@ test.describe('System Monitoring', () => {
     
     const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible();
+    
+    // Clear the route to avoid affecting other tests
+    await page.unroute('**/invoke/get_system_metrics');
   });
 
   test('should maintain system monitoring during navigation', async ({ page }) => {
+    // Set up a default mock for system metrics
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          cpu_usage: 45.5,
+          memory_usage: 8589934592,
+          memory_total: 17179869184,
+          disk_usage: 60,
+          disk_total: 1099511627776
+        })
+      });
+    });
+    
     await new Promise(r => setTimeout(r, 2000));
     
     // Navigate to folder analysis using the correct link selector
