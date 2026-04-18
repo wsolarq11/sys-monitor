@@ -68,10 +68,10 @@ export default defineConfig({
     }
   ],
   
-  webServer: {
-    command: process.env.CI ? 'pnpm dev' : 'pnpm dev',
+  webServer: process.env.CI ? undefined : {
+    command: 'pnpm dev',
     url: 'http://localhost:1420',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 60000,
     stdout: 'pipe',
     stderr: 'pipe'
