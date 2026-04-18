@@ -894,7 +894,10 @@ mod tests {
     fn create_test_repo() -> DatabaseRepository {
         let dir = tempdir().expect("Failed to create temp dir");
         let db_path = dir.path().join("test.db");
-        DatabaseRepository::new(db_path.to_str().unwrap()).expect("Failed to create repo")
+        let mut repo = DatabaseRepository::new(db_path.to_str().unwrap()).expect("Failed to create repo");
+        // Use MEMORY journal mode for tests to avoid disk I/O issues in CI
+        repo.conn.execute_batch("PRAGMA journal_mode = MEMORY; PRAGMA synchronous = OFF;").expect("Failed to set test pragmas");
+        repo
     }
 
     #[test]
