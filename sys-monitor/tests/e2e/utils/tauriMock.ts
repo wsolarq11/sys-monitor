@@ -30,11 +30,9 @@ export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []
     // 创建全局 Tauri 对象
     window.__TAURI__ = {
       invoke: async (command: string, args?: any) => {
-        // 这里会在测试时通过route拦截来模拟
-        return new Promise((resolve, reject) => {
-          // 默认实现，实际会被route拦截覆盖
-          resolve(null);
-        });
+        console.log(`[TauriMock] invoke called: ${command}`, args);
+        // 返回默认值，避免undefined错误
+        return null;
       },
       event: {
         listen: async (event: string, handler: any) => {
