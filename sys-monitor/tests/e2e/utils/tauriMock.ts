@@ -48,9 +48,9 @@ export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []
 
   // 为每个mock命令设置路由拦截
   for (const mock of mocks) {
-    await page.route(**/invoke/, async route => {
+    await page.route(/\/invoke/, async route => {
       if (mock.delay) {
-        await page.waitForTimeout(mock.delay);
+        await new Promise(r => setTimeout(r, mock.delay));
       }
 
       if (mock.error) {

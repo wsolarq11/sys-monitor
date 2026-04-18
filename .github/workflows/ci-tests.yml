@@ -171,6 +171,8 @@ jobs:
       - name: Run tests
         run: cargo test --all-targets --verbose -- --test-threads=1
         working-directory: sys-monitor/src-tauri
+        env:
+          SQLITE_TMPDIR: /tmp
       
       - name: Run clippy (linting)
         run: cargo clippy -- -D warnings
