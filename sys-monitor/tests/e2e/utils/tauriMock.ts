@@ -30,7 +30,19 @@ export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []
     // 创建统一的invoke函数
     const tauriInvoke = async (command: string, args?: any) => {
       console.log(`[TauriMock] invoke called: ${command}`, args);
-      // 返回默认值，避免undefined错误
+      
+      // 返回合理的默认值，避免undefined/null错误
+      if (command === 'get_system_metrics') {
+        return {
+          cpu_usage: 45.5,
+          memory_usage: 8589934592,
+          memory_total: 17179869184,
+          disk_usage: 65.2,
+          disk_total: 1099511627776,
+          network_usage: 12.5
+        };
+      }
+      
       return null;
     };
 
