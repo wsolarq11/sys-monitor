@@ -288,17 +288,19 @@ test.describe('System Monitoring', () => {
 
   test('should maintain system monitoring during navigation', async ({ page }) => {
     // Set up a default mock for system metrics
+    const mockMetrics = {
+      cpu_usage: 45.5,
+      memory_usage: 8589934592,
+      memory_total: 17179869184,
+      disk_usage: 60,
+      disk_total: 1099511627776
+    };
+
     await page.route('**/invoke/get_system_metrics', route => {
       route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          cpu_usage: 45.5,
-          memory_usage: 8589934592,
-          memory_total: 17179869184,
-          disk_usage: 60,
-          disk_total: 1099511627776
-        })
+        body: JSON.stringify(mockMetrics)
       });
     });
     
@@ -306,18 +308,31 @@ test.describe('System Monitoring', () => {
     await page.waitForLoadState('networkidle');
     await new Promise(r => setTimeout(r, 3000));
     
+    // Verify CPU monitor is visible on dashboard
+    const cpuMonitor = page.locator('text=CPU Usage');
+    await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
+    
     // Navigate to folder analysis using direct URL (more reliable)
     await page.goto('/folder-analysis');
     await page.waitForURL('**/folder-analysis');
     await new Promise(r => setTimeout(r, 2000));
     
+    // Re-setup mock before navigating back (mocks are cleared on navigation)
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockMetrics)
+      });
+    });
+    
     // Navigate back to dashboard
     await page.goto('/');
     await page.waitForURL('**/');
+    await page.waitForLoadState('networkidle');
     await new Promise(r => setTimeout(r, 3000));
     
     // Verify system monitoring is still working
-    const cpuMonitor = page.locator('text=CPU Usage');
     await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
   });
 });
