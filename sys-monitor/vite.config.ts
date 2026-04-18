@@ -7,6 +7,14 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig({
   plugins: [react()],
 
+  // Mock Tauri API for web mode (E2E tests)
+  resolve: {
+    alias: {
+      '@tauri-apps/api/core': '/src/mocks/tauri-api-mock.ts',
+      '@tauri-apps/api/event': '/src/mocks/tauri-api-mock.ts',
+    },
+  },
+
   // Vite options tailored for Tauri development and performance optimized
   // for being entered through the browser
   clearScreen: false,
