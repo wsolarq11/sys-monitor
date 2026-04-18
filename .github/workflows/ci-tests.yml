@@ -99,7 +99,24 @@ jobs:
         run: |
           npm install
           npx playwright install --with-deps chromium
-          npx playwright test
+          # Start dev server in background
+          cd ../..
+          nohup pnpm dev > /tmp/vite-dev.log 2>&1 &
+          echo "Waiting for dev server to start..."
+          timeout=60
+          while ! curl -s http://localhost:1420 > /dev/null 2>&1; do
+            sleep 2
+            timeout=$((timeout - 2))
+            if [ $timeout -le 0 ]; then
+              echo "Dev server failed to start"
+              cat /tmp/vite-dev.log
+              exit 1
+            fi
+          done
+          echo "Dev server is running!"
+          # Run Playwright tests
+          cd tests/e2e
+          npx playwright test --project=e2e-chromium
         working-directory: sys-monitor/tests/e2e
         env:
           CI: true
@@ -152,7 +169,7 @@ jobs:
             ${{ runner.os }}-cargo-
       
       - name: Run tests
-        run: cargo test --all-targets --verbose
+        run: cargo test --all-targets --verbose -- --test-threads=1
         working-directory: sys-monitor/src-tauri
       
       - name: Run clippy (linting)
