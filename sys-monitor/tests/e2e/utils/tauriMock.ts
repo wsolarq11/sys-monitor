@@ -27,13 +27,22 @@ export interface TauriCommandMock {
  */
 export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []) {
   await page.addInitScript(() => {
-    // 创建全局 Tauri 对象
+    // 创建统一的invoke函数
+    const tauriInvoke = async (command: string, args?: any) => {
+      console.log(`[TauriMock] invoke called: ${command}`, args);
+      // 返回默认值，避免undefined错误
+      return null;
+    };
+
+    // 设置 __TAURI_INTERNALS__ （新版本 Tauri 使用）
+    (window as any).__TAURI_INTERNALS__ = {
+      invoke: tauriInvoke,
+      transformCallback: (cb: any) => cb,
+    };
+
+    // 设置 __TAURI__ （旧版本 Tauri 兼容）
     window.__TAURI__ = {
-      invoke: async (command: string, args?: any) => {
-        console.log(`[TauriMock] invoke called: ${command}`, args);
-        // 返回默认值，避免undefined错误
-        return null;
-      },
+      invoke: tauriInvoke,
       event: {
         listen: async (event: string, handler: any) => {
           return () => {}; // 返回取消监听函数
@@ -47,6 +56,9 @@ export async function injectTauriMock(page: Page, mocks: TauriCommandMock[] = []
       fs: {
         readTextFile: async (path: string) => '',
         writeTextFile: async (path: string, contents: string) => {},
+      },
+      core: {
+        invoke: tauriInvoke,
       },
     };
   });
