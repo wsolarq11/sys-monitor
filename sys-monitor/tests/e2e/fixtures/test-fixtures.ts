@@ -1,5 +1,6 @@
 import { test as base, Page } from '@playwright/test';
 import { DashboardPage, FolderAnalysisPage, BasePage } from '../pages';
+import { injectTauriMock } from '../utils/tauriMock';
 
 export type Fixtures = {
   dashboardPage: DashboardPage;
@@ -9,6 +10,22 @@ export type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
+  page: async ({ page }, use) => {
+    // Automatically inject Tauri mock for all tests
+    await injectTauriMock(page);
+    
+    // Inject mock appState for web mode
+    await page.addInitScript(() => {
+      (window as any).appState = {
+        isRunning: true,
+        version: '1.0.0',
+        monitoringEnabled: true,
+        environment: 'web'
+      };
+    });
+    
+    await use(page);
+  },
   dashboardPage: async ({ page }, use) => {
     const dashboardPage = new DashboardPage(page);
     await dashboardPage.goto();
