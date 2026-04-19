@@ -182,7 +182,8 @@ test.describe('System Monitoring', () => {
       });
     });
 
-    // Wait for initial page load and multiple polling cycles
+    // Navigate to page and wait for load
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
     await new Promise(r => setTimeout(r, 6000));
     
