@@ -2,17 +2,19 @@ import { test, expect } from '../fixtures/test-fixtures';
 
 test.describe('API and UI Coordination Tests', () => {
   test('should use api for data setup and ui for validation', async ({ page }) => {
-    // Set custom mock for get_system_metrics
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    // Mock the API to return specific metrics
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 45.5,
           memory_usage: 8589934592,
           memory_total: 17179869184,
           disk_usage: 65.2,
           disk_total: 1099511627776
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -27,14 +29,16 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should use msw pattern for network interception', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 75.3,
           memory_usage: 12884901888,
           memory_total: 17179869184
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -55,16 +59,18 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should use har-like scenario for deterministic testing', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 50.0,
           memory_usage: 10737418240,
           memory_total: 17179869184,
           disk_usage: 70.5,
           disk_total: 1099511627776
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -76,16 +82,18 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should validate api response structure via ui', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 33.3,
           memory_usage: 6442450944,
           memory_total: 17179869184,
           disk_usage: 55.0,
           disk_total: 549755813888
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -99,15 +107,17 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should handle loading state with api delay', async ({ page }) => {
-    // Note: Delay simulation not supported in web mode mock
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    // Mock with immediate response
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 60.0,
           memory_usage: 9663676416,
           memory_total: 17179869184
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -117,16 +127,18 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should test edge case with api boundary values', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 0.0,
           memory_usage: 0,
           memory_total: 17179869184,
           disk_usage: 0.0,
           disk_total: 1099511627776
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
@@ -137,16 +149,18 @@ test.describe('API and UI Coordination Tests', () => {
   });
 
   test('should test high load scenario', async ({ page }) => {
-    await page.evaluate(() => {
-      (window as any).__TAURI_MOCKS__ = {
-        'get_system_metrics': {
+    await page.route('**/invoke/get_system_metrics', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
           cpu_usage: 99.9,
           memory_usage: 16106127360,
           memory_total: 17179869184,
           disk_usage: 98.5,
           disk_total: 1099511627776
-        }
-      };
+        })
+      });
     });
 
     await page.goto('/');
