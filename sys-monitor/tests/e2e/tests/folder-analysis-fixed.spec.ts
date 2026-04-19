@@ -135,22 +135,28 @@ test.describe('Folder Analysis Page - Fixed with Tauri Mock', () => {
   });
 
   test('should handle special characters in folder paths', async ({ page }) => {
-    const specialPath = 'C:\\\\测试文件夹\\\\中文路径\\\\特殊字符!@#\$%';
-    
-    const pathInput = page.locator('input[placeholder*=\"文件夹路径\"]');
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  
+    const specialPath = 'C:\\测试文件夹\\中文路径\\特殊字符!@#$%';
+      
+    const pathInput = page.locator('input[placeholder*="文件夹路径"]');
     await pathInput.fill(specialPath);
     await expect(pathInput).toHaveValue(specialPath);
   });
 
   test('should clear error message when path is entered', async ({ page }) => {
-    await page.click('button:has-text(\"扫描文件夹\")');
-    
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  
+    await page.click('button:has-text("扫描文件夹")');
+      
     const errorMessage = page.locator('text=请选择一个文件夹路径');
     await expect(errorMessage).toBeVisible();
-    
-    const pathInput = page.locator('input[placeholder*=\"文件夹路径\"]');
-    await pathInput.fill('C:\\\\test-folder');
-    
+      
+    const pathInput = page.locator('input[placeholder*="文件夹路径"]');
+    await pathInput.fill('C:\\test-folder');
+      
     await expect(errorMessage).not.toBeVisible();
   });
 });

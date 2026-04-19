@@ -471,6 +471,9 @@ test.describe('Edge Cases and Performance Testing', () => {
       });
     });
 
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
     await page.click('button:has-text("浏览...")');
     await page.click('button:has-text("扫描文件夹")');
     
@@ -502,6 +505,9 @@ test.describe('Edge Cases and Performance Testing', () => {
       });
     });
 
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
     await page.click('button:has-text("浏览...")');
     await page.click('button:has-text("扫描文件夹")');
     
@@ -526,6 +532,9 @@ test.describe('Edge Cases and Performance Testing', () => {
         body: JSON.stringify({ error: 'File system error: device not ready' })
       });
     });
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
     await page.click('button:has-text("浏览...")');
     await page.click('button:has-text("扫描文件夹")');

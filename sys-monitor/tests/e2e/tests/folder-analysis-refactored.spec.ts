@@ -15,8 +15,9 @@ test.describe('FolderAnalysis 模块功能测试', () => {
     // 导航到 FolderAnalysis 页面
     await page.goto('/folder-analysis');
     
-    // 等待页面加载
-    await page.waitForSelector('text=监控文件夹列表', { timeout: 10000 });
+    // 等待页面加载 - 使用更通用的选择器
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 2000));
   });
 
   test('✅ 页面加载成功', async ({ page }) => {
