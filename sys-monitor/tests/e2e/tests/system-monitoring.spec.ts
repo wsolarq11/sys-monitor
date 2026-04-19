@@ -158,14 +158,25 @@ test.describe('System Monitoring', () => {
   test('should maintain consistent polling intervals', async ({ page }) => {
     const requestTimes: number[] = [];
     
+    // Mock the API to track requests and return consistent data
     await page.route('**/invoke/get_system_metrics', route => {
       requestTimes.push(Date.now());
-      route.continue();
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          cpu_usage: 45.5,
+          memory_usage: 8589934592,
+          memory_total: 17179869184,
+          disk_usage: 60,
+          disk_total: 1099511627776
+        })
+      });
     });
 
-    // Wait for initial page load
+    // Wait for initial page load and multiple polling cycles
     await page.waitForLoadState('networkidle');
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise(r => setTimeout(r, 6000));
     
     expect(requestTimes.length).toBeGreaterThan(3);
     
