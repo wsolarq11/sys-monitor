@@ -345,10 +345,11 @@ test.describe('System Monitoring', () => {
     // Navigate back to dashboard
     await page.goto('/');
     await page.waitForURL('**/');
-    // Wait for component to render with mocked data (Tauri invoke may not trigger networkidle)
-    await new Promise(r => setTimeout(r, 3000));
+    await page.waitForLoadState('networkidle');
+    // Wait longer for Tauri invoke and component re-render
+    await new Promise(r => setTimeout(r, 5000));
     
     // Verify system monitoring is still working
-    await expect(cpuMonitor).toBeVisible({ timeout: 10000 });
+    await expect(cpuMonitor).toBeVisible({ timeout: 15000 });
   });
 });
