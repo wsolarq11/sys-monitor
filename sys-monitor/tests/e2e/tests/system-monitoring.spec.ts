@@ -7,7 +7,12 @@ test.describe('System Monitoring', () => {
   });
 
   test('should display real-time CPU usage updates', async ({ page }) => {
+    // Wait for page to load and component to render
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 3000));
+    
     const cpuValue = page.locator('text=%').first();
+    await expect(cpuValue).toBeVisible({ timeout: 10000 });
     
     const initialValue = await cpuValue.textContent();
     await new Promise(r => setTimeout(r, 3000));
@@ -21,7 +26,12 @@ test.describe('System Monitoring', () => {
   });
 
   test('should display real-time memory usage updates', async ({ page }) => {
+    // Wait for page to load and component to render
+    await page.waitForLoadState('networkidle');
+    await new Promise(r => setTimeout(r, 3000));
+    
     const memoryValue = page.locator('text=GB').first();
+    await expect(memoryValue).toBeVisible({ timeout: 10000 });
     
     const initialValue = await memoryValue.textContent();
     await new Promise(r => setTimeout(r, 3000));
