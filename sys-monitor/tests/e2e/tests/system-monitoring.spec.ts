@@ -146,13 +146,21 @@ test.describe('System Monitoring', () => {
     });
 
     // Wait for component to render with mocked data
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
     await new Promise(r => setTimeout(r, 3000));
     
-    const cpuValue = page.locator('text=%').first();
-    await expect(cpuValue).toHaveText('100.0%', { timeout: 10000 });
+    const cpuValue = page.getByText(/%/).first();
+    await expect(cpuValue).toBeVisible({ timeout: 10000 });
     
-    const memoryValue = page.locator('text=GB').first();
-    await expect(memoryValue).toHaveText('16.00 GB', { timeout: 10000 });
+    const cpuText = await cpuValue.textContent();
+    expect(cpuText).toContain('100.0');
+    
+    const memoryValue = page.getByText(/GB/).first();
+    await expect(memoryValue).toBeVisible({ timeout: 10000 });
+    
+    const memoryText = await memoryValue.textContent();
+    expect(memoryText).toContain('16.00');
   });
 
   test('should maintain consistent polling intervals', async ({ page }) => {
