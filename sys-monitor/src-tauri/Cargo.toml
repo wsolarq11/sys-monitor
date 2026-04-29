@@ -27,7 +27,7 @@ walkdir = "2"
 notify = "7.0"
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }
-sentry = "0.47.0"
+sentry = "0.48.0"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["wincon"] }
